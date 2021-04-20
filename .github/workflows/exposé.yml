@@ -5,6 +5,7 @@ on:
     paths:
       - docs/**
       - scripts/docs/**
+      - .github/workflows/exposé.yml
 
 jobs:
   pandoc:
