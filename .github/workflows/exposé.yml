@@ -3,11 +3,15 @@ name: Exposé
 on: push
 
 jobs:
-  exposé:
+  pandoc:
     runs-on: ubuntu-latest
+    container: moss/xelatex
     steps:
       - run: ./scripts/docs/md2pdf.sh docs/exposé.md scripts/docs/pandoc.yml --citeproc -o docs/exposé.pdf
-        container: moss/xelatex
+  upload:
+    needs: [pandoc]
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/upload-artifact@master
         with:
           name: exposé
