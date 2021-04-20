@@ -8,6 +8,7 @@ jobs:
     container: songritk/xelatex
     steps:
       - uses: actions/checkout@v2
+      - run: sudo dpkg -i https://github.com/jgm/pandoc/releases/download/2.13/pandoc-2.13-1-amd64.deb
       - run: apt-get update && apt-get install -y python3.8 python3-pip
       - run: python3 -m pip install -r scripts/docs/requirements.txt
       - run: ./scripts/docs/md2pdf.sh docs/exposé.md scripts/docs/pandoc.yml --citeproc -o docs/exposé.pdf
