@@ -1,6 +1,10 @@
 name: Exposé
 
-on: push
+on:
+  push:
+    paths:
+      - docs/**
+      - scripts/docs/**
 
 jobs:
   pandoc:
