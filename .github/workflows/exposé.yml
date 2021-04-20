@@ -7,11 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     container: songritk/xelatex
     steps:
+      - uses: actions/checkout@v2
       - run: ./scripts/docs/md2pdf.sh docs/exposé.md scripts/docs/pandoc.yml --citeproc -o docs/exposé.pdf
-  upload:
-    needs: [pandoc]
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/upload-artifact@master
         with:
           name: exposé
