@@ -1,0 +1,13 @@
+---
+documentclass: scrartcl
+output:
+  pdf_document:
+    md_extensions: +citations+raw_attribute
+urlcolor: blue
+link-citations: true
+header-includes:
+# emojis
+- |
+    \usepackage{fontspec}
+    \newfontfamily\DejaSans{DejaVu Sans}
+---

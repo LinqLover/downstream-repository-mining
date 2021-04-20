@@ -1,0 +1,14 @@
+name: Exposé
+
+on: push
+
+jobs:
+  exposé:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/docs/md2pdf.sh docs/exposé.md scripts/docs/pandoc.yml --citeproc -o docs/exposé.pdf
+        container: moss/xelatex
+      - uses: actions/upload-artifact@master
+        with:
+          name: exposé
+          path: exposé.pdf
