@@ -5,7 +5,7 @@ on: push
 jobs:
   pandoc:
     runs-on: ubuntu-latest
-    container: moss/xelatex
+    container: songritk/xelatex
     steps:
       - run: ./scripts/docs/md2pdf.sh docs/exposé.md scripts/docs/pandoc.yml --citeproc -o docs/exposé.pdf
   upload:
