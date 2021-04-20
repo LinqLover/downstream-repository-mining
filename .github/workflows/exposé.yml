@@ -23,5 +23,5 @@ jobs:
       - run: ./scripts/docs/md2pdf.sh docs/exposé.md scripts/docs/pandoc.yml --citeproc -o docs/exposé.pdf
       - uses: actions/upload-artifact@master
         with:
-          name: exposé
+          name: expose.pdf
           path: docs/exposé.pdf
