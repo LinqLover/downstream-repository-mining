@@ -32,9 +32,9 @@ Possible questions of package developers to be answered through the tool:
 - How many dependencies does the repository of interest (ROI) have?
   What are these dependencies (provide permalinks)?
   How large/popular/active are there, how many grand-dependencies do they have?
-- How many direct references do the single code identifiers (e. g., object-oriented entities, methods, etc.) in the ROI have in the downstream dependencies?
+- How many direct references do the single code identifiers (e.g., object-oriented entities, methods, etc.) in the ROI have in the downstream dependencies?
   How are these identifiers used (provide permalinks to the dependent lines)?
-- How often are the ROI or its single code identifiers mentioned in the conversations of downstream repositories (e. g., issues, pull requests (PRs), GitHub Discussions)?
+- How often are the ROI or its single code identifiers mentioned in the conversations of downstream repositories (e.g., issues, pull requests (PRs), GitHub Discussions)?
   What are the contents of these conversations (provide permalinks)?
 - Which ROI identifiers are correlated to a change rate above average in the downstream repositories (scan commit diffs and commit messages)?
   What is the intent of these changes (provide permalinks)?
@@ -137,7 +137,7 @@ Nevertheless, some milestones will have to be met:
 ## Tools, libraries, APIs, and data sources
 
 - Repository Mining:
-    - GitHub: GitHub REST/GraphQL API (e.g. `Repository`, `Commit`, `DependencyGraphDependency`) [@githubrest; @githubgql]
+    - GitHub: GitHub REST/GraphQL API (e.g., `Repository`, `Commit`, `DependencyGraphDependency`) [@githubrest; @githubgql]
     - GitHub mirror: GHTorrent [@Gousi13]
     - git; GitPython/gittle/PyGit/Dulwich
 - References analysis:
@@ -147,7 +147,7 @@ Nevertheless, some milestones will have to be met:
     - nektos/act [@nektos/act]
 - Visualization of results:
     - Jupyter Notebook (for prototypes)
-    - VS Code API (e.g. `CallHierarchyProvider`) [@vscodeapi]
+    - VS Code API (e.g., `CallHierarchyProvider`) [@vscodeapi]
 
 ## Literature
 
