@@ -32,8 +32,10 @@ Possible questions of package developers to be answered through the tool:
 - How many dependencies does the repository of interest (ROI) have?
   What are these dependencies (provide permalinks)?
   How large/popular/active are there, how many grand-dependencies do they have?
+  What versions of the ROI do the dependencies reference?
 - How many direct references do the single code identifiers (e.g., object-oriented entities, methods, etc.) in the ROI have in the downstream dependencies?
-  How are these identifiers used (provide permalinks to the dependent lines)?
+  How are these identifiers used (provide permalinks to the dependent lines), what arguments are specified?
+  Which users of the identifiers stand out from the majority of the users and how?
 - How often are the ROI or its single code identifiers mentioned in the conversations of downstream repositories (e.g., issues, pull requests (PRs), GitHub Discussions)?
   What are the contents of these conversations (provide permalinks)?
 - Which ROI identifiers are correlated to a change rate above average in the downstream repositories (scan commit diffs and commit messages)?
@@ -61,7 +63,11 @@ This involves running in small iterations and a focus on an MVP (minimum viable 
 As soon as a minimum baseline for the first two goals (see [goals](#goals)) exists, we will identify further goals as the project evolves.
 These goals can be based on the list from above but also other interesting subfields of the central vision.
 The focus on mining vs. presenting data can be adjusted during the semester.
-Nevertheless, some milestones will have to be met:
+Also, the setup of an automated pipeline that periodically fills a database is an optional task that will be chosen later if need be.
+For the MVP, a small tool that can be run locally using the simplest possible (non-graphical) interface will be an adequate solution.
+To assess the baseline prototype, a small sample of packages will be identified that are written in JavaScript or Python, consist of a manageable interface, and are at least moderately spread.
+
+Despite the agile approach of the project, some milestones will have to be met:
 
 <table>
     <thead>
@@ -71,6 +77,10 @@ Nevertheless, some milestones will have to be met:
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td>2021-05-05</td>
+            <td><strong>Related work</strong> assessed</td>
+        </tr>
         <tr>
             <td>2021-05-05</td>
             <td><strong>Baseline prototype</strong> ready for review</td>
