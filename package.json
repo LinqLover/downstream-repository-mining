@@ -21,6 +21,7 @@
   "homepage": "https://github.com/LinqLover/downstream-repository-mining#readme",
   "type": "module",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "ntqdm": "^1.0.0",
     "package-metadata": "^1.1.2"
   }

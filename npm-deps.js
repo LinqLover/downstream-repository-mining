@@ -3,13 +3,16 @@ import npmDependants from 'npm-dependants'
 import { RegistryClient } from 'package-metadata';
 import tqdm from 'ntqdm'
 import * as util from 'util'
+import * as dotenv from 'dotenv'
 
 async function main(rootName, limit = 20) {
+	dotenv.config()
+	
 	const endpoint = 'https://api.github.com/graphql'
 
 	const graphQLClient = new GraphQLClient(endpoint, {
 		headers: {
-			authorization: 'Bearer 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',
+			authorization: `Bearer ${process.env.GITHUB_OAUTH_TOKEN}`,
 			accept: 'application/vnd.github.hawkgirl-preview+json'
 		},
 	})
