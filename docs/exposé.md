@@ -233,12 +233,3 @@ Mining CI build logs
 
 <!-- See exposé.bib -->
 
-
-<!---
-
-# Questions
-
-- paper before holidays?
-- what‘s the role of literature? (how many references?)
-- do we need to *do* actual analysis as part of the paper?
--->
