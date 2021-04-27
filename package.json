@@ -1,0 +1,27 @@
+{
+  "name": "downstream-repository-mining",
+  "version": "1.0.0",
+  "description": "Student project as part of the course \"Software Mining and Applications\" offered by the Computer Graphics System Group ([@hpicgs](https://github.com/hpicgs)) at the Hasso Plattner Institute (HPI), Potsdam, Germany.",
+  "main": "github-deps.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LinqLover/downstream-repository-mining.git"
+  },
+  "author": "Christoph Thiede",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/LinqLover/downstream-repository-mining/issues"
+  },
+  "homepage": "https://github.com/LinqLover/downstream-repository-mining#readme",
+  "type": "module",
+  "dependencies": {
+    "ntqdm": "^1.0.0",
+    "package-metadata": "^1.1.2"
+  }
+}
