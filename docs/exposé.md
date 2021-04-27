@@ -5,6 +5,7 @@ author: Christoph Thiede
 date: 2021-04-21
 bibliography: exposé.bib
 nocite: '@*'
+classoption: twocolumn
 ---
 
 # Introduction
@@ -67,7 +68,8 @@ Also, the setup of an automated pipeline that periodically fills a database is a
 For the MVP, a small tool that can be run locally using the simplest possible (non-graphical) interface will be an adequate solution.
 To assess the baseline prototype, a small sample of packages will be identified that are written in JavaScript or Python, consist of a manageable interface, and are at least moderately spread.
 
-Despite the agile approach of the project, some milestones will have to be met:
+Despite the agile approach of the project, some milestones will have to be met.
+These are listed in +@tbl:schedule.
 
 <table>
     <thead>
@@ -131,6 +133,8 @@ Despite the agile approach of the project, some milestones will have to be met:
         </tr>
     </tbody>
 </table>
+
+Table: Preliminary schedule {#tbl:schedule}
 
 # Resources
 
