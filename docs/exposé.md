@@ -15,7 +15,8 @@ Especially, this trend has been experiencing an additional updraft due to the on
 Open-source development offers many advantages as opposed to traditional closed-source development, including large numbers of volunteer contributions from the open-source community, increased transparency effects in security-related domains, and a high potential for reusing solutions.
 These solutions are usually organized as *packages* each of which tries to solve an isolated problem and provide a generic interface for the deliverables.
 Most commonly, packages are developed in a *code repository* that is managed using a *development platform* (such a [GitHub]{.smallcaps}, [GitLab]{.smallcaps}, or [Bitbucket]{.smallcaps}) and deployed using a *package manager* (such as [PyPI]{.smallcaps} for Python, [npm]{.smallcaps} for Node.js/JavaScript/TypeScript, or [NuGet]{.smallcaps} for .NET languages).
-Other solutions or packages then can *depend* on existing packages. These dependency relations form a large directed acyclic graph (DAG) that connects major parts of the software world for each popular programming language ecosystem.
+Other solutions or packages then can *depend* on existing packages.
+These dependency relations form a large directed graph that connects major parts of the software world for each popular programming language ecosystem.
 
 Despite this connectedness by design, however, the development process of many packages is still characterized by an isolated approach:
 While OSS developers use to submit tickets or contribute patches against *upstream repositories* that they depend on and consider the right place to solve their problems, the reverse direction of *downstream dependencies* is often neglected by package developers when they extend, restructure, or refactor their solutions.
