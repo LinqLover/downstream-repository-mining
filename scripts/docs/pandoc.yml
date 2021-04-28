@@ -1,0 +1,46 @@
+---
+documentclass: scrartcl
+geometry: a4paper,left=1.5cm,right=1.5cm,top=1.5cm,bottom=1.75cm
+output:
+  pdf_document:
+    md_extensions: +citations+raw_attribute
+urlcolor: blue
+link-citations: true
+tablenos-warning-level: 1
+tablenos-cleveref: true
+header-includes:
+- |
+  \setlength{\columnsep}{1cm}
+  \setlength{\footskip}{1cm}
+# pandoc-xnos
+- |
+    \usepackage{caption}
+    \usepackage{cleveref}
+
+    \makeatletter
+    \newcounter{tableno}
+    \newenvironment{tablenos:no-prefix-table-caption}{
+      \caption@ifcompatibility{}{
+        \let\oldthetable\thetable
+        \let\oldtheHtable\theHtable
+        \renewcommand{\thetable}{tableno:\thetableno}
+        \renewcommand{\theHtable}{tableno:\thetableno}
+        \stepcounter{tableno}
+        \captionsetup{labelformat=empty}
+      }
+    }{
+      \caption@ifcompatibility{}{
+        \captionsetup{labelformat=default}
+        \let\thetable\oldthetable
+        \let\theHtable\oldtheHtable
+        \addtocounter{table}{-1}
+      }
+    }
+    \makeatother
+# emojis
+- |
+    \usepackage{fontspec}
+    \newfontfamily\DejaSans{DejaVu Sans}
+- |
+    \usepackage{booktabs}
+---

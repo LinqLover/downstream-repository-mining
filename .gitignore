@@ -1,2 +1,7 @@
+# node
 node_modules
 .env
+
+# docs
+docs/exposé.pdf
+docs/exposé.tex
