@@ -12,3 +12,5 @@ jobs:
           node-version: '14'
       - run: yarn install
       - run: yarn test
+        env:
+          GITHUB_OAUTH_TOKEN: ${{ github.token }}
