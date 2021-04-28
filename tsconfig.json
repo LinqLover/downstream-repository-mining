@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "importHelpers": true,
+        "lib": [
+            "ES2019",
+            "ESNext.AsyncIterable"
+        ],
+        "module": "commonjs",
+        "outDir": "lib",
+        "rootDir": "src",
+        "strict": true,
+        "target": "ES2019",
+        "types": ["jest", "node"],
+        "typeRoots": [
+            "./src/@types/**/*.d.ts",
+            "node_modules/@types"
+        ],
+        "esModuleInterop": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true
+    },
+    "include": [
+        "src/**/*.ts",
+        "tests/*.ts"
+    ],
+    "ts-node": {
+        "files": true
+    }
+}
