@@ -6,7 +6,7 @@ describe("getNpmDeps", () => {
         packageName     | limit  | countNestedDeps  | timeoutSecs  | nonGitHubThreshold
         ${'glob'}       | ${1}   | ${false}         | ${10}        | ${0}
         ${'glob'}       | ${3}   | ${true}          | ${30}        | ${0}
-        ${'gl-matrix'}  | ${10}  | ${false}         | ${30}        | ${0}
+        ${'gl-matrix'}  | ${4}   | ${false}         | ${30}        | ${0}
     `("should return plausible results for $packageName (at least $limit deps)", async ({packageName, limit, timeoutSecs, nonGitHubThreshold}) => {
         jest.setTimeout(timeoutSecs * 1000)
 
