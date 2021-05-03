@@ -30,9 +30,9 @@ class GitHubRepository {
 export async function getNpmDeps(packageName: string, limit: number, countNestedDepedents = false) {
     dotenv.config()
 
-    const endpoint = 'https://api.github.com/graphql'
-
-    const graphQLClient = new GraphQLClient(endpoint, {
+    const githubEndpoint = 'https://api.github.com/graphql'
+    // TODO: Consider using octokit
+    const githubClient = new GraphQLClient(githubEndpoint, {
         headers: {
             authorization: `Bearer ${process.env.GITHUB_OAUTH_TOKEN}`,
             accept: 'application/vnd.github.hawkgirl-preview+json'
@@ -49,15 +49,12 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
             console.warn("Package has no GitHub link", {metadata, url})
             continue
         }
-        dependent.github = new GitHubRepository(
-            match.groups.owner,
-            match.groups.name
-        )
+        dependent.github = new GitHubRepository(match.groups.owner, match.groups.name)
     }
 
     for (const repo of tqdm(dependents, {desc: "Gathering GitHub data"})) {
         if (!repo.github) continue
-        const repoData = (await getRepoData(graphQLClient, repo.github.owner, repo.github.name)).repository
+        const repoData = (await getRepoData(githubClient, repo.github.owner, repo.github.name)).repository
         Object.assign(repo.github, repoData);
     }
 
