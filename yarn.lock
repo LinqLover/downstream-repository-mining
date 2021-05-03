@@ -862,11 +862,6 @@ assign-symbols@^1.0.0:
   resolved "https://registry.yarnpkg.com/assign-symbols/-/assign-symbols-1.0.0.tgz#59667f41fadd4f20ccbc2bb96b8d4f7f78ec0367"
   integrity sha1-WWZ/QfrdTyDMvCu5a41Pf3jsA2c=
 
-async-iterator-to-array@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/async-iterator-to-array/-/async-iterator-to-array-0.0.1.tgz#3ab70698c68b4219ff36e7327c5a4880917b0d49"
-  integrity sha512-BH6nAEYCRjNh24ylW8juMrHq5k/wx2l3kLcFjVZQ3uNYNKHQmVb9UbXxDo9Z8YUjhCGTthUaR9hBf4aK+aHRQg==
-
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
@@ -2371,6 +2366,11 @@ istanbul-reports@^3.0.2:
   dependencies:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
+
+it-all@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/it-all/-/it-all-1.0.5.tgz#e880510d7e73ebb79063a76296a2eb3cb77bbbdb"
+  integrity sha512-ygD4kA4vp8fi+Y+NBgEKt6W06xSbv6Ub/0V8d1r3uCyJ9Izwa1UspkIOlqY9fOee0Z1w3WRo1+VWyAU4DgtufA==
 
 jest-changed-files@^26.6.2:
   version "26.6.2"

@@ -3,7 +3,7 @@ import npmDependants from 'npm-dependants'
 import { RegistryClient } from 'package-metadata';
 import tqdm from 'ntqdm'
 import * as dotenv from 'dotenv'
-import asyncIteratorToArray from 'async-iterator-to-array'
+import asyncIteratorToArray from 'it-all'
 
 
 export class Dependent {
