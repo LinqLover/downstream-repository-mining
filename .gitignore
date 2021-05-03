@@ -1,2 +1,9 @@
+# secrets
+.env
+
+# node
+node_modules
+
+# docs
 docs/exposé.pdf
 docs/exposé.tex
