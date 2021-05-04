@@ -3,6 +3,7 @@
 
 # node
 node_modules/
+yarn-error.log
 
 # docs
 docs/exposé.pdf
@@ -10,3 +11,4 @@ docs/exposé.tex
 
 # dowdep
 cache/
+cache-*/

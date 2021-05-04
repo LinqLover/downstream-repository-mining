@@ -64,10 +64,12 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
         }
     }
 
-    for (const repo of tqdm(dependents, {desc: "Gathering GitHub data"})) {
-        if (!repo.github) continue
-        const repoData = (await getRepoData(githubClient, repo.github.owner, repo.github.name)).repository
-        Object.assign(repo.github, repoData);
+    if (downloadGitHubData) {
+        for (const repo of tqdm(dependents, {desc: "Gathering GitHub data"})) {
+            if (!repo.github) continue
+            const repoData = (await getRepoData(githubClient, repo.github.owner, repo.github.name)).repository
+            Object.assign(repo.github, repoData);
+        }
     }
 
     if (countNestedDependents) {
@@ -82,9 +84,11 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
 }
 
 export async function downloadDep(dependent: Dependent) {
+    // TODO: Check cache before. Also check system-wide npm/yarn caches?
+    const cacheDirectory = process.env.NPM_CACHE || 'cache'
     await downloadPackageTarball({
         url: dependent.tarballUrl,
-        dir: `cache/${dependent.name}`
+        dir: cacheDirectory
     })
 }
 
