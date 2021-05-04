@@ -27,7 +27,7 @@ class GitHubRepository {
 }
 
 
-export async function getNpmDeps(packageName: string, limit: number, countNestedDepedents = false) {
+export async function getNpmDeps(packageName: string, limit: number, countNestedDependents = false, downloadGitHubData = false) {
     dotenv.config()
 
     const githubEndpoint = 'https://api.github.com/graphql'
@@ -43,13 +43,16 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
 
     for (const dependent of tqdm(dependents, {desc: "Gathering metadata"})) {
         const metadata = await RegistryClient.getMetadata(dependent.name, {fullMetadata: true})
-        const url = metadata?.versions?.latest?.repository?.url
-        const match = url?.match(/github\.com[\/:](?<owner>[^/]+)\/(?<name>[\w-_\.]+?)(?:.git)?$/)
-        if (!match) {
-            console.warn("Package has no GitHub link", {metadata, url})
-            continue
+
+        if (downloadGitHubData) {
+            const repositoryUrl = metadata?.versions?.latest?.repository?.url
+            const match = repositoryUrl?.match(/github\.com[\/:](?<owner>[^/]+)\/(?<name>[\w-_\.]+?)(?:.git)?$/)
+            if (!match) {
+                console.warn("Package has no GitHub link", {metadata, url: repositoryUrl})
+                continue
+            }
+            dependent.github = new GitHubRepository(match.groups.owner, match.groups.name)
         }
-        dependent.github = new GitHubRepository(match.groups.owner, match.groups.name)
     }
 
     for (const repo of tqdm(dependents, {desc: "Gathering GitHub data"})) {
@@ -58,7 +61,7 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
         Object.assign(repo.github, repoData);
     }
 
-    if (countNestedDepedents) {
+    if (countNestedDependents) {
         for (const dependent of tqdm(dependents, {desc: "Gathering nested dependents data"})) {
             dependent.dependentCount = (await asyncIteratorToArray(getNpmDependents(dependent.name, limit))).length;
         }

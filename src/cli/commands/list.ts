@@ -17,6 +17,11 @@ export default class List extends Command {
             name: 'count-nested-dependents', // TODO: Does not work!
             description: "count nested dependents",
             default: true
+        }),
+        downloadGitHubData: flags.boolean({
+            name: 'download-github-metadata', // TODO: Does not work!
+            description: "download GitHub metadata",
+            default: true
         })
     }
 
@@ -32,6 +37,7 @@ export default class List extends Command {
             packageName,
             flags.limit,
             flags.countNestedDependents,
+            flags.downloadGitHubData
         )
 
         console.log(util.inspect(deps, {showHidden: false, depth: null}))
