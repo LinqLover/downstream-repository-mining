@@ -3,7 +3,7 @@
         "declaration": true,
         "importHelpers": true,
         "lib": [
-            "ES2019",
+            "ES2020",
             "ESNext.AsyncIterable"
         ],
         "module": "commonjs",

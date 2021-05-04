@@ -1,10 +1,17 @@
-import { GraphQLClient, gql } from 'graphql-request'
-import npmDependants from 'npm-dependants'
-import { RegistryClient } from 'package-metadata';
-import tqdm from 'ntqdm'
 import * as dotenv from 'dotenv'
-import asyncIteratorToArray from 'it-all'
 import downloadPackageTarball from 'download-package-tarball';
+import escapeRegexp from 'escape-string-regexp'
+import * as fs from 'fs'
+import { promises as fsPromises } from "fs"
+import glob from 'glob-promise'
+import { GraphQLClient, gql } from 'graphql-request'
+import asyncIteratorToArray from 'it-all'
+import npmDependants from 'npm-dependants'
+import tqdm from 'ntqdm'
+import { RegistryClient } from 'package-metadata'
+import * as path from 'path'
+
+import rex from './utils/rex'
 
 
 export class Dependent {
@@ -28,8 +35,16 @@ class GitHubRepository {
     public forkCount!: number
 }
 
+class Reference {
+    public dependent!: Dependent
+    public file!: string
+    public lineNumber!: number
 
-export async function getNpmDeps(packageName: string, limit: number, countNestedDependents = false, downloadGitHubData = false) {
+    public matchString?: string
+}
+
+
+export async function getNpmDeps(packageName: string, limit?: number, countNestedDependents = false, downloadGitHubData = false) {
     dotenv.config()
 
     const githubEndpoint = 'https://api.github.com/graphql'
@@ -85,14 +100,86 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
 
 export async function downloadDep(dependent: Dependent) {
     // TODO: Check cache before. Also check system-wide npm/yarn caches?
-    const cacheDirectory = process.env.NPM_CACHE || 'cache'
     await downloadPackageTarball({
         url: dependent.tarballUrl,
-        dir: cacheDirectory
+        dir: getCacheDirectory()
     })
 }
 
-async function* getNpmDependents(packageName: string, limit: number | null) {
+export async function* searchReferences(packageName: string, limit?: number, rootDirectory?: string): AsyncIterable<Reference> {
+    if (!rootDirectory) {
+        rootDirectory = getCacheDirectory();
+    }
+    if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
+        // Search recursively
+        const depDirectories = (await fsPromises.readdir(rootDirectory, {withFileTypes: true})).filter(dirent => dirent.isDirectory)
+        for (const depDirectory of tqdm(depDirectories, {desc: `Scanning dependents (${rootDirectory})...`})) {
+            let i = 0;
+            for await (const reference of searchReferences(packageName, undefined, path.join(rootDirectory, depDirectory.name))) {
+                yield reference
+                if (limit && i++ > limit) {
+                    return
+                }
+            }
+        }
+        return;
+    }
+
+    // Search references in package directory
+    const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
+    const nonIdentifierCharacterPattern = /[^\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]/
+    const packageNameStringPattern = rex`
+        (?<quote>['"])
+        ${escapeRegexp(packageName)}
+        \k<quote>
+    /gm`
+    const requirePattern = rex`
+        (?<name> ${identifierPattern} ) \s*
+        = \s*
+        require \s* \( \s*
+            ${packageNameStringPattern}
+        \s* \)
+    /gm`
+    const importStarPattern = rex`
+        import \s+
+        \* \s+
+        as \s*
+        (?<name> ${identifierPattern} ) \s*
+        from \s*
+        ${packageNameStringPattern}
+    /gm`
+    const totalImportPatterns = [requirePattern, importStarPattern]
+
+    const files = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', {cwd: rootDirectory, nodir: true})
+    for (const file of files) {
+        const source = fs.readFileSync(path.join(rootDirectory, file)).toString()
+        const declarations = Array.prototype.concat(...totalImportPatterns.map(pattern => Array.from(source.matchAll(pattern))))
+        if (!declarations.length) continue
+
+        const declarationNames = declarations.map(match => match!.groups!['name'])
+        const lines: string[] = source.split('\n')
+        const matches = <[number, RegExpMatchArray][]>lines.map(
+            (line, lineNo) => [lineNo, line.match(rex`
+                ^ .* ( ${
+                    declarationNames.map(escapeRegexp).join('|')
+                }) .* $`)
+            ]).filter(([, match]) => match)
+        for (const [lineNo, match] of matches) {
+            yield <Reference>{
+                dependent: <Dependent>{name: rootDirectory},
+                file: file,
+                lineNumber: lineNo,
+                matchString: match[0]
+            }
+        }
+    }
+}
+
+function getCacheDirectory() {
+    return process.env.NPM_CACHE || 'cache';
+}
+
+async function* getNpmDependents(packageName: string, limit?: number) {
     let count = 0
     for await (const dependent of npmDependants(packageName)) {
         yield <Dependent>{name: <string>dependent, github: undefined, dependentCount: undefined}
