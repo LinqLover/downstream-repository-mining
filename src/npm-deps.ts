@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv'
 import downloadPackageTarball from 'download-package-tarball';
-import escapeRegexp from 'escape-string-regexp'
+import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import * as fs from 'fs'
 import { promises as fsPromises } from "fs"
 import glob from 'glob-promise'
