@@ -2,8 +2,11 @@
 .env
 
 # node
-node_modules
+node_modules/
 
 # docs
 docs/exposé.pdf
 docs/exposé.tex
+
+# dowdep
+cache/
