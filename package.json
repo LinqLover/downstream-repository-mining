@@ -2,7 +2,9 @@
     "name": "dowdep",
     "version": "0.0.0",
     "author": "Christoph Thiede",
-    "bin": "./bin/run",
+    "bin": {
+        "dowdep": "./bin/run.js"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/LinqLover/downstream-repository-mining.git"
@@ -21,6 +23,14 @@
     "jest": {
         "preset": "ts-jest",
         "testEnvironment": "node"
+    },
+    "oclif": {
+        "commands": "./lib/cli/commands",
+        "bin": "dowdep",
+        "description": "downstream repository mining CLI",
+        "plugins": [
+            "@oclif/plugin-help"
+        ]
     },
     "types": "lib/index.d.ts",
     "dependencies": {

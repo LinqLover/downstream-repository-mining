@@ -6,3 +6,9 @@ Student project as part of the course "Software Mining and Applications" offered
 
 For more information, read the [exposé](./docs/exposé.md):  
 [![Exposé](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/expos%C3%A9.yml/badge.svg?branch=master)](https://github.com/LinqLover/downstream-repository-mining/actions?query=branch%3Amaster)
+
+## Usage
+
+```bash
+./bin/run.js
+```
