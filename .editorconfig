@@ -9,3 +9,6 @@ insert_final_newline = true
 [*.{js,ts,json}]
 indent_size = 4
 indent_style = space
+
+[*.md]
+trim_trailing_whitespace = false  # for linebreaks

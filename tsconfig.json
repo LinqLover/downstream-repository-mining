@@ -14,15 +14,14 @@
         "types": ["jest", "node"],
         "typeRoots": [
             "./src/@types/**/*.d.ts",
-            "node_modules/@types"
+            "node_modules/@types",
         ],
         "esModuleInterop": true,
         "strictNullChecks": true,
         "noImplicitAny": true
     },
     "include": [
-        "src/**/*.ts",
-        "tests/*.ts"
+        "src/**/*.ts"
     ],
     "ts-node": {
         "files": true

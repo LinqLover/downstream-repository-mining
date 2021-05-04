@@ -2,8 +2,13 @@
 .env
 
 # node
-node_modules
+node_modules/
+yarn-error.log
 
 # docs
 docs/exposé.pdf
 docs/exposé.tex
+
+# dowdep
+cache/
+cache-*/
