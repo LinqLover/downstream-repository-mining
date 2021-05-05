@@ -1,11 +1,13 @@
+import _ from 'lodash'
+import asyncIteratorToArray from 'it-all'
+import * as path from 'path'
 import readJson from 'read-package-json'
 import rimRaf from 'rimraf'
-import * as path from 'path'
 
-import { getNpmDeps, downloadDep, Dependent } from "../src/npm-deps";
+import { getNpmDeps, downloadDep, searchReferences, Dependent } from "../src/npm-deps";
 
 
-describe("getNpmDeps", () => {
+describe('getNpmDeps', () => {
     it.each`
         packageName     | limit  | countNestedDeps  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
         ${'glob'}       | ${3}   | ${false}         | ${false}            | ${10}        | ${null}
@@ -42,15 +44,15 @@ describe("getNpmDeps", () => {
             expect(github!.stargazerCount).toBeGreaterThanOrEqual(10)
             expect(github!.forkCount).toBeGreaterThanOrEqual(10)
         }
-    });
-});
+    })
+})
 
-describe("downloadDep", () => {
+describe('downloadDep', () => {
     it.each`
         packageName     | version     | tarballUrl
         ${'gl-matrix'}  | ${'3.3.0'}  | ${'https://registry.npmjs.org/gl-matrix/-/gl-matrix-3.3.0.tgz'}
         ${'gl-matrix'}  | ${'3.2.1'}  | ${'https://registry.npmjs.org/gl-matrix/-/gl-matrix-3.2.1.tgz'}
-    `("should fetch the package with the right version", async ({
+    `("should fetch the package '$packageName' with the right version '$version'", async ({
             packageName, version, tarballUrl}) => {
         beforeEach(() => {
             rimRaf(<string>process.env.NPM_CACHE, (error: any) => {if (error) throw error})
@@ -69,5 +71,27 @@ describe("downloadDep", () => {
 
             expect(data.version).toBe(version)
         })
-    });
-});
+    })
+})
+
+describe('searchReferences', () => {
+    it.each`
+        packageName   | expectedReferences
+        ${'heureka'}  | ${{'bar': {'index.js': [1, 4, 7]}, 'foo': {'index.ts': [1, 5, 8, 9], 'util.js': [1, 3]}}}
+        ${'jolo'}     | ${{'foo': {'index.ts': [2, 4, 7]}}}
+    `("should find relevant references for package '$packageName'", async ({
+            packageName, expectedReferences}) => {
+        const references = await asyncIteratorToArray(searchReferences(packageName, undefined, 'test/npm-deps.test/examples'))
+
+        const aggregatedReferences = _.chain(references)
+            .groupBy(reference => reference.dependent.name)
+            .mapValues(dependentReferences => _.chain(dependentReferences)
+                .groupBy(reference => reference.file)
+                .mapValues(fileReferences => _.map(
+                    fileReferences, reference => reference.lineNumber))
+                .value())
+            .value()
+
+        expect(aggregatedReferences).toEqual(expectedReferences)
+    })
+})

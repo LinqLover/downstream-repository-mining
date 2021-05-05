@@ -11,5 +11,8 @@ module.exports = {
 	},
 	"setupFiles": [
 		"<rootDir>/test/.jest/setEnvVars.ts"
-	]
+	],
+    "testPathIgnorePatterns": [
+        "test/*.test"
+    ]
 }
