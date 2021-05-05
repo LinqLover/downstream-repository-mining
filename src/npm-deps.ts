@@ -125,7 +125,25 @@ export async function* searchReferences(packageName: string, limit?: number, roo
         return;
     }
 
-    // Search references in package directory
+    const dependencyName = path.basename(rootDirectory)
+    const files = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', {cwd: rootDirectory, nodir: true})
+    for (const file of files) {
+        yield* searchReferencesInFile(packageName, dependencyName, rootDirectory, file)
+    }
+}
+
+function* searchReferencesInFile(packageName: string, dependencyName: string, rootDirectory: string, file: string) {
+    const source = fs.readFileSync(path.join(rootDirectory, file)).toString()
+    // TODO: Convert into class (ReferenceSearch(er)) and initialize regexpes only once?
+
+    // Let's build a regex family!
+    // TODO: Support sophisticated import syntax such as:
+    //  * `foo = require('bar/baz')`
+    //  * `import foo0, { baz1, baz2 as foo2 }, * as foo3 from bar`
+    //  * `import 'bar'` (side effects only)
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
+    // See also: parse-imports; babel; flow; hegel
+    // Maybe check opportunities of a type analyzer before investing time into that.
     const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
     const nonIdentifierCharacterPattern = /[^\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]/
     const packageNameStringPattern = rex`
@@ -133,6 +151,7 @@ export async function* searchReferences(packageName: string, limit?: number, roo
         ${escapeRegexp(packageName)}
         \k<quote>
     /gm`
+    // `foo = require('bar')`
     const requirePattern = rex`
         (?<name> ${identifierPattern} ) \s*
         = \s*
@@ -140,6 +159,7 @@ export async function* searchReferences(packageName: string, limit?: number, roo
             ${packageNameStringPattern}
         \s* \)
     /gm`
+    // `import * as foo from 'bar'`
     const importStarPattern = rex`
         import \s+
         \* \s+
@@ -150,27 +170,28 @@ export async function* searchReferences(packageName: string, limit?: number, roo
     /gm`
     const totalImportPatterns = [requirePattern, importStarPattern]
 
-    const files = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', {cwd: rootDirectory, nodir: true})
-    for (const file of files) {
-        const source = fs.readFileSync(path.join(rootDirectory, file)).toString()
-        const declarations = Array.prototype.concat(...totalImportPatterns.map(pattern => Array.from(source.matchAll(pattern))))
-        if (!declarations.length) continue
+    const declarations = <RegExpMatchArray[]>Array.prototype.concat(...totalImportPatterns.map(
+        pattern => Array.from(source.matchAll(pattern)))
+    )
+    if (!declarations.length) {
+        return
+    }
 
-        const declarationNames = declarations.map(match => match!.groups!['name'])
-        const lines: string[] = source.split('\n')
-        const matches = <[number, RegExpMatchArray][]>lines.map(
-            (line, lineNo) => [lineNo, line.match(rex`
-                ^ .* ( ${
-                    declarationNames.map(escapeRegexp).join('|')
-                }) .* $`)
-            ]).filter(([, match]) => match)
-        for (const [lineNo, match] of matches) {
-            yield <Reference>{
-                dependent: <Dependent>{name: rootDirectory},
-                file: file,
-                lineNumber: lineNo,
-                matchString: match[0]
-            }
+    const declarationNames = declarations.map(match => match!.groups!['name'])
+    const lines = source.split('\n')
+    const matches = <[number, RegExpMatchArray][]>lines.map(
+        (line, lineNo) => [lineNo, line.match(rex`
+            ^ .* ( ${
+                // Find occurences of any declaration name
+                declarationNames.map(escapeRegexp).join('|')
+            }) .* $`)
+        ]).filter(([, match]) => match)
+    for (const [lineNo, match] of matches) {
+        yield <Reference>{
+            dependent: <Dependent>{name: dependencyName},
+            file: file,
+            lineNumber: lineNo + 1,
+            matchString: match[0]
         }
     }
 }
