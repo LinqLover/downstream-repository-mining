@@ -10,7 +10,7 @@ export default class Download extends Command {
     static flags = {
         help: flags.help({ char: 'h' }),
         limit: flags.integer({
-            description: "maximum number of packages to download",
+            description: "maximum number of packages to download (-1 for unlimited)",
             default: 20
         })
     }
@@ -21,8 +21,10 @@ export default class Download extends Command {
         const { args, flags } = this.parse(Download)
 
         const packageName: string = args.packageName;
-        if (!packageName) throw new Error("dowdep: Package not specified");
+        if (!packageName) throw new Error("dowdep: Package not specified")
+        const limit = flags.limit == -1 ? undefined : flags.limit
 
+        const deps = await getNpmDeps(packageName, limit)
         const deps = await getNpmDeps(packageName, flags.limit)
         for (const dep of tqdm(deps, {desc: "Downloading packages"})) {
             await downloadDep(dep)
