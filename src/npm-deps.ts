@@ -1,8 +1,8 @@
-import * as dotenv from 'dotenv'
+import dotenv from 'dotenv'
 import downloadPackageTarball from 'download-package-tarball';
 import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
-import * as fs from 'fs'
-import { promises as fsPromises } from "fs"
+import fs from 'fs'
+import { promises as fsPromises, Dirent } from "fs"
 import glob from 'glob-promise'
 import { GraphQLClient, gql } from 'graphql-request'
 import asyncIteratorToArray from 'it-all'
@@ -10,7 +10,7 @@ import _ from 'lodash'
 import npmDependants from 'npm-dependants'
 import tqdm from 'ntqdm'
 import { RegistryClient } from 'package-metadata'
-import * as path from 'path'
+import path from 'path'
 
 import rex from './utils/rex'
 
