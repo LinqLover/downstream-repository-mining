@@ -40,6 +40,7 @@
         "graphql": "^15.5.0",
         "graphql-request": "^3.4.0",
         "it-all": "^1.0.5",
+        "lodash": "^4.17.21",
         "npm-dependants": "^2.1.2",
         "ntqdm": "^1.0.0",
         "oclif": "^1.17.0",
@@ -55,7 +56,6 @@
         "@types/lodash": "^4.14.168",
         "@types/rimraf": "^3.0.0",
         "jest": "^26.6.3",
-        "lodash": "^4.17.21",
         "read-package-json": "^3.0.1",
         "rimraf": "^3.0.0",
         "ts-jest": "^26.5.5"

@@ -6,6 +6,7 @@ import { promises as fsPromises } from "fs"
 import glob from 'glob-promise'
 import { GraphQLClient, gql } from 'graphql-request'
 import asyncIteratorToArray from 'it-all'
+import _ from 'lodash'
 import npmDependants from 'npm-dependants'
 import tqdm from 'ntqdm'
 import { RegistryClient } from 'package-metadata'
@@ -39,6 +40,11 @@ class Reference {
     public dependent!: Dependent
     public file!: string
     public lineNumber!: number
+    // undefined: is default import
+    // null: imports root
+    // TODO: Primitive obsession! Model ExportMember class hierarchy.
+    public memberName?: string | null
+    public alias!: string
 
     public matchString?: string
 }
@@ -138,7 +144,6 @@ function* searchReferencesInFile(packageName: string, dependencyName: string, ro
 
     // Let's build a regex family!
     // TODO: Support sophisticated import syntax such as:
-    //  * `foo = require('bar/baz')`
     //  * `import foo0, { baz1, baz2 as foo2 }, * as foo3 from bar`
     //  * `import 'bar'` (side effects only)
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
@@ -148,15 +153,22 @@ function* searchReferencesInFile(packageName: string, dependencyName: string, ro
     const nonIdentifierCharacterPattern = /[^\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]/
     const packageNameStringPattern = rex`
         (?<quote>['"])
-        ${escapeRegexp(packageName)}
+        (?<packageName> ${escapeRegexp(packageName)} )
         \k<quote>
     /gm`
     // `foo = require('bar')`
+    // `foo = require('bar/baz')`
+    // https://nodejs.org/api/modules.html#modules_require_id
     const requirePattern = rex`
-        (?<name> ${identifierPattern} ) \s*
+        (?<alias> ${identifierPattern} ) \s*
         = \s*
         require \s* \( \s*
-            ${packageNameStringPattern}
+            (?<quote>['"])
+            (?<packageName> ${escapeRegexp(packageName)} )
+            (
+                \/ (?<memberName> ${identifierPattern} )
+            )?
+            \k<quote>
         \s* \)
     /gm`
     // `import * as foo from 'bar'`
@@ -164,34 +176,36 @@ function* searchReferencesInFile(packageName: string, dependencyName: string, ro
         import \s+
         \* \s+
         as \s*
-        (?<name> ${identifierPattern} ) \s*
+        (?<alias> ${identifierPattern} ) \s*
         from \s*
         ${packageNameStringPattern}
     /gm`
     const totalImportPatterns = [requirePattern, importStarPattern]
 
-    const declarations = <RegExpMatchArray[]>Array.prototype.concat(...totalImportPatterns.map(
-        pattern => Array.from(source.matchAll(pattern)))
-    )
+    const declarations = _.chain(totalImportPatterns)
+        .flatMap(pattern => [...source.matchAll(pattern) ?? []])
+        .map(match => ({
+            moduleName: match.groups!.packageName,
+            memberName: match.groups!.memberName ?? undefined /* require('foo') may either be default or root import, but is only equivalent to default import variant of ES6 */,
+            alias: match.groups!.alias
+        }))
+        .value()
     if (!declarations.length) {
         return
     }
 
-    const declarationNames = declarations.map(match => match!.groups!['name'])
     const lines = source.split('\n')
-    const matches = <[number, RegExpMatchArray][]>lines.map(
-        (line, lineNo) => [lineNo, line.match(rex`
-            ^ .* ( ${
-                // Find occurences of any declaration name
-                declarationNames.map(escapeRegexp).join('|')
-            }) .* $`)
-        ]).filter(([, match]) => match)
-    for (const [lineNo, match] of matches) {
-        yield <Reference>{
-            dependent: <Dependent>{name: dependencyName},
-            file: file,
-            lineNumber: lineNo + 1,
-            matchString: match[0]
+    for (const [lineNo, line] of lines.entries()) {
+        for (const declaration of declarations) {
+            if (!line.includes(declaration.alias)) continue
+            yield <Reference>{
+                dependent: <Dependent>{name: dependencyName},
+                file: file,
+                lineNumber: lineNo + 1,
+                memberName: declaration.memberName,
+                alias: declaration.alias,
+                matchString: line
+            }
         }
     }
 }
