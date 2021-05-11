@@ -112,18 +112,26 @@ export async function downloadDep(dependent: Dependent) {
     })
 }
 
-export async function* searchReferences(packageName: string, limit?: number, rootDirectory?: string): AsyncIterable<Reference> {
-    if (!rootDirectory) {
-        rootDirectory = getCacheDirectory();
-    }
+export async function* searchReferences(packageName: string, rootDirectory?: string, limit?: number): AsyncIterable<Reference> {
+    yield* basicSearchReferences(packageName, rootDirectory ?? getCacheDirectory(), limit, 0)
+}
+
+async function* basicSearchReferences(packageName: string, rootDirectory: string, limit: number | undefined, depth: number): AsyncIterable<Reference> {
     if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
         // Search recursively
-        const depDirectories = (await fsPromises.readdir(rootDirectory, {withFileTypes: true})).filter(dirent => dirent.isDirectory)
-        for (const depDirectory of tqdm(depDirectories, {desc: `Scanning dependents (${rootDirectory})...`})) {
-            let i = 0;
-            for await (const reference of searchReferences(packageName, undefined, path.join(rootDirectory, depDirectory.name))) {
+        let depDirectories: Iterable<Dirent> = (
+            await fsPromises.readdir(rootDirectory, {withFileTypes: true})
+        ).filter(dirent => dirent.isDirectory)
+
+        if (!(depth > 3)) {
+            depDirectories = tqdm(depDirectories, {desc: `Scanning dependents (${rootDirectory})...`})
+        }
+
+        let i = 0
+        for await (const depDirectory of depDirectories) {
+            for await (const reference of basicSearchReferences(packageName, path.join(rootDirectory, depDirectory.name), undefined, depth + 1)) {
                 yield reference
-                if (limit && i++ > limit) {
+                if (limit && ++i > limit) {
                     return
                 }
             }
@@ -132,7 +140,10 @@ export async function* searchReferences(packageName: string, limit?: number, roo
     }
 
     const dependencyName = path.basename(rootDirectory)
-    const files = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', {cwd: rootDirectory, nodir: true})
+    let files: Iterable<string> = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', {cwd: rootDirectory, nodir: true})
+    if (!(depth > 3)) {
+        files = tqdm(files, {desc: `Scanning dependents (${dependencyName})...`})
+    }
     for (const file of files) {
         yield* searchReferencesInFile(packageName, dependencyName, rootDirectory, file)
     }
