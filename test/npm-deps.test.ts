@@ -1,8 +1,12 @@
-import readJson from 'read-package-json'
-import rimRaf from 'rimraf'
+import readJsonCallback from 'read-package-json'
 import * as path from 'path'
+import rimRaf from 'rimraf'
+import { promisify } from 'util'
 
 import { getNpmDeps, downloadDep, Dependent } from "../src/npm-deps";
+
+const readJson = <(file: string) => Promise<any>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
+    promisify(readJsonCallback)
 
 
 describe("getNpmDeps", () => {
@@ -50,9 +54,7 @@ describe("downloadDep", () => {
         ${'gl-matrix'}  | ${'3.2.1'}  | ${'https://registry.npmjs.org/gl-matrix/-/gl-matrix-3.2.1.tgz'}
     `("should fetch the package with the right version", async ({
             packageName, version, tarballUrl}) => {
-        beforeEach(() => {
-            rimRaf(<string>process.env.NPM_CACHE, (error: any) => {if (error) throw error})
-        });
+        await (promisify(rimRaf))(<string>process.env.NPM_CACHE)
 
         jest.setTimeout(5000)
 
@@ -62,10 +64,7 @@ describe("downloadDep", () => {
 
         await downloadDep(dep)
 
-        readJson(path.join(<string>process.env.NPM_CACHE, packageName, 'package.json'), console.error, false, (error: any, data: any) => {
-            expect(error).toBeFalsy()
-
-            expect(data.version).toBe(version)
-        })
+        const data = await readJson(path.join(<string>process.env.NPM_CACHE, packageName, 'package.json'))
+        expect(data.version).toBe(version)
     });
 });
