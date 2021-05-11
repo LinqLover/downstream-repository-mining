@@ -149,8 +149,14 @@ async function* basicSearchReferences(packageName: string, rootDirectory: string
     }
 }
 
-function* searchReferencesInFile(packageName: string, dependencyName: string, rootDirectory: string, file: string) {
-    const source = fs.readFileSync(path.join(rootDirectory, file)).toString()
+async function* searchReferencesInFile(packageName: string, dependencyName: string, rootDirectory: string, file: string) {
+    const filePath = path.join(rootDirectory, file)
+    const fileSize = (await fsPromises.stat(filePath)).size
+    if (fileSize > 100_000 /*100 MB*/) {
+        console.warn(`Skipping very large file '${filePath}'`)
+        return
+    }
+    const source = fs.readFileSync(filePath).toString()
     // TODO: Convert into class (ReferenceSearch(er)) and initialize regexpes only once?
 
     // Let's build a regex family!
