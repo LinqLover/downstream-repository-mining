@@ -11,7 +11,7 @@ export default class Search extends Command {
     static flags = {
         help: flags.help({ char: 'h' }),
         limit: flags.integer({
-            description: "maximum number of references to find",
+            description: "maximum number of references to find (-1 for unlimited)",
             default: undefined
         })
     }
@@ -21,10 +21,11 @@ export default class Search extends Command {
     async run() {
         const { args, flags } = this.parse(Search)
 
-        const packageName: string = args.packageName;
-        if (!packageName) throw new Error("dowdep: Package not specified");
+        const packageName: string = args.packageName
+        if (!packageName) throw new Error("dowdep: Package not specified")
+        const limit = flags.limit == -1 ? undefined : flags.limit
 
-        const references = await asyncIteratorToArray(searchReferences(packageName, flags.limit))
+        const references = await asyncIteratorToArray(searchReferences(packageName, undefined, limit))
 
         console.log(util.inspect(references, {showHidden: false, depth: null, maxArrayLength: Infinity}))
     }
