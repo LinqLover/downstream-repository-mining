@@ -10,7 +10,7 @@ export default class List extends Command {
     static flags = {
         help: flags.help({ char: 'h' }),
         limit: flags.integer({
-            description: "maximum number of results to return",
+            description: "maximum number of results to return (-1 for unlimited)",
             default: 20
         }),
         countNestedDependents: flags.boolean({
@@ -30,12 +30,13 @@ export default class List extends Command {
     async run() {
         const { args, flags } = this.parse(List)
 
-        const packageName: string = args.packageName;
-        if (!packageName) throw new Error("dowdep: Package not specified");
+        const packageName: string = args.packageName
+        if (!packageName) throw new Error("dowdep: Package not specified")
+        const limit = flags.limit == -1 ? undefined : flags.limit
 
         const deps = await getNpmDeps(
             packageName,
-            flags.limit,
+            limit,
             flags.countNestedDependents,
             flags.downloadGitHubData
         )

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import downloadPackageTarball from 'download-package-tarball';
+import downloadPackageTarball from 'download-package-tarball'
 import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
 import { promises as fsPromises, Dirent } from "fs"
@@ -105,7 +105,13 @@ export async function getNpmDeps(packageName: string, limit?: number, countNeste
 }
 
 export async function downloadDep(dependent: Dependent) {
-    // TODO: Check cache before. Also check system-wide npm/yarn caches?
+    const cacheDirectory = getCacheDirectory()
+
+    if (fs.existsSync(path.join(cacheDirectory, dependent.name))) {
+        return
+    }
+
+    // TODO: Check system-wide npm/yarn caches?
     await downloadPackageTarball({
         url: dependent.tarballUrl,
         dir: getCacheDirectory()
