@@ -1,3 +1,4 @@
+import fs from 'fs'
 import { GraphQLClient, gql } from 'graphql-request'
 import npmDependants from 'npm-dependants'
 import { RegistryClient } from 'package-metadata';
@@ -5,6 +6,7 @@ import tqdm from 'ntqdm'
 import * as dotenv from 'dotenv'
 import asyncIteratorToArray from 'it-all'
 import downloadPackageTarball from 'download-package-tarball';
+import path from 'path'
 
 
 export class Dependent {
@@ -84,15 +86,24 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
 }
 
 export async function downloadDep(dependent: Dependent) {
-    // TODO: Check cache before. Also check system-wide npm/yarn caches?
-    const cacheDirectory = process.env.NPM_CACHE || 'cache'
+    const cacheDirectory = getCacheDirectory()
+
+    if (fs.existsSync(path.join(cacheDirectory, dependent.name))) {
+        return
+    }
+
+    // TODO: Check system-wide npm/yarn caches?
     await downloadPackageTarball({
         url: dependent.tarballUrl,
         dir: cacheDirectory
     })
 }
 
-async function* getNpmDependents(packageName: string, limit: number | null) {
+function getCacheDirectory() {
+    return process.env.NPM_CACHE || 'cache';
+}
+
+async function* getNpmDependents(packageName: string, limit?: number) {
     let count = 0
     for await (const dependent of npmDependants(packageName)) {
         yield <Dependent>{name: <string>dependent, github: undefined, dependentCount: undefined}
