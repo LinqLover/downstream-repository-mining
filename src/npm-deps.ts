@@ -84,8 +84,13 @@ export async function getNpmDeps(packageName: string, limit: number, countNested
 }
 
 export async function downloadDep(dependent: Dependent) {
-    // TODO: Check cache before. Also check system-wide npm/yarn caches?
-    const cacheDirectory = process.env.NPM_CACHE || 'cache'
+    const cacheDirectory = getCacheDirectory()
+
+    if (fs.existsSync(path.join(cacheDirectory, dependent.name))) {
+        return
+    }
+
+    // TODO: Check system-wide npm/yarn caches?
     await downloadPackageTarball({
         url: dependent.tarballUrl,
         dir: cacheDirectory
