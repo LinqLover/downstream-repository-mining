@@ -8,7 +8,6 @@
         ],
         "module": "commonjs",
         "outDir": "lib",
-        "rootDir": "src",
         "strict": true,
         "target": "ES2019",
         "types": ["jest", "node"],
