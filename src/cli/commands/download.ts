@@ -17,17 +17,17 @@ export default class Download extends Command {
 
     static args = [{ name: 'packageName' }]
 
-    async run() {
+    async run(): Promise<void> {
         const { args, flags } = this.parse(Download)
 
-        const packageName: string = args.packageName;
+        const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const deps = await getNpmDeps(packageName, limit)
         let successes = 0
         let errors = 0
-        for (const dep of tqdm(deps, {desc: "Downloading packages"})) {
+        for (const dep of tqdm(deps, { desc: "Downloading packages" })) {
             try {
                 await downloadDep(dep)
                 successes++

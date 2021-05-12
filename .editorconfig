@@ -12,3 +12,9 @@ indent_style = space
 
 [*.md]
 trim_trailing_whitespace = false  # for linebreaks
+
+[*.yml]
+indent_size = 2
+
+[.vscode/*.json]
+indent_style = tab

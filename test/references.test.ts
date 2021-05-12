@@ -1,10 +1,12 @@
 import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
 
-import { Reference, ReferenceSearcher } from '../src/references'
+import { ReferenceSearcher } from '../src/references'
+
+import expectedReferences from './npm-deps.test/expectedReferences.json'
 
 
-describe('searchReferences', () => {
+describe('ReferenceSearcher', () => {
     it.each(Object.entries(<{
         [packageName: string]: {
             [memberName: string]: {
@@ -13,7 +15,7 @@ describe('searchReferences', () => {
                 }
             }
         }
-    }>require("./npm-deps.test/expectedReferences.json")).map(
+    }>expectedReferences).map(
         ([packageName, expectedReferences]) => ({ packageName, expectedReferences }))
     )("should find relevant references for %s", async (
         { packageName, expectedReferences }) => {

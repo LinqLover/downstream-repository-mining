@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert from 'assert'
 
 /**
  * regular expression utility using template literals
@@ -21,7 +21,7 @@ import assert from 'assert';
  * Denys Séguret <cano.petrole@gmail.com>
  * https://github.com/Canop/miaou/blob/803a7fc5ee8a2d36b896aa0ef1deedfd89c1b670/libs/rex.js
  */
-export default function(templates: TemplateStringsArray, ...args: (String | RegExp)[]) {
+export default function (templates: TemplateStringsArray, ...args: (string | RegExp)[]) {
     assert(templates.raw.length == args.length + 1)
     const raws = templates.raw.map(raw => raw
         .replace(/(?<![^\\](?:\\{2})*\\)\s/gm, '')  // remove unescaped whitespace
@@ -35,7 +35,7 @@ export default function(templates: TemplateStringsArray, ...args: (String | RegE
     }
     args = args.map(arg => arg instanceof RegExp ? arg.source : arg)
     const raw = raws.shift() + raws.map((template, i) => `${args[i]}${template}`).join('')
-	let [, source, newFlags] = raw.match(/^\/?(.*?)(?:\/(\w+))?$/)!;  // extracts source and flags
+    const [, source, newFlags] = raw.match(/^\/?(.*?)(?:\/(\w+))?$/)!  // extracts source and flags
     flags += newFlags ?? ''
-	return new RegExp(source, [...new Set(flags)].join(''));
+    return new RegExp(source, [...new Set(flags)].join(''))
 }
