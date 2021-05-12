@@ -6,7 +6,8 @@ fail() {
     exit 1
 }
 
-output="$(./bin/run.js help | tee /dev/tty)"
+output="$(./bin/run.js help)"
+echo "$output"
 
 commands="$(echo "$output" | sed -n '/^COMMANDS$/,$p' | sed -n '/^  /p')"
 number_of_commands="$(echo "$commands" | wc -l)"
