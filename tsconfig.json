@@ -8,10 +8,14 @@
         ],
         "module": "commonjs",
         "outDir": "lib",
+        "resolveJsonModule": true,
         "rootDir": "src",
         "strict": true,
         "target": "ES2019",
-        "types": ["jest", "node"],
+        "types": [
+            "jest",
+            "node"
+        ],
         "typeRoots": [
             "./src/@types/**/*.d.ts",
             "node_modules/@types",

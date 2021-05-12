@@ -238,9 +238,10 @@ class PackageReferenceSearcher {
     async* collectCommonJsBindings(source: string): AsyncGenerator<ModuleBinding, void, undefined> {
         yield* _.chain(this.commonJsPatterns)
             .flatMap(pattern => [...source.matchAll(pattern) ?? []])
-            .map(match => ({
-                moduleName: match.groups!.packageName,
-                memberName: match.groups!.memberName
+            .map(match => match.groups!)
+            .map(matchGroups => ({
+                moduleName: matchGroups.packageName,
+                memberName: matchGroups.memberName
                     /** `require()` without member name is ambiguous:
                       * | Exporting package type | `require()` return value |
                       * | ---------------------- | ------------------------ |
@@ -250,7 +251,7 @@ class PackageReferenceSearcher {
                       *
                       * TODO: Create parameter to indicate the module type for packageName. */
                     ?? undefined,
-                alias: match.groups!.alias
+                alias: matchGroups.alias
             }))
             .value()
     }

@@ -1,6 +1,6 @@
 import { Command, flags } from '@oclif/command'
 import * as util from 'util'
-import asyncIteratorToArray from "it-all";
+import asyncIteratorToArray from "it-all"
 
 import { ReferenceSearcher } from '../../references'
 
@@ -28,6 +28,6 @@ export default class Search extends Command {
         const searcher = new ReferenceSearcher(packageName)
         const references = await asyncIteratorToArray(searcher.searchReferences(limit))
 
-        console.log(util.inspect(references, {showHidden: false, depth: null, maxArrayLength: Infinity}))
+        console.log(util.inspect(references, { showHidden: false, depth: null, maxArrayLength: Infinity }))
     }
 }

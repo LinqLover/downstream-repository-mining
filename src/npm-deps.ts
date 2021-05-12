@@ -1,6 +1,4 @@
-import dotenv from 'dotenv'
 import downloadPackageTarball from 'download-package-tarball'
-import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
 import { GraphQLClient, gql } from 'graphql-request'
 import asyncIteratorToArray from 'it-all'
@@ -33,8 +31,6 @@ class GitHubRepository {
 
 
 export async function getNpmDeps(packageName: string, limit?: number, countNestedDependents = false, downloadGitHubData = false) {
-    dotenv.config()
-
     const githubEndpoint = 'https://api.github.com/graphql'
     // TODO: Consider using octokit
     const githubClient = new GraphQLClient(githubEndpoint, {
@@ -46,21 +42,21 @@ export async function getNpmDeps(packageName: string, limit?: number, countNeste
 
     let dependents = await asyncIteratorToArray(getNpmDependents(packageName, limit))
 
-    for (const dependent of tqdm(dependents, {desc: "Gathering metadata"})) {
-        const metadata = await RegistryClient.getMetadata(dependent.name, {fullMetadata: true})
+    for (const dependent of tqdm(dependents, { desc: "Gathering metadata" })) {
+        const metadata = await RegistryClient.getMetadata(dependent.name, { fullMetadata: true })
 
         const tarballUrl = metadata.versions?.latest.dist?.tarball
         if (!tarballUrl) {
-            console.warn("Package has no tarball", {metadata})
+            console.warn("Package has no tarball", { metadata })
             continue
         }
         dependent.tarballUrl = tarballUrl
 
         if (downloadGitHubData) {
             const repositoryUrl = metadata?.versions?.latest?.repository?.url
-            const match = repositoryUrl?.match(/github\.com[\/:](?<owner>[^/]+)\/(?<name>[\w-_\.]+?)(?:.git)?$/)
+            const match = repositoryUrl?.match(/github\.com[/:](?<owner>[^/]+)\/(?<name>[\w-_.]+?)(?:.git)?$/)
             if (!match) {
-                console.warn("Package has no GitHub link", {metadata, url: repositoryUrl})
+                console.warn("Package has no GitHub link", { metadata, url: repositoryUrl })
                 continue
             }
             dependent.github = new GitHubRepository(match.groups.owner, match.groups.name)
@@ -68,16 +64,16 @@ export async function getNpmDeps(packageName: string, limit?: number, countNeste
     }
 
     if (downloadGitHubData) {
-        for (const repo of tqdm(dependents, {desc: "Gathering GitHub data"})) {
+        for (const repo of tqdm(dependents, { desc: "Gathering GitHub data" })) {
             if (!repo.github) continue
             const repoData = (await getRepoData(githubClient, repo.github.owner, repo.github.name)).repository
-            Object.assign(repo.github, repoData);
+            Object.assign(repo.github, repoData)
         }
     }
 
     if (countNestedDependents) {
-        for (const dependent of tqdm(dependents, {desc: "Gathering nested dependents data"})) {
-            dependent.dependentCount = (await asyncIteratorToArray(getNpmDependents(dependent.name, limit))).length;
+        for (const dependent of tqdm(dependents, { desc: "Gathering nested dependents data" })) {
+            dependent.dependentCount = (await asyncIteratorToArray(getNpmDependents(dependent.name, limit))).length
         }
     }
 
@@ -107,8 +103,8 @@ export function getCacheDirectory() {
 async function* getNpmDependents(packageName: string, limit?: number) {
     let count = 0
     for await (const dependent of npmDependants(packageName)) {
-        yield <Dependent>{name: <string>dependent, github: undefined, dependentCount: undefined}
-        if (limit && ++count >= limit) break;
+        yield <Dependent>{ name: <string>dependent, github: undefined, dependentCount: undefined }
+        if (limit && ++count >= limit) break
     }
 }
 
@@ -121,7 +117,7 @@ async function getRepoData(graphQLClient: GraphQLClient, owner: string, name: st
         }
     `
 
-    const variables = {owner, name}
+    const variables = { owner, name }
 
     return await graphQLClient.request(query, variables)
 }
