@@ -1,11 +1,9 @@
-import asyncIteratorToArray from 'it-all'
-import _ from 'lodash'
 import * as path from 'path'
 import readJsonCallback from 'read-package-json'
 import rimRaf from 'rimraf'
 import { promisify } from 'util'
 
-import { getNpmDeps, downloadDep, searchReferences, Dependent } from "../src/npm-deps";
+import { getNpmDeps, downloadDep, Dependent } from "../src/npm-deps"
 
 const readJson = <(file: string) => Promise<any>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readJsonCallback)
@@ -75,49 +73,5 @@ describe('downloadDep', () => {
 
         const data = await readJson(path.join(<string>process.env.NPM_CACHE, packageName, 'package.json'))
         expect(data.version).toBe(version)
-    })
-})
-
-describe('searchReferences', () => {
-    it.each(Object.entries(<{
-        [packageName: string]: {
-            [memberName: string]: {
-                [dependent: string]: {
-                    [fileName: string]: number[]
-                }
-            }
-        }
-    }>require("./npm-deps.test/expectedReferences.json")).map(
-        ([packageName, expectedReferences]) => ({packageName, expectedReferences}))
-    )("should find relevant references for package '$packageName'", async (
-            { packageName, expectedReferences }) => {
-        const references = await asyncIteratorToArray(searchReferences(packageName, 'test/npm-deps.test/examples'))
-
-        /** Since null and undefined are invalid keys in JS objects, we stringify them for compatibility with lodash. See Reference.memberName. */
-        function stringify(key: string | null | undefined) {
-            if (key === undefined) return '<undefined>'
-            if (key === null) return '<null>'
-            return key
-        }
-        const aggregatedReferences = _.chain(references)
-            .groupBy(reference => stringify(reference.memberName))
-            .mapValues(memberReferences => _.chain(memberReferences)
-                .groupBy(reference => reference.dependent.name)
-                .mapValues(dependentReferences => _.chain(dependentReferences)
-                    .groupBy(reference => reference.file)
-                    .mapValues(fileReferences => _.map(
-                        fileReferences, reference => reference.lineNumber))
-                    .value())
-                .value())
-            .value()
-
-        expect(aggregatedReferences).toEqual(
-            expect.objectContaining(
-                _.mapValues(expectedReferences, dependentReferences => expect.objectContaining(
-                    _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
-                        _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
-                    ))
-                ))))
-        // TODO: Test false positive rate?
     })
 })

@@ -2,17 +2,12 @@ import dotenv from 'dotenv'
 import downloadPackageTarball from 'download-package-tarball'
 import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
-import { promises as fsPromises, Dirent } from "fs"
-import glob from 'glob-promise'
 import { GraphQLClient, gql } from 'graphql-request'
 import asyncIteratorToArray from 'it-all'
-import _ from 'lodash'
 import npmDependants from 'npm-dependants'
 import tqdm from 'ntqdm'
 import { RegistryClient } from 'package-metadata'
 import path from 'path'
-
-import rex from './utils/rex'
 
 
 export class Dependent {
@@ -34,19 +29,6 @@ class GitHubRepository {
 
     public stargazerCount!: number
     public forkCount!: number
-}
-
-class Reference {
-    public dependent!: Dependent
-    public file!: string
-    public lineNumber!: number
-    // undefined: is default import
-    // null: imports root
-    // TODO: Primitive obsession! Model ExportMember class hierarchy.
-    public memberName?: string | null
-    public alias!: string
-
-    public matchString?: string
 }
 
 
@@ -118,123 +100,8 @@ export async function downloadDep(dependent: Dependent) {
     })
 }
 
-export async function* searchReferences(packageName: string, rootDirectory?: string, limit?: number): AsyncIterable<Reference> {
-    yield* basicSearchReferences(packageName, rootDirectory ?? getCacheDirectory(), limit, 0)
-}
-
-async function* basicSearchReferences(packageName: string, rootDirectory: string, limit: number | undefined, depth: number): AsyncIterable<Reference> {
-    if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
-        // Search recursively
-        let depDirectories: Iterable<Dirent> = (
-            await fsPromises.readdir(rootDirectory, {withFileTypes: true})
-        ).filter(dirent => dirent.isDirectory)
-
-        if (!(depth > 3)) {
-            depDirectories = tqdm(depDirectories, {desc: `Scanning dependents (${rootDirectory})...`})
-        }
-
-        let i = 0
-        for await (const depDirectory of depDirectories) {
-            for await (const reference of basicSearchReferences(packageName, path.join(rootDirectory, depDirectory.name), undefined, depth + 1)) {
-                yield reference
-                if (limit && ++i > limit) {
-                    return
-                }
-            }
-        }
-        return;
-    }
-
-    const dependencyName = path.basename(rootDirectory)
-    let files: Iterable<string> = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', {cwd: rootDirectory, nodir: true})
-    if (!(depth > 3)) {
-        files = tqdm(files, {desc: `Scanning dependents (${dependencyName})...`})
-    }
-    for (const file of files) {
-        yield* searchReferencesInFile(packageName, dependencyName, rootDirectory, file)
-    }
-}
-
-async function* searchReferencesInFile(packageName: string, dependencyName: string, rootDirectory: string, file: string) {
-    const filePath = path.join(rootDirectory, file)
-    const fileSize = (await fsPromises.stat(filePath)).size
-    if (fileSize > 100_000 /*100 MB*/) {
-        console.warn(`Skipping very large file '${filePath}'`)
-        return
-    }
-    const source = fs.readFileSync(filePath).toString()
-    // TODO: Convert into class (ReferenceSearch(er)) and initialize regexpes only once?
-
-    // Let's build a regex family!
-    // TODO: Support sophisticated import syntax such as:
-    //  * `import foo0, { baz1, baz2 as foo2 }, * as foo3 from bar`
-    //  * `import 'bar'` (side effects only)
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
-    // See also: parse-imports; babel; flow; hegel
-    // Maybe check opportunities of a type analyzer before investing time into that.
-    const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
-    const nonIdentifierCharacterPattern = /[^\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]/
-    const packageNameStringPattern = rex`
-        (?<quote>['"])
-        (?<packageName> ${escapeRegexp(packageName)} )
-        \k<quote>
-    /gm`
-    // `foo = require('bar')`
-    // `foo = require('bar/baz')`
-    // https://nodejs.org/api/modules.html#modules_require_id
-    const requirePattern = rex`
-        (?<alias> ${identifierPattern} ) \s*
-        = \s*
-        require \s* \( \s*
-            (?<quote>['"])
-            (?<packageName> ${escapeRegexp(packageName)} )
-            (
-                \/ (?<memberName> ${identifierPattern} )
-            )?
-            \k<quote>
-        \s* \)
-    /gm`
-    // `import * as foo from 'bar'`
-    const importStarPattern = rex`
-        import \s+
-        \* \s+
-        as \s*
-        (?<alias> ${identifierPattern} ) \s*
-        from \s*
-        ${packageNameStringPattern}
-    /gm`
-    const totalImportPatterns = [requirePattern, importStarPattern]
-
-    const declarations = _.chain(totalImportPatterns)
-        .flatMap(pattern => [...source.matchAll(pattern) ?? []])
-        .map(match => ({
-            moduleName: match.groups!.packageName,
-            memberName: match.groups!.memberName ?? undefined /* require('foo') may either be default or root import, but is only equivalent to default import variant of ES6 */,
-            alias: match.groups!.alias
-        }))
-        .value()
-    if (!declarations.length) {
-        return
-    }
-
-    const lines = source.split('\n')
-    for (const [lineNo, line] of lines.entries()) {
-        for (const declaration of declarations) {
-            if (!line.includes(declaration.alias)) continue
-            yield <Reference>{
-                dependent: <Dependent>{name: dependencyName},
-                file: file,
-                lineNumber: lineNo + 1,
-                memberName: declaration.memberName,
-                alias: declaration.alias,
-                matchString: line
-            }
-        }
-    }
-}
-
-function getCacheDirectory() {
-    return process.env.NPM_CACHE || 'cache';
+export function getCacheDirectory() {
+    return process.env.NPM_CACHE || 'cache'
 }
 
 async function* getNpmDependents(packageName: string, limit?: number) {

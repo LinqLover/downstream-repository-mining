@@ -2,7 +2,7 @@ import { Command, flags } from '@oclif/command'
 import * as util from 'util'
 import asyncIteratorToArray from "it-all";
 
-import { searchReferences } from '../../npm-deps'
+import { ReferenceSearcher } from '../../references'
 
 
 export default class Search extends Command {
@@ -25,7 +25,8 @@ export default class Search extends Command {
         if (!packageName) throw new Error("dowdep: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
 
-        const references = await asyncIteratorToArray(searchReferences(packageName, undefined, limit))
+        const searcher = new ReferenceSearcher(packageName)
+        const references = await asyncIteratorToArray(searcher.searchReferences(limit))
 
         console.log(util.inspect(references, {showHidden: false, depth: null, maxArrayLength: Infinity}))
     }
