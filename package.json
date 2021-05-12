@@ -34,7 +34,7 @@
     },
     "types": "lib/index.d.ts",
     "dependencies": {
-        "@types/node": "^15.0.1",
+        "@types/node": "^15.0.3",
         "dotenv": "^8.2.0",
         "download-package-tarball": "^1.0.7",
         "escape-string-regexp": "^5.0.0",
