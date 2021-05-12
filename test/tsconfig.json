@@ -1,6 +1,7 @@
 {
     "extends": "../tsconfig.json",
     "outDir": "lib",
+    "rootDir": ".",
     "compilerOptions": {
         "typeRoots": [
             "./@types/**/*.d.ts",
