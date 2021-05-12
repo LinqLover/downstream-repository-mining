@@ -34,7 +34,6 @@
         "dotenv": "^8.2.0",
         "download-package-tarball": "^1.0.7",
         "escape-string-regexp": "^5.0.0",
-        "fs": "^0.0.1-security",
         "glob": "^7.1.6",
         "glob-promise": "^4.1.0",
         "graphql": "^15.5.0",
