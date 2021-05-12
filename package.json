@@ -21,9 +21,12 @@
         "test": "jest"
     },
     "oclif": {
-        "commands": "./lib/cli/commands",
         "bin": "dowdep",
+        "commands": "./lib/cli/commands",
         "description": "downstream repository mining CLI",
+        "hooks": {
+            "init": "./src/cli/oclif.init.ts"
+        },
         "plugins": [
             "@oclif/plugin-help"
         ]

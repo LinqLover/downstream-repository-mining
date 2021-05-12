@@ -1,4 +1,3 @@
-import dotenv from 'dotenv'
 import downloadPackageTarball from 'download-package-tarball'
 import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
@@ -33,8 +32,6 @@ class GitHubRepository {
 
 
 export async function getNpmDeps(packageName: string, limit?: number, countNestedDependents = false, downloadGitHubData = false) {
-    dotenv.config()
-
     const githubEndpoint = 'https://api.github.com/graphql'
     // TODO: Consider using octokit
     const githubClient = new GraphQLClient(githubEndpoint, {
