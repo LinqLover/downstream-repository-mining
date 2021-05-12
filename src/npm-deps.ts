@@ -1,11 +1,12 @@
+import dotenv from 'dotenv'
+import downloadPackageTarball from 'download-package-tarball'
+import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
 import { GraphQLClient, gql } from 'graphql-request'
-import npmDependants from 'npm-dependants'
-import { RegistryClient } from 'package-metadata';
-import tqdm from 'ntqdm'
-import * as dotenv from 'dotenv'
 import asyncIteratorToArray from 'it-all'
-import downloadPackageTarball from 'download-package-tarball';
+import npmDependants from 'npm-dependants'
+import tqdm from 'ntqdm'
+import { RegistryClient } from 'package-metadata'
 import path from 'path'
 
 
@@ -31,7 +32,7 @@ class GitHubRepository {
 }
 
 
-export async function getNpmDeps(packageName: string, limit: number, countNestedDependents = false, downloadGitHubData = false) {
+export async function getNpmDeps(packageName: string, limit?: number, countNestedDependents = false, downloadGitHubData = false) {
     dotenv.config()
 
     const githubEndpoint = 'https://api.github.com/graphql'
@@ -95,12 +96,12 @@ export async function downloadDep(dependent: Dependent) {
     // TODO: Check system-wide npm/yarn caches?
     await downloadPackageTarball({
         url: dependent.tarballUrl,
-        dir: cacheDirectory
+        dir: getCacheDirectory()
     })
 }
 
-function getCacheDirectory() {
-    return process.env.NPM_CACHE || 'cache';
+export function getCacheDirectory() {
+    return process.env.NPM_CACHE || 'cache'
 }
 
 async function* getNpmDependents(packageName: string, limit?: number) {

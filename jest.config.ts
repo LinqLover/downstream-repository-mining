@@ -6,10 +6,13 @@ module.exports = {
 	],
 	"globals": {
 		"ts-jest": {
-			"tsconfig": "tsconfig.test.json"
+			"tsconfig": "test/tsconfig.json"
 		}
 	},
 	"setupFiles": [
 		"<rootDir>/test/.jest/setEnvVars.ts"
-	]
+	],
+    "testPathIgnorePatterns": [
+        "test/*.test"
+    ]
 }
