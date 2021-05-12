@@ -1,12 +1,26 @@
 {
     "heureka": {
+        "<null>": {
+            "foo": {
+                "index.ts": [
+                    1,
+                    6,
+                    11,
+                    12
+                ],
+                "util.js": [
+                    1,
+                    3
+                ]
+            }
+        },
         "<undefined>": {
             "bar": {
-                "index.js": [1, 6, 10]
-            },
-            "foo": {
-                "index.ts": [1, 6, 11, 12],
-                "util.js": [1, 3]
+                "index.js": [
+                    1,
+                    6,
+                    10
+                ]
             }
         },
         "util": {
@@ -16,7 +30,10 @@
     "jolo": {
         "<undefined>": {
             "foo": {
-                "index.ts": [2, 5]
+                "index.ts": [
+                    3,
+                    10
+                ]
             }
         },
         "huey": {
@@ -31,7 +48,10 @@
         },
         "<null>": {
             "foo": {
-                "index.ts": [3, 10]
+                "index.ts": [
+                    2,
+                    5
+                ]
             }
         }
     }
