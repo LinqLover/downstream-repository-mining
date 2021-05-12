@@ -6,11 +6,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-      - run: yarn install
+      - uses: .github/setup
       - run: ./scripts/test-cli.sh
       - run: yarn test
         env:
@@ -18,9 +14,5 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-      - run: yarn install
+      - uses: .github/setup
       - run: yarn lint
