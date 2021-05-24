@@ -50,7 +50,7 @@
         "package-metadata": "^1.1.2",
         "parse-imports": "^0.0.5",
         "path": "^0.12.7",
-        "ts-node": "^9.1.1",
+        "ts-node": "^10.0.0",
         "tslib": "^2",
         "typescript": "^4.3.2"
     },
