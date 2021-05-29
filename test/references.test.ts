@@ -2,6 +2,8 @@ import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
 
 import { ReferenceSearcher } from '../src/references'
+import ifCurtailed from '../src/utils/if-curtailed'
+import { printDiff } from './_utils/printDiff'
 
 import expectedHeuristicReferences from './references.test/expectedReferences-heuristic.json'
 
@@ -42,13 +44,15 @@ describe('ReferenceSearcher', () => {
                 .value())
             .value()
 
-        expect(aggregatedReferences).toEqual(
-            expect.objectContaining(
-                _.mapValues(expectedReferences, dependentReferences => expect.objectContaining(
-                    _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
-                        _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
-                    ))
-                ))))
-        // TODO: Test false positive rate?
+        const aggregatedExpectedReferences = expect.objectContaining(
+            _.mapValues(expectedReferences, dependentReferences => expect.objectContaining(
+                _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
+                    _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
+                ))
+            )))
+        ifCurtailed(
+            () => expect(aggregatedReferences).toEqual(aggregatedExpectedReferences),
+            () => printDiff(aggregatedReferences, aggregatedExpectedReferences, packageReferenceSearcher, packageName))
+        // TODO: Test false positive rate
     })
 })
