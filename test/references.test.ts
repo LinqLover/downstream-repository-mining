@@ -3,23 +3,25 @@ import _ from 'lodash'
 
 import { ReferenceSearcher } from '../src/references'
 
-import expectedReferences from './npm-deps.test/expectedReferences.json'
+import expectedHeuristicReferences from './references.test/expectedReferences-heuristic.json'
 
 
 describe('ReferenceSearcher', () => {
-    it.each(Object.entries(<{
-        [packageName: string]: {
-            [memberName: string]: {
-                [dependent: string]: {
-                    [fileName: string]: number[]
+    it.each(_.flatMap(Object.entries(<{
+        [packageReferenceSearcher: string]: {
+            [packageName: string]: {
+                [memberName: string]: {
+                    [dependent: string]: {
+                        [fileName: string]: number[]
+                    }
                 }
             }
         }
-    }>expectedReferences).map(
-        ([packageName, expectedReferences]) => ({ packageName, expectedReferences }))
+    }>{'heuristic': expectedHeuristicReferences}),
+    ([packageReferenceSearcher, allExpectedReferences]) => _.map(Object.entries(allExpectedReferences), ([packageName, expectedReferences]) => ({ packageReferenceSearcher, packageName, expectedReferences })))
     )("should find relevant references for %s", async (
-        { packageName, expectedReferences }) => {
-        const searcher = new ReferenceSearcher(packageName, 'test/npm-deps.test/examples')
+        { packageReferenceSearcher, packageName, expectedReferences }) => {
+        const searcher = new ReferenceSearcher(packageName, 'test/references.test/examples/dependents')
         const references = await asyncIteratorToArray(searcher.searchReferences())
 
         /** Since null and undefined are invalid keys in JS objects, we stringify them for compatibility with lodash. See Reference.memberName. */
