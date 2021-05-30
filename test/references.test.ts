@@ -1,6 +1,7 @@
 import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
 
+import Package from '../src/package'
 import { ReferenceSearcher } from '../src/references'
 import ifCurtailed from '../src/utils/if-curtailed'
 import { printDiff } from './_utils/printDiff'

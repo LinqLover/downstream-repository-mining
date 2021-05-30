@@ -1,4 +1,4 @@
-import { Dirent, promises as fsPromises } from "fs"
+import { Dirent, promises as fsPromises } from 'fs'
 import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
 import glob from 'glob-promise'
@@ -10,6 +10,7 @@ import path from 'path'
 
 import { getCacheDirectory } from './npm-deps'
 import rex from './utils/rex'
+import Package from './package'
 
 
 export type Reference = {
@@ -41,13 +42,17 @@ type ModuleBinding = {
 }
 
 export class ReferenceSearcher {
-    packageName: string
+    package: Package
     rootDirectory: string
+    packageReferenceSearcher: ConcretePackageReferenceSearcher = HeuristicPackageReferenceSearcher
     private static readonly maximumReportableDepth = 2
 
-    constructor(packageName: string, rootDirectory?: string) {
-        this.packageName = packageName
+    constructor(_package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
+        this.package = _package
         this.rootDirectory = rootDirectory ?? getCacheDirectory()
+        if (packageReferenceSearcher) {
+            this.packageReferenceSearcher = PackageReferenceSearcher.named(packageReferenceSearcher)
+        }
     }
 
     async* searchReferences(limit?: number): AsyncIterable<Reference> {
@@ -79,30 +84,44 @@ export class ReferenceSearcher {
         }
 
         const dependencyName = path.basename(rootDirectory)
-        const packageSearcher = new PackageReferenceSearcher(this.packageName, dependencyName)
-        let files: Iterable<string> = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: rootDirectory, nodir: true })
-        if (!(depth > ReferenceSearcher.maximumReportableDepth)) {
-            files = tqdm(files, { desc: `Scanning dependents (${dependencyName})...` })
-        }
-        for (const file of files) {
-            yield* packageSearcher.searchReferencesInFile(rootDirectory, file)
-        }
+        const packageSearcher = new this.packageReferenceSearcher(this.package, dependencyName)
+        yield* packageSearcher.searchReferences(rootDirectory)
     }
 }
 
-class PackageReferenceSearcher {
+type ConcretePackageReferenceSearcher = (new (_package: Package, rootDirectory: string) => PackageReferenceSearcher)
+
+abstract class PackageReferenceSearcher {
     /** TODOS for later:
      * Honor package-specific module configurations such as webpack that can rename modules
-     * Use type-checker. See also: babel; flow; hegel; TAJS; TypeScript; TypL
+     * What about babel transformations? 😱
      */
-    packageName: string
+    package: Package
     dependencyName: string
+
+    static named(name: string): ConcretePackageReferenceSearcher {
+        switch (name) {
+            case 'heuristic':
+                return HeuristicPackageReferenceSearcher
+            default:
+                throw new Error("Unrecognized PackageReferenceSearcher name")
+        }
+    }
+
+    constructor(_package: Package, dependencyName: string) {
+        this.package = _package
+        this.dependencyName = dependencyName
+    }
+
+    abstract searchReferences(rootDirectory: string): AsyncGenerator<Reference, void, undefined>
+}
+
+class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
     static readonly maximumFileSize = 100_000  // 100 MB
     protected commonJsPatterns!: ReadonlyArray<RegExp>
 
-    constructor(packageName: string, dependencyName: string) {
-        this.packageName = packageName
-        this.dependencyName = dependencyName
+    constructor(_package: Package, dependencyName: string) {
+        super(_package, dependencyName)
 
         this.initializeCommonJsPatterns()
     }
@@ -120,7 +139,7 @@ class PackageReferenceSearcher {
             = \s*
             require \s* \( \s*
                 (?<quote>['"])
-                (?<packageName> ${escapeRegexp(this.packageName)} )
+                (?<packageName> ${escapeRegexp(this.package.name)} )
                 (
                     \/ (?<memberName> ${identifierPattern} )
                 )?
@@ -131,10 +150,17 @@ class PackageReferenceSearcher {
         this.commonJsPatterns = [requirePattern]
     }
 
+    async* searchReferences(rootDirectory: string) {
+        const files = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: rootDirectory, nodir: true })
+        for (const file of files) {
+            yield* this.searchReferencesInFile(rootDirectory, file)
+        }
+    }
+
     async* searchReferencesInFile(rootDirectory: string, filePath: string) {
         const fullPath = path.join(rootDirectory, filePath)
         const fileSize = (await fsPromises.stat(fullPath)).size
-        if (fileSize > PackageReferenceSearcher.maximumFileSize) {
+        if (fileSize > HeuristicPackageReferenceSearcher.maximumFileSize) {
             console.warn(`Skipping very large file '${fullPath}'`)
             return
         }
@@ -198,7 +224,7 @@ class PackageReferenceSearcher {
                 continue
             }
             const packageName = _import.moduleSpecifier.value
-            if (!packageName || packageName != this.packageName) {
+            if (!packageName || packageName != this.package.name) {
                 continue
             }
 
