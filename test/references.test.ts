@@ -24,7 +24,9 @@ describe('ReferenceSearcher', () => {
     ([packageReferenceSearcher, allExpectedReferences]) => _.map(Object.entries(allExpectedReferences), ([packageName, expectedReferences]) => ({ packageReferenceSearcher, packageName, expectedReferences })))
     )("should find relevant references for %s", async (
         { packageReferenceSearcher, packageName, expectedReferences }) => {
-        const searcher = new ReferenceSearcher(packageName, 'test/references.test/examples/dependents')
+        const _package = new Package(packageName)
+        _package.directory = `test/references.test/examples/packages/${packageName}`
+        const searcher = new ReferenceSearcher(_package, 'test/references.test/examples/dependents', packageReferenceSearcher)
         const references = await asyncIteratorToArray(searcher.searchReferences())
 
         /** Since null and undefined are invalid keys in JS objects, we stringify them for compatibility with lodash. See Reference.memberName. */
