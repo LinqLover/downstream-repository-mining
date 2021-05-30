@@ -34,6 +34,9 @@ rules:
   - error
   - never
   "@typescript-eslint/explicit-module-boundary-types": 'off'
+  "@typescript-eslint/no-explicit-any":
+    - warn
+    - ignoreRestArgs: true
   "jest/no-disabled-tests": "warn"
   "jest/no-focused-tests": "error"
   "jest/no-identical-title": "error"

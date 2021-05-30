@@ -50,6 +50,8 @@
         "package-metadata": "^1.1.2",
         "parse-imports": "^0.0.5",
         "path": "^0.12.7",
+        "path-is-inside": "^1.0.2",
+        "try-catch": "^3.0.0",
         "ts-node": "^9.1.1",
         "tslib": "^2",
         "typescript": "^4.2.4"
@@ -59,6 +61,7 @@
         "@types/jest": "^26.0.23",
         "@types/lodash": "^4.14.169",
         "@types/npm-dependants": "^2.1.0",
+        "@types/path-is-inside": "^1.0.0",
         "@types/rimraf": "^3.0.0",
         "@typescript-eslint/eslint-plugin": "^4.23.0",
         "@typescript-eslint/parser": "^4.23.0",

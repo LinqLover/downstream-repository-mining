@@ -7,6 +7,7 @@ import ifCurtailed from '../src/utils/if-curtailed'
 import { printDiff } from './_utils/printDiff'
 
 import expectedHeuristicReferences from './references.test/expectedReferences-heuristic.json'
+import expectedTypeReferences from './references.test/expectedReferences-types.json'
 
 
 describe('ReferenceSearcher', () => {
@@ -20,7 +21,7 @@ describe('ReferenceSearcher', () => {
                 }
             }
         }
-    }>{'heuristic': expectedHeuristicReferences}),
+    }>{'heuristic': expectedHeuristicReferences, 'types': expectedTypeReferences}),
     ([packageReferenceSearcher, allExpectedReferences]) => _.map(Object.entries(allExpectedReferences), ([packageName, expectedReferences]) => ({ packageReferenceSearcher, packageName, expectedReferences })))
     )("should find relevant references for %s", async (
         { packageReferenceSearcher, packageName, expectedReferences }) => {

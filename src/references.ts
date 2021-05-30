@@ -7,6 +7,9 @@ import _ from "lodash"
 import tqdm from 'ntqdm'
 import parseImports from 'parse-imports'
 import path from 'path'
+import pathIsInside from 'path-is-inside'
+import tryCatch from 'try-catch'
+import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
 import rex from './utils/rex'
@@ -103,6 +106,8 @@ abstract class PackageReferenceSearcher {
         switch (name) {
             case 'heuristic':
                 return HeuristicPackageReferenceSearcher
+            case 'types':
+                return TypePackageReferenceSearcher
             default:
                 throw new Error("Unrecognized PackageReferenceSearcher name")
         }
@@ -280,5 +285,150 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 alias: matchGroups.alias
             }))
             .value()
+    }
+}
+
+class TypePackageReferenceSearcher extends PackageReferenceSearcher {
+    protected typeChecker!: ts.TypeChecker
+    protected references!: Set<Reference>
+    protected dependencyDirectory!: string // TODO: Initialize in constructor?
+    private static identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
+
+    async* searchReferences(rootDirectory: string) {
+        this.dependencyDirectory = rootDirectory
+        const options = this.parseOptions(this.dependencyDirectory)
+        const packageOptions = this.parseOptions(this.package.directory!)
+        if (!options.fileNames.length) {
+            options.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.dependencyDirectory, nodir: true })).map(file => path.join(this.dependencyDirectory, file))
+        }
+        if (!packageOptions.fileNames.length) {
+            packageOptions.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.package.directory!, nodir: true })).map(file => path.join(this.package.directory!, file))
+        }
+        // Heuristic: At the moment, we try to match as many files as possible. Maybe this behavior should be aligned more precise to the original Node.js behavior.
+        // 4l8r: Download all required type defs (or at much as possible) for better type inference.
+        const program = ts.createProgram([...packageOptions.fileNames, ...options.fileNames], options.options)
+        this.typeChecker = program.getTypeChecker()
+
+        this.references = new Set<Reference>()
+
+        for (const sourceFile of program.getSourceFiles()) {
+            if (!options.fileNames.includes(sourceFile.fileName)) {
+                continue
+            }
+            // TODO: Skip if sourceFile.isDeclarationFile?
+            ts.forEachChild(sourceFile, (node) => this.visitNode(node))
+        }
+        yield* this.references
+    }
+
+    parseOptions(rootDirectory: string) {
+        const configFileName = ts.findConfigFile(rootDirectory, ts.sys.fileExists)
+        let config: any
+        if (configFileName && pathIsInside(configFileName, rootDirectory)) {
+            const configFile = ts.readConfigFile(configFileName, ts.sys.readFile)
+            config = configFile.config
+        }
+        return ts.parseJsonConfigFileContent(config ?? {}, ts.sys, rootDirectory, {allowJs: true, checkJs: true})
+    }
+
+    visitNode(node: ts.Node) {
+        const reference = this.findReference(node)
+        if (reference) {
+            this.references.add(reference)
+        }
+        ts.forEachChild(node, (node) => this.visitNode(node))
+    }
+
+    findReference(node: ts.Node) {
+        if (ts.isPropertyAccessExpression(node)) {
+            const propertyReference = this.findPropertyReference(node)
+            if (propertyReference) {
+                return propertyReference
+            }
+        }
+
+        const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node)
+        const symbol = type?.symbol ?? type?.aliasSymbol
+        if (!symbol || !symbol.declarations) {
+            return
+        }
+        const declaration = symbol.declarations.find(declaration => pathIsInside(
+            path.resolve(declaration.getSourceFile().fileName),
+            path.resolve(this.package.directory!)))
+        if (!declaration) {
+            return
+        }
+        const file = node.getSourceFile()
+        const { line } = file.getLineAndCharacterOfPosition(node.getStart())
+        return <Reference>{
+            dependentName: this.dependencyName,
+            file: path.relative(this.dependencyDirectory!, file.fileName),
+            lineNumber: line + 1,
+            memberName: this.getFullQualifiedName(declaration),
+            matchString: node.getText(file),
+            alias: node.getText(file)
+        }
+    }
+
+    findPropertyReference(node: ts.PropertyAccessExpression) {
+        const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node.expression)
+        const symbol = type?.symbol
+        if (!symbol || !symbol.declarations) {
+            return
+        }
+        const declaration = symbol.declarations.find(declaration => pathIsInside(
+            declaration.getSourceFile().fileName, this.package.directory!))
+        if (!declaration) {
+            return
+        }
+        if (symbol.flags & ts.SymbolFlags.Module) {
+            return
+        }
+        const file = node.getSourceFile()
+        const { line, character } = file.getLineAndCharacterOfPosition(node.getStart())
+        return <Reference>{
+            dependentName: this.dependencyName,
+            file: path.relative(this.dependencyDirectory!, file.fileName),
+            lineNumber: line + 1,
+            memberName: `${this.getFullQualifiedName(declaration)}.${node.name.text}`,
+            matchString: node.getText(file),
+            alias: node.getText(file)
+        }
+    }
+
+    // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
+    getFullQualifiedName(declaration: ts.Declaration) {
+        const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol!
+        const name = this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module ? this.getRelativeQualifiedName(symbol) : symbol.name
+        const relativePath = path.relative(this.package.directory!, declaration.getSourceFile().fileName)
+        const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
+        return name ? `${shortRelativePath}/${name}` : shortRelativePath
+    }
+
+    isDefaultExport(symbol: ts.Symbol, declaration: ts.Declaration) {
+        const sourceFile = declaration.getSourceFile() as unknown as { symbol: ts.Symbol }
+        if (!sourceFile) return false
+        const exports = sourceFile.symbol?.exports
+        if (!exports) return false
+        const defaultExport = exports?.get(<ts.__String>'export=')
+        if (!(defaultExport && defaultExport.declarations)) return false
+        return defaultExport.declarations.some(_export => (_export as unknown as {expression: ts.Expression})?.expression?.getText() == symbol.name)
+    }
+
+    getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
+        const parent = (<Partial<{parent?: ts.Symbol}>>symbol).parent
+        if (!parent) {
+            if (!ts.isSourceFile(symbol.valueDeclaration)) {
+                return undefined
+            }
+            return null
+        }
+        const symbolName = this.typeChecker.symbolToString(symbol)
+        const parentName = this.getRelativeQualifiedName(parent)
+        if (!parentName) {
+            return symbolName
+        }
+        const parentShortName = parentName.replace(/\.(js|ts|d\.ts)$/, '')
+        return `${parentShortName}.${symbolName}`
     }
 }

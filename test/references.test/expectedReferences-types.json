@@ -1,0 +1,98 @@
+{
+    "heureka": {
+        "index": {
+            "bar": {
+                "index.js": [1]
+            },
+            "foo": {
+                "index.ts": [2, 25],
+                "util.js": [1, 42]
+            }
+        },
+        "index/Part": {
+            "bar": {
+                "index.js": [10]
+            },
+            "foo": {
+                "index.ts": [12, 13, 14]
+            }
+        },
+        "index/Part.inNewWhole": {
+            "bar": {
+                "index.js": [11]
+            }
+        },
+        "index/Part.name": {
+            "bar": {
+                "index.js": [8]
+            }
+        },
+        "index/Whole": {
+            "foo": {
+                "index.ts": [16]
+            }
+        },
+        "index/Whole.getName": {
+            "bar": {
+                "index.js": [6]
+            },
+            "foo": {
+                "index.ts": [17]
+            }
+        },
+        "index/Whole.lastPart": {
+            "bar": {
+                "index.js": [7]
+            }
+        },
+        "index/Whole.secondaryParts": {
+            "bar": {
+                "index.js": [12]
+            }
+        },
+        "index/makeWhole": {
+            "bar": {
+                "index.js": [5]
+            },
+            "foo": {
+                "index.ts": [26],
+                "util.js": [3]
+            }
+        },
+        "util": {
+            "bar": {
+                "index.js": [2, 14]
+            },
+            "foo": {
+                "index.ts": [1, 9, 23]
+            }
+        },
+        "utilSync": {
+            "bar": {
+                "index.js": [3]
+            }
+        },
+        "utilSync/solveKnapsack": {
+            "bar": {
+                "index.js": [15]
+            }
+        }
+    },
+    "jolo": {
+        "index": {
+            "foo": {
+                "index.ts": [4]
+            }
+        },
+        "index/dewey": {
+            "foo": {
+                "index.ts": [3, 7, 22]
+            }
+        },
+        "index/huey": {
+            "foo": {
+                "index.ts": [3, 21]
+            }
+        }
+    }
+}
