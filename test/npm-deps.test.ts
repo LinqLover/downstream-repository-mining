@@ -14,9 +14,9 @@ const readJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in ty
 describe('getNpmDeps', () => {
     it.each`
         packageName     | limit  | countNestedDeps  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
-        ${'glob'}       | ${3}   | ${false}         | ${false}            | ${10}        | ${null}
-        ${'glob'}       | ${3}   | ${false}         | ${true}             | ${10}        | ${0}
-        ${'glob'}       | ${3}   | ${true}          | ${true}             | ${30}        | ${0}
+        ${'glob'}       | ${4}   | ${false}         | ${false}            | ${10}        | ${null}
+        ${'glob'}       | ${4}   | ${false}         | ${true}             | ${10}        | ${0}
+        ${'glob'}       | ${4}   | ${true}          | ${true}             | ${30}        | ${0}
         ${'gl-matrix'}  | ${4}   | ${false}         | ${false}            | ${30}        | ${null}
         `("should return plausible results for $packageName (at least $limit deps)", async (
         { packageName, limit, countNestedDeps, downloadGitHubData, timeoutSecs, nonGitHubThreshold }: {
@@ -26,8 +26,8 @@ describe('getNpmDeps', () => {
 
         const deps = await getNpmDeps(packageName, limit, countNestedDeps, downloadGitHubData)
 
-        // NOTE: FLAKE TEST (at least 2 incidences).
-        // Raised the glob limit to 3, did this solve the issue?
+        // NOTE: FLAKE TEST (at least 4 incidences).
+        // Raised the glob limit to 4, did this solve the issue?
         expect(deps).toHaveLength(limit)
 
         for (const dep of deps) {
