@@ -1,7 +1,6 @@
 import { Command, flags } from '@oclif/command'
 import * as path from 'path'
 import * as util from 'util'
-import asyncIteratorToArray from "it-all"
 
 import Package from '../../package'
 import { getCacheDirectory } from '../../npm-deps'
