@@ -418,7 +418,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
         const parent = (<Partial<{parent?: ts.Symbol}>>symbol).parent
         if (!parent) {
-            if (!ts.isSourceFile(symbol.valueDeclaration)) {
+            if (!ts.isSourceFile(symbol.valueDeclaration!)) {
                 return undefined
             }
             return null
