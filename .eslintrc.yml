@@ -14,6 +14,7 @@ ignorePatterns:
 - cache-*/
 - src/utils/escape-string-regexp.ts
 - test/*.test/
+- samples/
 parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: 2020
