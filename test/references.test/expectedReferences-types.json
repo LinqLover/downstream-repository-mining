@@ -6,7 +6,7 @@
             },
             "foo": {
                 "index.ts": [2, 25],
-                "util.js": [1, 42]
+                "util.js": [1]
             }
         },
         "index/Part": {
