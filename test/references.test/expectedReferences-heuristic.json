@@ -1,41 +1,84 @@
 {
     "heureka": {
-        "<null>": {
-            "foo": {
-                "index.ts": [2, 12, 13, 14, 16, 25],
-                "util.js": [1, 3]
+        "imports": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [2],
+                    "util.js": [1]
+                }
+            },
+            "<undefined>": {
+                "bar": {
+                    "index.js": [1]
+                }
+            },
+            "util": {
+                "bar": {
+                    "index.js": [2]
+                }
+            },
+            "utilSync": {
+                "bar": {
+                    "index.js": [3]
+                }
             }
         },
-        "<undefined>": {
-            "bar": {
-                "index.js": [1, 5, 10]
-            }
-        },
-        "util": {
-            "bar": {
-                "index.js": [2, 14]
-            }
-        },
-        "utilSync": {
-            "bar": {
-                "index.js": [3, 15]
+        "usages": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [12, 13, 14, 16, 25],
+                    "util.js": [3]
+                }
+            },
+            "<undefined>": {
+                "bar": {
+                    "index.js": [5, 10]
+                }
+            },
+            "util": {
+                "bar": {
+                    "index.js": [14]
+                }
+            },"utilSync": {
+                "bar": {
+                    "index.js": [15]
+                }
             }
         }
     },
     "jolo": {
-        "<null>": {
-            "foo": {
-                "index.ts": [4, 7]
+        "imports": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [4]
+                }
+            },
+            "dewey": {
+                "foo": {
+                    "index.ts": [3]
+                }
+            },
+            "huey": {
+                "foo": {
+                    "index.ts": [3]
+                }
             }
         },
-        "dewey": {
-            "foo": {
-                "index.ts": [3, 22]
-            }
-        },
-        "huey": {
-            "foo": {
-                "index.ts": [3, 21]
+        "usages": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [7]
+                }
+            },
+            "dewey": {
+                "foo": {
+                    "index.ts": [22]
+                }
+            },
+            "huey": {
+                "foo": {
+                    "index.ts": [21]
+                }
             }
         }
     }

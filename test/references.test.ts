@@ -14,9 +14,11 @@ describe('ReferenceSearcher', () => {
     it.each(_.flatMap(Object.entries(<{
         [packageReferenceSearcher: string]: {
             [packageName: string]: {
-                [memberName: string]: {
-                    [dependent: string]: {
-                        [fileName: string]: number[]
+                [category: string]: {
+                    [memberName: string]: {
+                        [dependent: string]: {
+                            [fileName: string]: number[]
+                        }
                     }
                 }
             }
@@ -37,21 +39,26 @@ describe('ReferenceSearcher', () => {
             return key
         }
         const aggregatedReferences = _.chain(references)
-            .groupBy(reference => stringify(reference.memberName))
-            .mapValues(memberReferences => _.chain(memberReferences)
-                .groupBy(reference => reference.dependentName)
-                .mapValues(dependentReferences => _.chain(dependentReferences)
-                    .groupBy(reference => reference.file)
-                    .mapValues(fileReferences => _.map(
-                        fileReferences, reference => reference.lineNumber))
+            .groupBy(reference => reference.isImport ? "imports" : "usages")
+            .mapValues(categorizedReferences => _.chain(categorizedReferences)
+                .groupBy(reference => stringify(reference.memberName))
+                .mapValues(memberReferences => _.chain(memberReferences)
+                    .groupBy(reference => reference.dependentName)
+                    .mapValues(dependentReferences => _.chain(dependentReferences)
+                        .groupBy(reference => reference.file)
+                        .mapValues(fileReferences => _.map(
+                            fileReferences, reference => reference.position.row))
+                        .value())
                     .value())
                 .value())
             .value()
 
         const aggregatedExpectedReferences = expect.objectContaining(
-            _.mapValues(expectedReferences, dependentReferences => expect.objectContaining(
-                _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
-                    _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
+            _.mapValues(expectedReferences, categorizedReferences => expect.objectContaining(
+                _.mapValues(categorizedReferences, dependentReferences => expect.objectContaining(
+                    _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
+                        _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
+                    ))
                 ))
             )))
         ifCurtailed(

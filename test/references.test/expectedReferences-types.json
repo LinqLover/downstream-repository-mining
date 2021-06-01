@@ -1,97 +1,128 @@
 {
     "heureka": {
-        "index": {
-            "bar": {
-                "index.js": [1]
+        "imports": {
+            "index": {
+                "bar": {
+                    "index.js": [1]
+                },
+                "foo": {
+                    "index.ts": [2],
+                    "util.js": [1]
+                }
             },
-            "foo": {
-                "index.ts": [2, 25],
-                "util.js": [1]
-            }
-        },
-        "index/Part": {
-            "bar": {
-                "index.js": [10]
+            "util": {
+                "bar": {
+                    "index.js": [2]
+                },
+                "foo": {
+                    "index.ts": [1]
+                }
             },
-            "foo": {
-                "index.ts": [12, 13, 14]
+            "utilSync": {
+                "bar": {
+                    "index.js": [3]
+                }
             }
         },
-        "index/Part.inNewWhole": {
-            "bar": {
-                "index.js": [11]
-            }
-        },
-        "index/Part.name": {
-            "bar": {
-                "index.js": [8]
-            }
-        },
-        "index/Whole": {
-            "foo": {
-                "index.ts": [16]
-            }
-        },
-        "index/Whole.getName": {
-            "bar": {
-                "index.js": [6]
+        "usages": {
+            "index": {
+                "foo": {
+                    "index.ts": [25]
+                }
             },
-            "foo": {
-                "index.ts": [17]
-            }
-        },
-        "index/Whole.lastPart": {
-            "bar": {
-                "index.js": [7]
-            }
-        },
-        "index/Whole.secondaryParts": {
-            "bar": {
-                "index.js": [12]
-            }
-        },
-        "index/makeWhole": {
-            "bar": {
-                "index.js": [5]
+            "index/Part": {
+                "bar": {
+                    "index.js": [10]
+                },
+                "foo": {
+                    "index.ts": [12, 13, 14]
+                }
             },
-            "foo": {
-                "index.ts": [26],
-                "util.js": [3]
-            }
-        },
-        "util": {
-            "bar": {
-                "index.js": [2, 14]
+            "index/Part.inNewWhole": {
+                "bar": {
+                    "index.js": [11]
+                }
             },
-            "foo": {
-                "index.ts": [1, 9, 23]
-            }
-        },
-        "utilSync": {
-            "bar": {
-                "index.js": [3]
-            }
-        },
-        "utilSync/solveKnapsack": {
-            "bar": {
-                "index.js": [15]
+            "index/Part.name": {
+                "bar": {
+                    "index.js": [8]
+                }
+            },
+            "index/Whole": {
+                "foo": {
+                    "index.ts": [16]
+                }
+            },
+            "index/Whole.getName": {
+                "bar": {
+                    "index.js": [6]
+                },
+                "foo": {
+                    "index.ts": [17]
+                }
+            },
+            "index/Whole.lastPart": {
+                "bar": {
+                    "index.js": [7]
+                }
+            },
+            "index/Whole.secondaryParts": {
+                "bar": {
+                    "index.js": [12]
+                }
+            },
+            "index/makeWhole": {
+                "bar": {
+                    "index.js": [5]
+                },
+                "foo": {
+                    "index.ts": [26],
+                    "util.js": [3]
+                }
+            },
+            "util": {
+                "bar": {
+                    "index.js": [14]
+                },
+                "foo": {
+                    "index.ts": [9, 23]
+                }
+            },
+            "utilSync/solveKnapsack": {
+                "bar": {
+                    "index.js": [15]
+                }
             }
         }
     },
     "jolo": {
-        "src/jolo": {
-            "foo": {
-                "index.ts": [4]
+        "imports": {
+            "src/jolo": {
+                "foo": {
+                    "index.ts": [4]
+                }
+            },
+            "src/jolo/dewey": {
+                "foo": {
+                    "index.ts": [3]
+                }
+            },
+            "src/jolo/huey": {
+                "foo": {
+                    "index.ts": [3]
+                }
             }
         },
-        "src/jolo/dewey": {
-            "foo": {
-                "index.ts": [3, 7, 22]
-            }
-        },
-        "src/jolo/huey": {
-            "foo": {
-                "index.ts": [3, 21]
+        "usages": {
+            "src/jolo/dewey": {
+                "foo": {
+                    "index.ts": [7, 22]
+                }
+            },
+            "src/jolo/huey": {
+                "foo": {
+                    "index.ts": [21]
+                }
             }
         }
     }
