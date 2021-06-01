@@ -390,7 +390,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             return
         }
         const declaration = symbol.declarations.find(declaration => pathIsInside(
-            declaration.getSourceFile().fileName, this.package.directory!))
+            path.resolve(declaration.getSourceFile().fileName), path.resolve(this.package.directory!)))
         if (!declaration) {
             return
         }
