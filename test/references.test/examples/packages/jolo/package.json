@@ -1,4 +1,4 @@
 {
-    "main": "jolo.js",
+    "main": "src/jolo.js",
     "type": "commonjs"
 }

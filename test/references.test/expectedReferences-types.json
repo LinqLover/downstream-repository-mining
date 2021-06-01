@@ -79,17 +79,17 @@
         }
     },
     "jolo": {
-        "jolo": {
+        "src/jolo": {
             "foo": {
                 "index.ts": [4]
             }
         },
-        "jolo/dewey": {
+        "src/jolo/dewey": {
             "foo": {
                 "index.ts": [3, 7, 22]
             }
         },
-        "jolo/huey": {
+        "src/jolo/huey": {
             "foo": {
                 "index.ts": [3, 21]
             }
