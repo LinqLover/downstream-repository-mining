@@ -36,6 +36,8 @@ export default class Search extends Command {
         const searcher = new ReferenceSearcher(_package, undefined, flags.strategy)
         const references = searcher.searchReferences(limit)
 
-        console.log(util.inspect(references, { showHidden: false, depth: null, maxArrayLength: Infinity }))
+        for await (const reference of references) {
+            console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
+        }
     }
 }
