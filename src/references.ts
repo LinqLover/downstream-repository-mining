@@ -342,7 +342,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         return ts.parseJsonConfigFileContent(config ?? {}, ts.sys, rootDirectory, existingOptions)
     }
-    }
 
     visitNode(node: ts.Node) {
         const reference = this.findReference(node)
