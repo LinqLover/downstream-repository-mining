@@ -318,7 +318,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             options.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.dependencyDirectory, nodir: true })).map(file => path.join(this.dependencyDirectory, file))
         }
         // 4l8r: Download all required type defs (or at much as possible) for better type inference.
-        const program = ts.createProgram([...packageOptions.fileNames, ...options.fileNames], options.options)
+        const program = ts.createProgram(options.fileNames, options.options)
         this.typeChecker = program.getTypeChecker()
 
         this.references = new Set<Reference>()
