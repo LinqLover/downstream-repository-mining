@@ -47,7 +47,7 @@ describe('ReferenceSearcher', () => {
                     .mapValues(dependentReferences => _.chain(dependentReferences)
                         .groupBy(reference => reference.file)
                         .mapValues(fileReferences => _.map(
-                            fileReferences, reference => reference.position.row))
+                            fileReferences, reference => reference.lineNumber))
                         .value())
                     .value())
                 .value())

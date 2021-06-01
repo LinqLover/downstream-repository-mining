@@ -27,7 +27,8 @@ export type Reference = {
      * @todo Primitive obsession! Model ExportMember class hierarchy.
      */
     memberName: string | null | undefined
-    isImport!: boolean
+    alias: string
+    isImport: boolean
 
     matchString?: string
 }
@@ -388,6 +389,8 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             memberName: this.getFullQualifiedName(declaration),
             isImport: this.isImport(node),
             alias: node.getText(file)
+        }
+    }
 
     private isImport(node: ts.Node, depth = 0): boolean {
         // require statement
@@ -408,7 +411,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             return this.isImport(node.parent, depth + 1)
         }
         return false
-    }
     }
 
     findPropertyReference(node: ts.PropertyAccessExpression) {
