@@ -12,6 +12,10 @@ export default class Search extends Command {
 
     static flags = {
         help: flags.help({ char: 'h' }),
+        source: flags.string({
+            description: "source directory of the package (if omitted, it will be searched in the npm cache)",
+            default: undefined
+        }),
         strategy: flags.enum({
             description: "search strategy to use",
             options: ['heuristic', 'types']
@@ -29,10 +33,11 @@ export default class Search extends Command {
 
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep: Package not specified")
+        const packageDirectory = flags.source || undefined
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const _package = new Package(packageName)
-        _package.directory = path.join(getCacheDirectory(), packageName)
+        _package.directory = packageDirectory ?? path.join(getCacheDirectory(), packageName)
         const searcher = new ReferenceSearcher(_package, undefined, flags.strategy)
         const references = searcher.searchReferences(limit)
 
