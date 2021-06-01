@@ -16,10 +16,27 @@ import rex from './utils/rex'
 import Package from './package'
 
 
-export type Reference = {
-    dependentName: string
-    file: string
-    lineNumber: number
+export class FilePosition {
+    constructor(init: FilePosition) {
+        Object.assign(this, init)
+    }
+
+    row!: number
+    column?: number
+
+    toString() {
+        return this.column ? `${this.row}:${this.column}` : `${this.row}`
+    }
+}
+
+export class Reference {
+    constructor(init: Reference) {
+        Object.assign(this, init)
+    }
+
+    dependentName!: string
+    file!: string
+    position!: FilePosition
     /**
      * - `undefined`: is default import
      * - `null`: imports root
@@ -28,8 +45,13 @@ export type Reference = {
      */
     memberName: string | null | undefined
     isImport!: boolean
+    alias!: string
 
     matchString?: string
+
+    toString() {
+        return `${this.file}:${this.position}`
+    }
 }
 
 type ModuleBinding = {
@@ -192,7 +214,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 yield {
                     dependentName: this.dependencyName,
                     file: filePath,
-                    lineNumber: lineNo + 1,
+                    position: { row: lineNo + 1 },
                     isImport: HeuristicPackageReferenceSearcher.importKeywords.some(keyword => line.includes(keyword)),  // as brittle as the rest of this implementation
                     memberName: binding.memberName,
                     alias: binding.alias,
@@ -380,14 +402,17 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             return
         }
         const file = node.getSourceFile()
-        const { line } = file.getLineAndCharacterOfPosition(node.getStart())
-        return <Reference>{
+        const { line, character } = file.getLineAndCharacterOfPosition(node.getStart())
+        return new Reference({
             dependentName: this.dependencyName,
             file: path.relative(this.dependencyDirectory!, file.fileName),
-            lineNumber: line + 1,
+            position: { row: line + 1, column: character + 1 },
             memberName: this.getFullQualifiedName(declaration),
             isImport: this.isImport(node),
+            matchString: node.parent.getText(file),
             alias: node.getText(file)
+        })
+    }
 
     private isImport(node: ts.Node, depth = 0): boolean {
         // require statement
@@ -409,7 +434,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         return false
     }
-    }
 
     findPropertyReference(node: ts.PropertyAccessExpression) {
         const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node.expression)
@@ -427,15 +451,15 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         const file = node.getSourceFile()
         const { line, character } = file.getLineAndCharacterOfPosition(node.getStart())
-        return <Reference>{
+        return new Reference({
             dependentName: this.dependencyName,
             file: path.relative(this.dependencyDirectory!, file.fileName),
-            lineNumber: line + 1,
+            position: { row: line + 1, column: character + 1 },
             memberName: `${this.getFullQualifiedName(declaration)}.${node.name.text}`,
-            matchString: node.getText(file),
             isImport: false,
+            matchString: node.parent.getText(file),
             alias: node.getText(file)
-        }
+        })
     }
 
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
