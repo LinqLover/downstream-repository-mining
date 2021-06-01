@@ -20,6 +20,10 @@ export default class Search extends Command {
             description: "search strategy to use",
             options: ['heuristic', 'types']
         }),
+        includeImports: flags.boolean({
+            description: "whether also find import statements for the package",
+            default: false
+        }),
         limit: flags.integer({
             description: "maximum number of references to find (-1 for unlimited)",
             default: undefined
@@ -34,12 +38,14 @@ export default class Search extends Command {
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep: Package not specified")
         const packageDirectory = flags.source || undefined
+        const strategy = flags.strategy
+        const includeImports = flags.includeImports
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const _package = new Package(packageName)
         _package.directory = packageDirectory ?? path.join(getCacheDirectory(), packageName)
-        const searcher = new ReferenceSearcher(_package, undefined, flags.strategy)
-        const references = searcher.searchReferences(limit)
+        const searcher = new ReferenceSearcher(_package, undefined, strategy)
+        const references = searcher.searchReferences(includeImports, limit)
 
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))

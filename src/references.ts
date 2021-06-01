@@ -27,7 +27,7 @@ export type Reference = {
      * @todo Primitive obsession! Model ExportMember class hierarchy.
      */
     memberName: string | null | undefined
-    alias: string
+    isImport!: boolean
 
     matchString?: string
 }
@@ -58,11 +58,11 @@ export class ReferenceSearcher {
         }
     }
 
-    async* searchReferences(limit?: number): AsyncIterable<Reference> {
-        yield* this.basicSearchReferences(this.rootDirectory, limit, 0)
+    async* searchReferences(includeImports = false, limit?: number): AsyncIterable<Reference> {
+        yield* this.basicSearchReferences(this.rootDirectory, includeImports, limit, 0)
     }
 
-    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, depth: number): AsyncIterable<Reference> {
+    protected async* basicSearchReferences(rootDirectory: string, includeImports: boolean, limit: number | undefined, depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
             let depDirectories: Iterable<Dirent> = (
@@ -76,7 +76,10 @@ export class ReferenceSearcher {
 
             let i = 0
             for await (const depDirectory of depDirectories) {
-                for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), undefined, depth + 1)) {
+                for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), includeImports, undefined, depth + 1)) {
+                    if (!includeImports && reference.isImport) {
+                        continue
+                    }
                     yield reference
                     if (limit && ++i > limit) {
                         return
@@ -122,6 +125,7 @@ abstract class PackageReferenceSearcher {
 }
 
 class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
+    static readonly importKeywords = ['import', 'require']
     static readonly maximumFileSize = 100_000  // 100 MB
     protected commonJsPatterns!: ReadonlyArray<RegExp>
 
@@ -189,6 +193,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                     dependentName: this.dependencyName,
                     file: filePath,
                     lineNumber: lineNo + 1,
+                    isImport: HeuristicPackageReferenceSearcher.importKeywords.some(keyword => line.includes(keyword)),  // as brittle as the rest of this implementation
                     memberName: binding.memberName,
                     alias: binding.alias,
                     matchString: line
@@ -381,9 +386,29 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             file: path.relative(this.dependencyDirectory!, file.fileName),
             lineNumber: line + 1,
             memberName: this.getFullQualifiedName(declaration),
-            matchString: node.getText(file),
+            isImport: this.isImport(node),
             alias: node.getText(file)
+
+    private isImport(node: ts.Node, depth = 0): boolean {
+        // require statement
+        // Type check has already been passed in the caller
+        if (ts.isVariableDeclaration(node) && (node.initializer as ts.CallExpression)?.expression?.getText() === 'require') {
+            return true
         }
+        if (ts.isCallExpression(node) && node.expression.getText() === 'require') {
+            return true
+        }
+
+        // import statement
+        if (ts.isImportDeclaration(node) || ts.isImportSpecifier(node) || ts.isImportClause(node)) {
+            return true
+        }
+
+        if (depth < 2) {
+            return this.isImport(node.parent, depth + 1)
+        }
+        return false
+    }
     }
 
     findPropertyReference(node: ts.PropertyAccessExpression) {
@@ -408,6 +433,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             lineNumber: line + 1,
             memberName: `${this.getFullQualifiedName(declaration)}.${node.name.text}`,
             matchString: node.getText(file),
+            isImport: false,
             alias: node.getText(file)
         }
     }
