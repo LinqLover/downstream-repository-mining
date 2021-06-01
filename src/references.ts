@@ -308,6 +308,10 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 [this.package.name]: [
                     ...((options.options.paths ?? {})[this.package.name] ?? []),
                     path.resolve(this.package.directory!)
+                ],
+                [`${this.package.name}/*`]: [
+                    ...((options.options.paths ?? {})[`${this.package.name}/*`] ?? []),
+                    `${path.resolve(this.package.directory!)}/*`
                 ]
             },
             // Prevent the compiler from searching all parent folders for type definitions - these are not relevant
