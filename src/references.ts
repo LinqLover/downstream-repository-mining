@@ -44,8 +44,8 @@ export class Reference {
      * @todo Primitive obsession! Model ExportMember class hierarchy.
      */
     memberName: string | null | undefined
-    isImport!: boolean
     alias!: string
+    isImport!: boolean
 
     matchString?: string
 
