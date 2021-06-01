@@ -296,15 +296,27 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     async* searchReferences(rootDirectory: string) {
         this.dependencyDirectory = rootDirectory
-        const options = this.parseOptions(this.dependencyDirectory)
-        const packageOptions = this.parseOptions(this.package.directory!)
+        const options = this.parseOptions(this.dependencyDirectory, {
+            allowJs: true,
+            checkJs: true
+        })
+        // Since the dependency is not installed, we need to do some hacks here ...
+        Object.assign(options.options, {
+            paths: {
+                ...options.options.paths,
+                // Map our package of interest to known location
+                [this.package.name]: [
+                    ...((options.options.paths ?? {})[this.package.name] ?? []),
+                    path.resolve(this.package.directory!)
+                ]
+            },
+            // Prevent the compiler from searching all parent folders for type definitions - these are not relevant
+            typeRoots: options.options.typeRoots ?? [path.resolve(this.dependencyDirectory, './node_modules/@types')]
+        })
         if (!options.fileNames.length) {
+            console.warn("Heuristic file search")
             options.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.dependencyDirectory, nodir: true })).map(file => path.join(this.dependencyDirectory, file))
         }
-        if (!packageOptions.fileNames.length) {
-            packageOptions.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.package.directory!, nodir: true })).map(file => path.join(this.package.directory!, file))
-        }
-        // Heuristic: At the moment, we try to match as many files as possible. Maybe this behavior should be aligned more precise to the original Node.js behavior.
         // 4l8r: Download all required type defs (or at much as possible) for better type inference.
         const program = ts.createProgram([...packageOptions.fileNames, ...options.fileNames], options.options)
         this.typeChecker = program.getTypeChecker()
@@ -321,14 +333,15 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         yield* this.references
     }
 
-    parseOptions(rootDirectory: string) {
+    parseOptions(rootDirectory: string, existingOptions?: ts.CompilerOptions) {
         const configFileName = ts.findConfigFile(rootDirectory, ts.sys.fileExists)
         let config: any
         if (configFileName && pathIsInside(configFileName, rootDirectory)) {
             const configFile = ts.readConfigFile(configFileName, ts.sys.readFile)
             config = configFile.config
         }
-        return ts.parseJsonConfigFileContent(config ?? {}, ts.sys, rootDirectory, {allowJs: true, checkJs: true})
+        return ts.parseJsonConfigFileContent(config ?? {}, ts.sys, rootDirectory, existingOptions)
+    }
     }
 
     visitNode(node: ts.Node) {
