@@ -53,17 +53,21 @@ describe('ReferenceSearcher', () => {
                 .value())
             .value()
 
-        const aggregatedExpectedReferences = expect.objectContaining(
-            _.mapValues(expectedReferences, categorizedReferences => expect.objectContaining(
-                _.mapValues(categorizedReferences, dependentReferences => expect.objectContaining(
-                    _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
-                        _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
+        if (packageReferenceSearcher !== 'heuristic') {
+            expect(aggregatedReferences).toEqual(expectedReferences)
+        } else {
+            // Tolerate false positives
+            const aggregatedExpectedReferences = expect.objectContaining(
+                _.mapValues(expectedReferences, categorizedReferences => expect.objectContaining(
+                    _.mapValues(categorizedReferences, dependentReferences => expect.objectContaining(
+                        _.mapValues(dependentReferences, memberReferences => expect.objectContaining(
+                            _.mapValues(memberReferences, lineNumbers => expect.arrayContaining(lineNumbers))
+                        ))
                     ))
-                ))
-            )))
-        ifCurtailed(
-            () => expect(aggregatedReferences).toEqual(aggregatedExpectedReferences),
-            () => printDiff(aggregatedReferences, aggregatedExpectedReferences, packageReferenceSearcher, packageName))
-        // TODO: Test false positive rate
+                )))
+            ifCurtailed(
+                () => expect(aggregatedReferences).toEqual(aggregatedExpectedReferences),
+                () => printDiff(aggregatedReferences, aggregatedExpectedReferences, packageReferenceSearcher, packageName))
+        }
     })
 })
