@@ -349,7 +349,8 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             options.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.dependencyDirectory, nodir: true })).map(file => path.join(this.dependencyDirectory, file))
         }
         // 4l8r: Download all required type defs (or at much as possible) for better type inference.
-        const program = ts.createProgram(options.fileNames, options.options)
+        const host = this.createCompilerHost(options.options)
+        const program = ts.createProgram(options.fileNames, options.options, host)
         this.typeChecker = program.getTypeChecker()
 
         this.references = new Set<Reference>()
@@ -365,13 +366,37 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     }
 
     parseOptions(rootDirectory: string, existingOptions?: ts.CompilerOptions) {
+        // NOTE: existingOptions will override options from config file
         const configFileName = ts.findConfigFile(rootDirectory, ts.sys.fileExists)
-        let config: any
+        let config: ts.CompilerOptions
         if (configFileName && pathIsInside(configFileName, rootDirectory)) {
             const configFile = ts.readConfigFile(configFileName, ts.sys.readFile)
             config = configFile.config
         }
-        return ts.parseJsonConfigFileContent(config ?? {}, ts.sys, rootDirectory, existingOptions)
+        config ??= {}
+        return ts.parseJsonConfigFileContent(config, ts.sys, rootDirectory, existingOptions)
+    }
+
+    createCompilerHost(options: ts.CompilerOptions) {
+        const host = ts.createCompilerHost(options)
+
+        host.getCurrentDirectory = () => this.dependencyDirectory
+
+        // Customize module resolution
+        const basicDirectoryExists = host.directoryExists ?? ts.sys.directoryExists
+        host.directoryExists = directoryName => {
+            if (directoryName === path.resolve(this.dependencyDirectory, 'node_modules')) {
+                // Pretend this depdendent to be installed
+                return true
+            }
+            if (path.basename(directoryName) === 'node_modules' && !pathIsInside(path.resolve(directoryName), path.resolve(this.dependencyDirectory))) {
+                // Stop module resolution outside dependent folder - this might cause unintended side effects and slow down search significantly
+                return false
+            }
+            return basicDirectoryExists(directoryName)
+        }
+
+        return host
     }
 
     visitNode(node: ts.Node) {
