@@ -70,7 +70,7 @@ export class ReferenceSearcher {
             for await (const depDirectory of depDirectories) {
                 for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), undefined, depth + 1)) {
                     yield reference
-                    if (limit && ++i > limit) {
+                    if (limit && ++i >= limit) {
                         return
                     }
                 }

@@ -16,24 +16,27 @@
         "*"
     ],
     "license": "UNLICENSED",
-    "main": "lib/index.js",
+    "main": "bin/run.js",
     "scripts": {
         "lint": "eslint . --ext=.js,.ts,.json",
         "test": "jest"
     },
     "oclif": {
         "bin": "dowdep",
-        "commands": "./lib/cli/commands",
+        "commands": "./src/cli/commands",
         "description": "downstream repository mining CLI",
         "hooks": {
             "init": "./src/cli/oclif.init.ts"
         },
         "plugins": [
-            "@oclif/plugin-help"
+            "@oclif/plugin-autocomplete",
+            "@oclif/plugin-help",
+            "@oclif/plugin-not-found"
         ]
     },
     "types": "lib/index.d.ts",
     "dependencies": {
+        "@oclif/plugin-autocomplete": "^0.3.0",
         "@types/node": "^15.6.1",
         "dotenv": "^10.0.0",
         "download-package-tarball": "^1.0.7",
