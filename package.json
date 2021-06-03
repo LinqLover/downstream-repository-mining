@@ -19,7 +19,7 @@
     "main": "lib/index.js",
     "scripts": {
         "lint": "eslint . --ext=.js,.ts,.json",
-        "test": "jest"
+        "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
     },
     "oclif": {
         "bin": "dowdep",
@@ -48,7 +48,7 @@
         "ntqdm": "^1.0.0",
         "oclif": "^1.18.0",
         "package-metadata": "^1.1.2",
-        "parse-imports": "^0.0.5",
+        "parse-imports": "^1.0.0",
         "path": "^0.12.7",
         "ts-node": "^10.0.0",
         "tslib": "^2",
@@ -62,12 +62,13 @@
         "@types/rimraf": "^3.0.0",
         "@typescript-eslint/eslint-plugin": "^4.26.0",
         "@typescript-eslint/parser": "^4.26.0",
+        "cross-env": "^7.0.3",
         "eslint": "^7.27.0",
         "eslint-plugin-jest": "^24.3.6",
-        "jest": "^26.6.3",
+        "jest": "^27.0.0-next.11",
         "package-json": "^6.5.0",
         "read-package-json": "^3.0.1",
         "rimraf": "^3.0.0",
-        "ts-jest": "^26.5.6"
+        "ts-jest": "^27.0.0-next.12"
     }
 }
