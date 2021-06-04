@@ -2457,10 +2457,10 @@ error@^7.0.2:
   dependencies:
     string-template "~0.2.1"
 
-es-module-lexer@0.3.26:
-  version "0.3.26"
-  resolved "https://registry.yarnpkg.com/es-module-lexer/-/es-module-lexer-0.3.26.tgz#7b507044e97d5b03b01d4392c74ffeb9c177a83b"
-  integrity sha512-Va0Q/xqtrss45hWzP8CZJwzGSZJjDM5/MJRE3IXXnUCcVLElR9BRaE9F62BopysASyc4nM3uwhSW7FFB9nlWAA==
+es-module-lexer@0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/es-module-lexer/-/es-module-lexer-0.4.1.tgz#dda8c6a14d8f340a24e34331e0fab0cb50438e0e"
+  integrity sha512-ooYciCUtfw6/d2w56UVeqHPcoCFAiJdz5XOkYpv/Txl1HMUozpXjz/2RIQgqwKdXNDPSF1W7mJCFse3G+HDyAA==
 
 escalade@^3.1.1:
   version "3.1.1"
@@ -5438,12 +5438,12 @@ parent-module@^1.0.0:
   dependencies:
     callsites "^3.0.0"
 
-parse-imports@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/parse-imports/-/parse-imports-0.0.5.tgz#80e505b9558d6fa8d760b9f0be64f42f65bf4d17"
-  integrity sha512-yA6mDNotJmyAXcEdi2AjiHfI8Llk+/uv/jgBgvzFVP8iGaHC5L3rR6VQk/1qEE3SvLUsDQ2GdQMfPTi0qrmt8Q==
+parse-imports@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/parse-imports/-/parse-imports-1.0.0.tgz#81d88a188943ac9748168f84421de4fa41210814"
+  integrity sha512-x40Kv0fRhBCs+jM1TfVeCaSh7hZZXz505Cu77nI/CuXMufHBUSRbpOAyI777rxrjxGPONibTA7CbhXzPcvzmGQ==
   dependencies:
-    es-module-lexer "0.3.26"
+    es-module-lexer "0.4.1"
     slashes "2.0.2"
 
 parse-json@^2.2.0:

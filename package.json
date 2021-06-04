@@ -51,7 +51,7 @@
         "ntqdm": "^1.0.0",
         "oclif": "^1.18.0",
         "package-metadata": "^1.1.2",
-        "parse-imports": "^0.0.5",
+        "parse-imports": "^1.0.0",
         "path": "^0.12.7",
         "ts-node": "^10.0.0",
         "tslib": "^2",
