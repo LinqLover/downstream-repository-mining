@@ -5,7 +5,6 @@ import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
 import _ from "lodash"
 import tqdm from 'ntqdm'
-import parseImports from 'parse-imports'
 import path from 'path'
 
 import { getCacheDirectory } from './npm-deps'
@@ -180,6 +179,17 @@ class PackageReferenceSearcher {
 
         const imports = await (async () => {
             try {
+                // Truly awful hack! There are a few things going on here:
+                // - Jest (or something) can't find parse-imports by just importing its package name
+                //   no matter what. Just give it the path to the src/index.js file
+                // - TypeScript will always try to replace dynamic imports with requires
+                //   which doesn't work for importing ESM from CJS (https://github.com/microsoft/TypeScript/issues/43329).
+                //   We work around by "hiding" our dynamic import in a Function constructor (terrible...)
+                // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
+                const parseImportsIndexPath = path.join(path.dirname(__dirname), 'node_modules/parse-imports/src/index.js')
+                const dynamicImport = new Function('moduleName', 'return import(moduleName)')
+                const parseImports = (await dynamicImport(parseImportsIndexPath)).default
+                
                 return await parseImports(source)
             } catch (parseError) {
                 console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100) })
