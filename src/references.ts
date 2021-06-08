@@ -1,5 +1,4 @@
 import { Dirent, promises as fsPromises } from "fs"
-import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
 import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
@@ -8,6 +7,7 @@ import tqdm from 'ntqdm'
 import path from 'path'
 
 import { getCacheDirectory } from './npm-deps'
+import dynamicImport from "./utils/dynamic-import"
 import rex from './utils/rex'
 
 
@@ -79,6 +79,7 @@ export class ReferenceSearcher {
 
         const dependencyName = path.basename(rootDirectory)
         const packageSearcher = new PackageReferenceSearcher(this.packageName, dependencyName)
+        await packageSearcher.initialize()
         let files: Iterable<string> = await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: rootDirectory, nodir: true })
         if (!(depth > ReferenceSearcher.maximumReportableDepth)) {
             files = tqdm(files, { desc: `Scanning dependents (${dependencyName})...` })
@@ -102,11 +103,13 @@ class PackageReferenceSearcher {
     constructor(packageName: string, dependencyName: string) {
         this.packageName = packageName
         this.dependencyName = dependencyName
-
-        this.initializeCommonJsPatterns()
     }
 
-    private initializeCommonJsPatterns() {
+    async initialize() {
+        await this.initializeCommonJsPatterns()
+    }
+
+    private async initializeCommonJsPatterns() {
         // Let's build a regex family!
         // `foo = require('bar')`
         // `foo = require('bar/baz')`
@@ -114,6 +117,7 @@ class PackageReferenceSearcher {
 
         const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
+        const escapeRegexp = (await dynamicImport('escape-string-regexp')).default
         const requirePattern = rex`
             (?<alias> ${identifierPattern} ) \s*
             = \s*
@@ -182,14 +186,11 @@ class PackageReferenceSearcher {
                 // Truly awful hack! There are a few things going on here:
                 // - Jest (or something) can't find parse-imports by just importing its package name
                 //   no matter what. Just give it the path to the src/index.js file
-                // - TypeScript will always try to replace dynamic imports with requires
-                //   which doesn't work for importing ESM from CJS (https://github.com/microsoft/TypeScript/issues/43329).
-                //   We work around by "hiding" our dynamic import in a Function constructor (terrible...)
+                // - See the comment in dynamicImport
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
                 const parseImportsIndexPath = path.join(path.dirname(__dirname), 'node_modules/parse-imports/src/index.js')
-                const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                 const parseImports = (await dynamicImport(parseImportsIndexPath)).default
-                
+
                 return await parseImports(source)
             } catch (parseError) {
                 console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100) })
