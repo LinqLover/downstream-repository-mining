@@ -10,8 +10,8 @@ import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
-import rex from './utils/rex'
 import Package from './package'
+import rex from './utils/rex'
 
 
 export class FilePosition {
@@ -375,6 +375,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                     ...((options.options.paths ?? {})[this.package.name] ?? []),
                     path.resolve(this.package.directory)
                 ],
+                // Same for submodules of our package
                 [`${this.package.name}/*`]: [
                     ...((options.options.paths ?? {})[`${this.package.name}/*`] ?? []),
                     `${path.resolve(this.package.directory)}/*`
@@ -424,11 +425,11 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         const basicDirectoryExists = host.directoryExists ?? ts.sys.directoryExists
         host.directoryExists = directoryName => {
             if (directoryName === path.resolve(this.dependencyDirectory, 'node_modules')) {
-                // Pretend this depdendent to be installed
+                // Pretend this dependent to be installed
                 return true
             }
             if (path.basename(directoryName) === 'node_modules' && !pathIsInside(path.resolve(directoryName), path.resolve(this.dependencyDirectory))) {
-                // Stop module resolution outside dependent folder - this might cause unintended side effects and slow down search significantly
+                // Stop module resolution outside dependent folder - this might cause unintended side effects and will slow down search significantly
                 return false
             }
             return basicDirectoryExists(directoryName)
@@ -588,21 +589,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     private getCallLikeNode(node: ts.CallLikeExpression): ts.LeftHandSideExpression | ts.JsxOpeningElement {
         return ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)
-    }
-
-    private isImport(node: ts.Node) {
-        // `require()` statement
-        // Type check has already been passed in the caller
-        if (ts.isCallExpression(node) && node.expression.getText() === 'require') {
-            return true
-        }
-
-        // `import` statement
-        if (ts.isImportSpecifier(node) || node.parent && ts.isImportClause(node.parent)) {
-            return true
-        }
-
-        return false
     }
 
     private isReference(node: ts.Node) {
