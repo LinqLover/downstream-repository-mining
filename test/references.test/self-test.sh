@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -e
-export TERM="${TERM:-xterm-color}"  # for tput
-echo "term is $TERM"  # DEBUG
 
+# Make tput a noop if not applicable
+tput=":" && tput sgr0 && tput="tput"
 op() {
-    tput bold ; echo "\$ $*" ; tput sgr0
+    "$tput" bold && echo "\$ $*" && "$tput" sgr0
     "$@"
 }
 
