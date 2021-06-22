@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+export TERM="${TERM:-xterm-color}"  # for tput
 
 op() {
     tput bold && echo "\$ $*" && tput sgr0
