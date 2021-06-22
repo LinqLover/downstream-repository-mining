@@ -32,7 +32,7 @@ export default class Download extends Command {
                 await downloadDep(dep)
                 successes++
             } catch (error) {
-                console.warn(`Download of ${dep} failed: ${error}. Skipping...`)
+                console.warn(`Download of ${dep.tarballUrl} failed: ${error}. Skipping...`)
                 errors++
             }
         }

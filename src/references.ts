@@ -138,7 +138,7 @@ class PackageReferenceSearcher {
         const fullPath = path.join(rootDirectory, filePath)
         const fileSize = (await fsPromises.stat(fullPath)).size
         if (fileSize > PackageReferenceSearcher.maximumFileSize) {
-            console.warn(`Skipping very large file '${fullPath}'`)
+            console.warn(`Skipping very large file`, { dependencyName: this.dependencyName, fullPath })
             return
         }
 
@@ -193,7 +193,7 @@ class PackageReferenceSearcher {
 
                 return await parseImports(source)
             } catch (parseError) {
-                console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100) })
+                console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100), dependencyName: this.dependencyName })
                 // This includes syntax errors but also TypeScript syntax which is not (yet?) supported by parse-imports.
                 // See: https://github.com/TomerAberbach/parse-imports/issues/1
                 // TODO: Increase robustness by stripping of everything below import statements
