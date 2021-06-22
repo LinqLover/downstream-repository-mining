@@ -536,6 +536,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
 
         if (ts.isPropertyAccessExpression(node) && !(ts.isCallLikeExpression(node.parent) && this.getCallLikeNode(node.parent) == node)) {
+            // TODO: Do we already support ElementAccess (x[y]) here?
             const symbol = this.typeChecker.getSymbolAtLocation(node)
             if (!symbol?.declarations) {
                 return
@@ -581,7 +582,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             file: path.relative(this.dependencyDirectory, file.fileName),
             position: { row: line + 1, column: character + 1 },
             memberName: this.getFullQualifiedName(declaration, false),
-            type: /* this.isImport(node) ? 'import' : */ /* (this.isReference(node) ? 'reference' : 'occurence') */'occurence',
+            type: 'occurence',
             matchString: node.parent.getText(file),
             alias: node.getText(file)
         })
@@ -589,19 +590,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     private getCallLikeNode(node: ts.CallLikeExpression): ts.LeftHandSideExpression | ts.JsxOpeningElement {
         return ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)
-    }
-
-    private isReference(node: ts.Node) {
-        if (ts.isCallLikeExpression(node)) {
-            return true
-        }
-
-        if (ts.isPropertyAccessExpression(node) && !this.isReference(node.parent)) { // TODO: What about QualifiedName?
-            return true
-        }
-        // TODO: ElementAccess (x[y])
-
-        return false
     }
 
     findPropertyReference(node: ts.PropertyAccessExpression) {
@@ -625,7 +613,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             file: path.relative(this.dependencyDirectory, file.fileName),
             position: { row: line + 1, column: character + 1 },
             memberName: `${this.getFullQualifiedName(declaration, false)}.${node.name.text}`,
-            type: /* this.isReference(node) ? 'reference' :  */'occurence',
+            type: 'occurence',
             matchString: node.parent.getText(file),
             alias: node.getText(file)
         })
