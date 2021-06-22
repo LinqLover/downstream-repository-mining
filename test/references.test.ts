@@ -39,8 +39,12 @@ describe('ReferenceSearcher', () => {
             return key
         }
         const aggregatedReferences = _.chain(references)
-            .groupBy(reference => reference.isImport ? "imports" : "usages")
+            .groupBy(reference => reference.type)
             .mapValues(categorizedReferences => _.chain(categorizedReferences)
+                /* .filter(reference => {
+                    // TODO: This behavior still needs to be defined. Should it be index/method.__object.cap, or index/method.cap, or should we rename __object
+                    return !stringify(reference.memberName).includes('__object')
+                }) */
                 .groupBy(reference => stringify(reference.memberName))
                 .mapValues(memberReferences => _.chain(memberReferences)
                     .groupBy(reference => reference.dependentName)
