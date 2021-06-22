@@ -43,7 +43,7 @@
         "escape-string-regexp": "^5.0.0",
         "glob": "^7.1.6",
         "glob-promise": "^4.2.0",
-        "graphql": "^15.5.0",
+        "graphql": "^15.5.1",
         "graphql-request": "^3.4.0",
         "it-all": "^1.0.5",
         "lodash": "^4.17.21",
