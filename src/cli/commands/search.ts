@@ -1,3 +1,4 @@
+import * as _ from 'lodash'
 import { Command, flags } from '@oclif/command'
 import * as path from 'path'
 import * as util from 'util'
@@ -28,7 +29,10 @@ export default class Search extends Command {
         includeOccurences: flags.boolean({
             name: 'include-occurences',
             description: "whether also to find indirect occurences of package types",
-            description: "whether also find import statements for the package",
+            default: false
+        }),
+        aggregate: flags.boolean({
+            description: "if enabled, search results will be counted",
             default: false
         }),
         limit: flags.integer({
@@ -48,6 +52,7 @@ export default class Search extends Command {
         const strategy = flags.strategy
         const includeImports = flags.includeImports
         const includeOccurences = flags.includeOccurences
+        const aggregate = flags.aggregate
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const _package = new Package(packageName)
@@ -62,8 +67,22 @@ export default class Search extends Command {
         }
         const references = searcher.searchReferences(limit, includeTypes)
 
+        const allReferences = aggregate && new Array<Reference>()
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
+            if (allReferences) {
+                allReferences.push(reference)
+            }
+        }
+        if (allReferences) {
+            const aggregatedReferences = _.chain(allReferences)
+                .groupBy(reference => reference.memberName)
+                .mapValues(memberReferences => _.countBy(memberReferences, 'dependentName'))
+                .toPairs()
+                .orderBy(([, countedReferences]) => _.sum(Object.values(countedReferences)), 'desc')
+                .fromPairs()
+                .value()
+            console.table(aggregatedReferences)
         }
     }
 }
