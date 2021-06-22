@@ -28,8 +28,10 @@ describe('ReferenceSearcher', () => {
     ([packageReferenceSearcher, allExpectedReferences]) => _.map(Object.entries(allExpectedReferences), ([packageName, expectedReferences]) => ({ packageReferenceSearcher, packageName, expectedReferences })))
     )("should find relevant references for %s", async (
         { packageReferenceSearcher, packageName, expectedReferences }) => {
-        const _package = new Package(packageName)
-        _package.directory = `test/references.test/examples/packages/${packageName}`
+        const _package = new Package({
+            name: packageName,
+            directory: `test/references.test/examples/packages/${packageName}`
+        })
         const searcher = new ReferenceSearcher(_package, 'test/references.test/examples/dependents', packageReferenceSearcher)
         const references = await asyncIteratorToArray(searcher.searchReferences(undefined, ['import', 'reference']))
 

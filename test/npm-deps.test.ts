@@ -62,13 +62,14 @@ describe('downloadDep', () => {
         { packageName, version, tarballUrl }: {
             packageName: string, version: string, tarballUrl: string
         }) => {
+        jest.setTimeout(5000)
         await (promisify(rimRaf))(<string>process.env.NPM_CACHE)
 
-        jest.setTimeout(5000)
 
-        const dep = new Dependent()
-        dep.name = packageName
-        dep.tarballUrl = tarballUrl
+        const dep = new Dependent({
+            name: packageName,
+            tarballUrl: tarballUrl
+        })
 
         await downloadDep(dep)
 

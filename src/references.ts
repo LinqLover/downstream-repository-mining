@@ -331,7 +331,12 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
     async* collectCommonJsBindings(source: string): AsyncGenerator<ModuleBinding, void, undefined> {
         yield* _.chain(this.commonJsPatterns)
             .flatMap(pattern => [...source.matchAll(pattern) ?? []])
-            .map(match => match.groups!)
+            .map(match => {
+                if (!match.groups) {
+                    throw new Error("match groups not found")
+                }
+                return match.groups
+            })
             .map(matchGroups => ({
                 moduleName: matchGroups.packageName,
                 memberName: matchGroups.memberName
@@ -354,7 +359,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected typeChecker!: ts.TypeChecker
     protected references!: Reference[]
     protected dependencyDirectory!: string // TODO: Initialize in constructor?
-    private static identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
     async* searchReferences(rootDirectory: string) {
         this.dependencyDirectory = rootDirectory
@@ -369,26 +373,26 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 // Map our package of interest to known location
                 [this.package.name]: [
                     ...((options.options.paths ?? {})[this.package.name] ?? []),
-                    path.resolve(this.package.directory!)
+                    path.resolve(this.package.directory)
                 ],
                 [`${this.package.name}/*`]: [
                     ...((options.options.paths ?? {})[`${this.package.name}/*`] ?? []),
-                    `${path.resolve(this.package.directory!)}/*`
+                    `${path.resolve(this.package.directory)}/*`
                 ]
             },
             // Prevent the compiler from searching all parent folders for type definitions - these are not relevant
             typeRoots: options.options.typeRoots ?? [path.resolve(this.dependencyDirectory, './node_modules/@types')]
         })
+        // 4l8r: Download all required type defs (or at much as possible) for better type inference.
         if (!options.fileNames.length) {
             console.warn("Heuristic file search", { dependencyName: this.dependencyName })
             options.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.dependencyDirectory, nodir: true })).map(file => path.join(this.dependencyDirectory, file))
         }
-        // 4l8r: Download all required type defs (or at much as possible) for better type inference.
         const host = this.createCompilerHost(options.options)
         const program = ts.createProgram(options.fileNames, options.options, host)
         this.typeChecker = program.getTypeChecker()
 
-        this.references = []
+        this.references = []  // A generator would be nicer but also more complicated
 
         for (const sourceFile of program.getSourceFiles()) {
             if (!options.fileNames.includes(sourceFile.fileName)) {
@@ -400,8 +404,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         yield* this.references
     }
 
-    parseOptions(rootDirectory: string, existingOptions?: ts.CompilerOptions) {
-        // NOTE: existingOptions will override options from config file
+    parseOptions(rootDirectory: string, overrideOptions?: ts.CompilerOptions) {
         const configFileName = ts.findConfigFile(rootDirectory, ts.sys.fileExists)
         let config: ts.CompilerOptions
         if (configFileName && pathIsInside(configFileName, rootDirectory)) {
@@ -409,7 +412,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             config = configFile.config
         }
         config ??= {}
-        return ts.parseJsonConfigFileContent(config, ts.sys, rootDirectory, existingOptions)
+        return ts.parseJsonConfigFileContent(config, ts.sys, rootDirectory, overrideOptions)
     }
 
     createCompilerHost(options: ts.CompilerOptions) {
@@ -458,7 +461,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             }
             const declaration = symbol.declarations.find(declaration => pathIsInside(
                 path.resolve(declaration.getSourceFile().fileName),
-                path.resolve(this.package.directory!)))
+                path.resolve(this.package.directory)))
             if (!declaration) {
                 return
             }
@@ -470,7 +473,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
             return new Reference({
                 dependentName: this.dependencyName,
-                file: path.relative(this.dependencyDirectory!, file.fileName),
+                file: path.relative(this.dependencyDirectory, file.fileName),
                 position: { row: line + 1, column: character + 1 },
                 memberName: this.getFullQualifiedName(declaration, true),
                 type: 'import',
@@ -487,7 +490,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             }
             const declaration = symbol.declarations.find(declaration => pathIsInside(
                 path.resolve(declaration.getSourceFile().fileName),
-                path.resolve(this.package.directory!)))
+                path.resolve(this.package.directory)))
             if (!declaration) {
                 return
             }
@@ -496,7 +499,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
             return new Reference({
                 dependentName: this.dependencyName,
-                file: path.relative(this.dependencyDirectory!, file.fileName),
+                file: path.relative(this.dependencyDirectory, file.fileName),
                 position: { row: line + 1, column: character + 1 },
                 memberName: this.getFullQualifiedName(declaration, true),
                 type: 'import',
@@ -513,7 +516,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             }
             const declaration = symbol.declarations.find(declaration => pathIsInside(
                 path.resolve(declaration.getSourceFile().fileName),
-                path.resolve(this.package.directory!)))
+                path.resolve(this.package.directory)))
             if (!declaration) {
                 return
             }
@@ -522,7 +525,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
             return new Reference({
                 dependentName: this.dependencyName,
-                file: path.relative(this.dependencyDirectory!, file.fileName),
+                file: path.relative(this.dependencyDirectory, file.fileName),
                 position: { row: line + 1, column: character + 1 },
                 memberName: this.getFullQualifiedName(declaration, false),
                 type: 'reference',
@@ -538,7 +541,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             }
             const declaration = symbol.declarations.find(declaration => pathIsInside(
                 path.resolve(declaration.getSourceFile().fileName),
-                path.resolve(this.package.directory!)))
+                path.resolve(this.package.directory)))
             if (!declaration) {
                 return
             }
@@ -547,7 +550,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
             return new Reference({
                 dependentName: this.dependencyName,
-                file: path.relative(this.dependencyDirectory!, file.fileName),
+                file: path.relative(this.dependencyDirectory, file.fileName),
                 position: { row: line + 1, column: character + 1 },
                 memberName: this.getFullQualifiedName(declaration, false),
                 type: 'reference',
@@ -563,7 +566,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         const declaration = symbol.declarations.find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
-            path.resolve(this.package.directory!)))
+            path.resolve(this.package.directory)))
         if (!declaration) {
             return
         }
@@ -574,7 +577,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         } */
         return new Reference({
             dependentName: this.dependencyName,
-            file: path.relative(this.dependencyDirectory!, file.fileName),
+            file: path.relative(this.dependencyDirectory, file.fileName),
             position: { row: line + 1, column: character + 1 },
             memberName: this.getFullQualifiedName(declaration, false),
             type: /* this.isImport(node) ? 'import' : */ /* (this.isReference(node) ? 'reference' : 'occurence') */'occurence',
@@ -622,7 +625,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             return
         }
         const declaration = symbol.declarations.find(declaration => pathIsInside(
-            path.resolve(declaration.getSourceFile().fileName), path.resolve(this.package.directory!)))
+            path.resolve(declaration.getSourceFile().fileName), path.resolve(this.package.directory)))
         if (!declaration) {
             return
         }
@@ -633,7 +636,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         const { line, character } = file.getLineAndCharacterOfPosition(node.getStart())
         return new Reference({
             dependentName: this.dependencyName,
-            file: path.relative(this.dependencyDirectory!, file.fileName),
+            file: path.relative(this.dependencyDirectory, file.fileName),
             position: { row: line + 1, column: character + 1 },
             memberName: `${this.getFullQualifiedName(declaration, false)}.${node.name.text}`,
             type: /* this.isReference(node) ? 'reference' :  */'occurence',
@@ -645,9 +648,23 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
     getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
         const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol!
-        const name = isImport ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module ? /* this.getRelativeQualifiedName(symbol) */undefined : symbol.name : this.getRelativeQualifiedName(symbol)
-        const relativePath = path.relative(this.package.directory!, declaration.getSourceFile().fileName)
-        const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
+        const name = isImport
+            ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module
+                ? undefined
+                : symbol.name
+            : this.getRelativeQualifiedName(symbol)
+        const relativePath = path.relative(this.package.directory, declaration.getSourceFile().fileName)
+        const shortRelativePath = relativePath.replace(
+            rex`
+                \.
+                (
+                    [^.]+ | d
+                    \.ts
+                )
+                $
+            `,
+            ''
+        )
         return name ? `${shortRelativePath}/${name}` : shortRelativePath
     }
 
@@ -658,7 +675,9 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         if (!exports) return false
         const defaultExport = exports?.get(<ts.__String>'export=')
         if (!(defaultExport && defaultExport.declarations)) return false
-        return defaultExport.declarations.some(_export => (_export as unknown as {expression: ts.Expression})?.expression?.getText() == symbol.name)
+        return defaultExport.declarations.some(_export =>
+            (_export as unknown as { expression: ts.Expression })?.expression?.getText() == symbol.name
+        )
     }
 
     getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {

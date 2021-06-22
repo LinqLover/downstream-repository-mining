@@ -1,8 +1,8 @@
 export default class Package {
-    constructor(name: string) {
-        this.name = name
+    constructor(init: Package) {
+        Object.assign(this, init)
     }
 
-    name: string
-    directory?: string
+    name!: string
+    directory!: string
 }
