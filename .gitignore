@@ -12,5 +12,6 @@ docs/exposé.tex
 # dowdep
 cache/
 cache-*/
+output/
 samples/
 samples-*/
