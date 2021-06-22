@@ -1,6 +1,6 @@
 {
     "heureka": {
-        "imports": {
+        "import": {
             "<null>": {
                 "foo": {
                     "index.ts": [2],
@@ -23,7 +23,7 @@
                 }
             }
         },
-        "usages": {
+        "reference": {
             "<null>": {
                 "foo": {
                     "index.ts": [12, 13, 14, 16, 25],
@@ -39,7 +39,8 @@
                 "bar": {
                     "index.js": [14]
                 }
-            },"utilSync": {
+            },
+            "utilSync": {
                 "bar": {
                     "index.js": [15]
                 }
@@ -47,8 +48,13 @@
         }
     },
     "jolo": {
-        "imports": {
+        "import": {
             "<null>": {
+                "foo": {
+                    "index.ts": [4]
+                }
+            },
+            "<undefined>": {
                 "foo": {
                     "index.ts": [4]
                 }
@@ -64,7 +70,7 @@
                 }
             }
         },
-        "usages": {
+        "reference": {
             "<null>": {
                 "foo": {
                     "index.ts": [7]

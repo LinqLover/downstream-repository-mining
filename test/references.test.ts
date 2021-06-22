@@ -1,13 +1,14 @@
 import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
+import { jsonc as json } from 'jsonc'
 
 import Package from '../src/package'
 import { ReferenceSearcher } from '../src/references'
 import ifCurtailed from '../src/utils/if-curtailed'
 import { printDiff } from './_utils/printDiff'
 
-import expectedHeuristicReferences from './references.test/expectedReferences-heuristic.json'
-import expectedTypeReferences from './references.test/expectedReferences-types.json'
+const expectedHeuristicReferences = json.readSync('./test/references.test/expectedReferences-heuristic.jsonc')
+const expectedTypeReferences = json.readSync('./test/references.test/expectedReferences-types.jsonc')
 
 
 describe('ReferenceSearcher', () => {

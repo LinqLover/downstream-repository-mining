@@ -1,7 +1,7 @@
 import solve from 'heureka/util'
 import * as baz from 'heureka'
 import { huey as jolo1, dewey } from 'jolo'
-import * as myJolo from 'jolo'
+import allJolo, * as myJolo from 'jolo'
 import * as fs from 'fs'
 
 const tick = myJolo.dewey()
@@ -25,3 +25,4 @@ console.log(sacks)
 console.log(baz)
 console.log(baz.makeWhole)
 console.log(fs.Dir)  // irrelevant
+console.log(allJolo.louie())

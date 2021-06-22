@@ -1,6 +1,6 @@
 {
     "heureka": {
-        "imports": {
+        "import": {
             "index": {
                 "bar": {
                     "index.js": [1]
@@ -24,12 +24,7 @@
                 }
             }
         },
-        "usages": {
-            "index": {
-                "foo": {
-                    "index.ts": [25]
-                }
-            },
+        "reference": {
             "index/Part": {
                 "bar": {
                     "index.js": [10]
@@ -85,7 +80,7 @@
                     "index.js": [14]
                 },
                 "foo": {
-                    "index.ts": [9, 23]
+                    "index.ts": [9]
                 }
             },
             "utilSync/solveKnapsack": {
@@ -94,12 +89,24 @@
                 }
             }
         }
+        /* "occurence": {
+            "index": {
+                "foo": {
+                    "index.ts": [25]
+                }
+            },
+            "util": {
+                "foo": {
+                    "index.ts": [23]
+                }
+            }
+        } */
     },
     "jolo": {
-        "imports": {
+        "import": {
             "src/jolo": {
                 "foo": {
-                    "index.ts": [4]
+                    "index.ts": [4, 4]
                 }
             },
             "src/jolo/dewey": {
@@ -113,17 +120,39 @@
                 }
             }
         },
-        "usages": {
+        "reference": {
             "src/jolo/dewey": {
                 "foo": {
-                    "index.ts": [7, 22]
+                    "index.ts": [7]
+                }
+            },
+            "src/jolo/dewey.cap": {
+                "foo": {
+                    "index.ts": [8]
+                }
+            },
+            "src/jolo/dewey.firstNames": {
+                "foo": {
+                    "index.ts": [8, 9]
                 }
             },
             "src/jolo/huey": {
                 "foo": {
                     "index.ts": [21]
                 }
+            },
+            "src/jolo/louie": {
+                "foo": {
+                    "index.ts": [28]
+                }
             }
         }
+        /* "occurence": {
+            "src/jolo/dewey": {
+                "foo": {
+                    "index.ts": [22]
+                }
+            }
+        } */
     }
 }
