@@ -12,6 +12,7 @@ jobs:
           node-version: '14'
       - run: yarn install
       - run: ./scripts/test-cli.sh
+      - run: ./scripts/test-examples.sh
       - run: yarn test
         env:
           GITHUB_OAUTH_TOKEN: ${{ github.token }}

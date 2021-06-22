@@ -16,7 +16,7 @@ const parts = [
 const whole = new baz.Whole(parts[0], parts[1], parts[2])
 console.log(whole.getName())
 
-heureka.hello()  // TS2304 cannot find name
+let err: Error = undefined; try { heureka.hello() } catch (referenceError) { err = referenceError }; console.log(err.message) // $ExpectedError TS2304 cannot find name
 
 console.log(jolo1())
 console.log(dewey)
