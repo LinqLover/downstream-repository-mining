@@ -12,7 +12,7 @@ For more information, read the [exposé](./docs/exposé.md):
 
 ```sh
 $ yarn install
-$ npm bind
+$ npm link
 
 # Install autocompletion (optional)
 $ dowdep autocomplete
