@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 "$(dirname "$0")/unflavor_md.py" "$1" | pandoc \
