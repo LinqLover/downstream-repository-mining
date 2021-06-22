@@ -1,17 +1,16 @@
 import { Dirent, promises as fsPromises } from 'fs'
-import escapeRegexp from './utils/escape-string-regexp' // WORKAROUND! Importing escape-string-regexp leads to ERR_REQUIRE_ESM
 import fs from 'fs'
 import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
 import _ from "lodash"
 import tqdm from 'ntqdm'
-import parseImports from 'parse-imports'
 import path from 'path'
 import pathIsInside from 'path-is-inside'
 import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
+import dynamicImport from "./utils/dynamic-import"
 import rex from './utils/rex'
 import Package from './package'
 
@@ -106,7 +105,7 @@ export class ReferenceSearcher {
                         continue
                     }
                     yield reference
-                    if (limit && ++i > limit) {
+                    if (limit && ++i >= limit) {
                         return
                     }
                 }
@@ -116,6 +115,7 @@ export class ReferenceSearcher {
 
         const dependencyName = path.basename(rootDirectory)
         const packageSearcher = new this.packageReferenceSearcher(this.package, dependencyName)
+        await packageSearcher.initialize()
         yield* packageSearcher.searchReferences(rootDirectory)
     }
 }
@@ -146,6 +146,10 @@ abstract class PackageReferenceSearcher {
         this.dependencyName = dependencyName
     }
 
+    async initialize() {
+        // Stub method for subclasses.
+    }
+
     abstract searchReferences(rootDirectory: string): AsyncGenerator<Reference, void, undefined>
 }
 
@@ -154,13 +158,12 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
     static readonly maximumFileSize = 100_000  // 100 MB
     protected commonJsPatterns!: ReadonlyArray<RegExp>
 
-    constructor(_package: Package, dependencyName: string) {
-        super(_package, dependencyName)
-
-        this.initializeCommonJsPatterns()
+    async initialize() {
+        await super.initialize()
+        await this.initializeCommonJsPatterns()
     }
 
-    private initializeCommonJsPatterns() {
+    private async initializeCommonJsPatterns() {
         // Let's build a regex family!
         // `foo = require('bar')`
         // `foo = require('bar/baz')`
@@ -168,6 +171,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 
         const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
+        const escapeRegexp = (await dynamicImport('escape-string-regexp')).default
         const requirePattern = rex`
             (?<alias> ${identifierPattern} ) \s*
             = \s*
@@ -195,7 +199,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
         const fullPath = path.join(rootDirectory, filePath)
         const fileSize = (await fsPromises.stat(fullPath)).size
         if (fileSize > HeuristicPackageReferenceSearcher.maximumFileSize) {
-            console.warn(`Skipping very large file '${fullPath}'`)
+            console.warn(`Skipping very large file`, { dependencyName: this.dependencyName, fullPath })
             return
         }
 
@@ -242,9 +246,17 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 
         const imports = await (async () => {
             try {
+                // Truly awful hack! There are a few things going on here:
+                // - Jest (or something) can't find parse-imports by just importing its package name
+                //   no matter what. Just give it the path to the src/index.js file
+                // - See the comment in dynamicImport
+                // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
+                const parseImportsIndexPath = path.join(path.dirname(__dirname), 'node_modules/parse-imports/src/index.js')
+                const parseImports = (await dynamicImport(parseImportsIndexPath)).default
+
                 return await parseImports(source)
             } catch (parseError) {
-                console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100) })
+                console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100), dependencyName: this.dependencyName })
                 // This includes syntax errors but also TypeScript syntax which is not (yet?) supported by parse-imports.
                 // See: https://github.com/TomerAberbach/parse-imports/issues/1
                 // TODO: Increase robustness by stripping of everything below import statements
