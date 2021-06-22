@@ -349,7 +349,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             typeRoots: options.options.typeRoots ?? [path.resolve(this.dependencyDirectory, './node_modules/@types')]
         })
         if (!options.fileNames.length) {
-            console.warn("Heuristic file search")
+            console.warn("Heuristic file search", { dependencyName: this.dependencyName })
             options.fileNames = (await glob('**{/!(dist)/,}!(*.min|dist).{js,ts}', { cwd: this.dependencyDirectory, nodir: true })).map(file => path.join(this.dependencyDirectory, file))
         }
         // 4l8r: Download all required type defs (or at much as possible) for better type inference.
@@ -526,7 +526,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
 
         const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, ts.isCallLikeExpression(node) ? (ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)) : node)
-        // STEHENGEBLIEBEN: Hier weiter rumfeilen. Letzte Änderung hat require()-Erkennung kaputtgemacht. Ist es einfacher, alle relevanten Fälle hierdrüber nochmal neu zu implementieren?
         const symbol = type?.symbol ?? type?.aliasSymbol
         if (!symbol || !symbol.declarations) {
             return
@@ -548,7 +547,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             position: { row: line + 1, column: character + 1 },
             memberName: this.getFullQualifiedName(declaration, false),
             type: /* this.isImport(node) ? 'import' : */ /* (this.isReference(node) ? 'reference' : 'occurence') */'occurence',
-            // STEHENGEBLIEBEN: Wir wollten hier children von already matched imports ausschließen. Das ginge entweder über Speichern von kind-of-ids für nodes, oder wir bauen filter dafür in visitNode ... ndanach mit anderen dbubletten weiter
             matchString: node.parent.getText(file),
             alias: node.getText(file)
         })
