@@ -29,6 +29,9 @@ export class FilePosition {
     }
 }
 
+const ALL_REFERENCE_TYPES = ['import', 'occurence', 'reference'] as const
+export type ReferenceType = (typeof ALL_REFERENCE_TYPES)[number]
+
 export class Reference {
     constructor(init: Reference) {
         Object.assign(this, init)
@@ -44,8 +47,8 @@ export class Reference {
      * @todo Primitive obsession! Model ExportMember class hierarchy.
      */
     memberName: string | null | undefined
-    alias!: string
-    isImport!: boolean
+    alias!: string | undefined
+    type!: ReferenceType
 
     matchString?: string
 
@@ -80,11 +83,11 @@ export class ReferenceSearcher {
         }
     }
 
-    async* searchReferences(includeImports = false, limit?: number): AsyncIterable<Reference> {
-        yield* this.basicSearchReferences(this.rootDirectory, includeImports, limit, 0)
+    async* searchReferences(limit?: number, includeTypes: ReadonlyArray<ReferenceType> | '*' = ['reference']): AsyncIterable<Reference> {
+        yield* this.basicSearchReferences(this.rootDirectory, limit, includeTypes === '*' ? ALL_REFERENCE_TYPES : includeTypes, 0)
     }
 
-    protected async* basicSearchReferences(rootDirectory: string, includeImports: boolean, limit: number | undefined, depth: number): AsyncIterable<Reference> {
+    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeTypes: ReadonlyArray<ReferenceType>, depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
             let depDirectories: Iterable<Dirent> = (
@@ -98,8 +101,8 @@ export class ReferenceSearcher {
 
             let i = 0
             for await (const depDirectory of depDirectories) {
-                for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), includeImports, undefined, depth + 1)) {
-                    if (!includeImports && reference.isImport) {
+                for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), undefined, includeTypes, depth + 1)) {
+                    if (!includeTypes.includes(reference.type)) {
                         continue
                     }
                     yield reference
@@ -211,11 +214,12 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
         for (const [lineNo, line] of lines.entries()) {
             for (const binding of bindings) {
                 if (!line.includes(binding.alias)) continue
+                const isImport = HeuristicPackageReferenceSearcher.importKeywords.some(keyword => line.includes(keyword))  // as brittle as the rest of this implementation
                 yield {
                     dependentName: this.dependencyName,
                     file: filePath,
                     position: { row: lineNo + 1 },
-                    isImport: HeuristicPackageReferenceSearcher.importKeywords.some(keyword => line.includes(keyword)),  // as brittle as the rest of this implementation
+                    type: isImport ? 'import' : 'reference',
                     memberName: binding.memberName,
                     alias: binding.alias,
                     matchString: line
@@ -317,7 +321,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 
 class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected typeChecker!: ts.TypeChecker
-    protected references!: Set<Reference>
+    protected references!: Reference[]
     protected dependencyDirectory!: string // TODO: Initialize in constructor?
     private static identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
@@ -353,13 +357,13 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         const program = ts.createProgram(options.fileNames, options.options, host)
         this.typeChecker = program.getTypeChecker()
 
-        this.references = new Set<Reference>()
+        this.references = []
 
         for (const sourceFile of program.getSourceFiles()) {
             if (!options.fileNames.includes(sourceFile.fileName)) {
                 continue
             }
-            // TODO: Skip if sourceFile.isDeclarationFile?
+
             ts.forEachChild(sourceFile, (node) => this.visitNode(node))
         }
         yield* this.references
@@ -402,20 +406,127 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     visitNode(node: ts.Node) {
         const reference = this.findReference(node)
         if (reference) {
-            this.references.add(reference)
+            this.references.push(reference)
         }
         ts.forEachChild(node, (node) => this.visitNode(node))
     }
 
     findReference(node: ts.Node) {
-        if (ts.isPropertyAccessExpression(node)) {
+        /* if (ts.isPropertyAccessExpression(node)) {
             const propertyReference = this.findPropertyReference(node)
             if (propertyReference) {
                 return propertyReference
             }
+        } */
+
+        if (ts.isCallExpression(node) && node.expression.getText() === 'require') {
+            const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node)
+            const symbol = type?.symbol ?? type?.aliasSymbol
+            if (!symbol?.declarations) {
+                return
+            }
+            const declaration = symbol.declarations.find(declaration => pathIsInside(
+                path.resolve(declaration.getSourceFile().fileName),
+                path.resolve(this.package.directory!)))
+            if (!declaration) {
+                return
+            }
+            let targetNode: ts.Node = node
+            if (ts.isVariableDeclaration(node.parent)) {
+                targetNode = node.parent
+            }
+            const file = targetNode.getSourceFile()
+            const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
+            return new Reference({
+                dependentName: this.dependencyName,
+                file: path.relative(this.dependencyDirectory!, file.fileName),
+                position: { row: line + 1, column: character + 1 },
+                memberName: this.getFullQualifiedName(declaration, true),
+                type: 'import',
+                matchString: targetNode.getText(file),
+                alias: ts.isVariableDeclaration(targetNode) ? targetNode.name.getText(file) : undefined
+            })
         }
 
-        const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node)
+        if (ts.isImportSpecifier(node) || node.parent && ts.isImportClause(node.parent)) {
+            const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node) // Do we need the type here at all and not only getSymbolAtLocation?
+            const symbol = type?.symbol ?? type?.aliasSymbol
+            if (!symbol?.declarations) {
+                return
+            }
+            const declaration = symbol.declarations.find(declaration => pathIsInside(
+                path.resolve(declaration.getSourceFile().fileName),
+                path.resolve(this.package.directory!)))
+            if (!declaration) {
+                return
+            }
+            const targetNode: ts.Node = node
+            const file = targetNode.getSourceFile()
+            const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
+            return new Reference({
+                dependentName: this.dependencyName,
+                file: path.relative(this.dependencyDirectory!, file.fileName),
+                position: { row: line + 1, column: character + 1 },
+                memberName: this.getFullQualifiedName(declaration, true),
+                type: 'import',
+                matchString: targetNode.getText(file),
+                alias: targetNode.getText(file)
+            })
+        }
+
+        if (ts.isCallLikeExpression(node)) {
+            const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, this.getCallLikeNode(node))
+            const symbol = type?.symbol ?? type?.aliasSymbol
+            if (!symbol?.declarations) {
+                return
+            }
+            const declaration = symbol.declarations.find(declaration => pathIsInside(
+                path.resolve(declaration.getSourceFile().fileName),
+                path.resolve(this.package.directory!)))
+            if (!declaration) {
+                return
+            }
+            const targetNode: ts.Node = node
+            const file = targetNode.getSourceFile()
+            const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
+            return new Reference({
+                dependentName: this.dependencyName,
+                file: path.relative(this.dependencyDirectory!, file.fileName),
+                position: { row: line + 1, column: character + 1 },
+                memberName: this.getFullQualifiedName(declaration, false),
+                type: 'reference',
+                matchString: targetNode.getText(file),
+                alias: targetNode.getText(file)
+            })
+        }
+
+        if (ts.isPropertyAccessExpression(node) && !(ts.isCallLikeExpression(node.parent) && this.getCallLikeNode(node.parent) == node)) {
+            const symbol = this.typeChecker.getSymbolAtLocation(node)
+            if (!symbol?.declarations) {
+                return
+            }
+            const declaration = symbol.declarations.find(declaration => pathIsInside(
+                path.resolve(declaration.getSourceFile().fileName),
+                path.resolve(this.package.directory!)))
+            if (!declaration) {
+                return
+            }
+            const targetNode: ts.Node = node
+            const file = targetNode.getSourceFile()
+            const { line, character } = file.getLineAndCharacterOfPosition(targetNode.getStart())
+            return new Reference({
+                dependentName: this.dependencyName,
+                file: path.relative(this.dependencyDirectory!, file.fileName),
+                position: { row: line + 1, column: character + 1 },
+                memberName: this.getFullQualifiedName(declaration, false),
+                type: 'reference',
+                matchString: targetNode.getText(file),
+                alias: targetNode.getText(file) // NOTE: The uselessness of this member for non-imports indicates that we should use a class hierarchy for references!
+            })
+        }
+
+        const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, ts.isCallLikeExpression(node) ? (ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)) : node)
+        // STEHENGEBLIEBEN: Hier weiter rumfeilen. Letzte Änderung hat require()-Erkennung kaputtgemacht. Ist es einfacher, alle relevanten Fälle hierdrüber nochmal neu zu implementieren?
         const symbol = type?.symbol ?? type?.aliasSymbol
         if (!symbol || !symbol.declarations) {
             return
@@ -428,35 +539,50 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         const file = node.getSourceFile()
         const { line, character } = file.getLineAndCharacterOfPosition(node.getStart())
+        /* if (!this.isImport(node) && (node.getText().includes('require') || node.parent.getText().includes('* as') || node.getText().includes('import'))) {
+            console.warn("Suspicious isImport = false", {fileName: file.fileName, kind: node.kind, parentKind: node.parent.kind, parent2Kind: node.parent.parent?.kind, line, character})
+        } */
         return new Reference({
             dependentName: this.dependencyName,
             file: path.relative(this.dependencyDirectory!, file.fileName),
             position: { row: line + 1, column: character + 1 },
-            memberName: this.getFullQualifiedName(declaration),
-            isImport: this.isImport(node),
+            memberName: this.getFullQualifiedName(declaration, false),
+            type: /* this.isImport(node) ? 'import' : */ /* (this.isReference(node) ? 'reference' : 'occurence') */'occurence',
+            // STEHENGEBLIEBEN: Wir wollten hier children von already matched imports ausschließen. Das ginge entweder über Speichern von kind-of-ids für nodes, oder wir bauen filter dafür in visitNode ... ndanach mit anderen dbubletten weiter
             matchString: node.parent.getText(file),
             alias: node.getText(file)
         })
     }
 
-    private isImport(node: ts.Node, depth = 0): boolean {
-        // require statement
+    private getCallLikeNode(node: ts.CallLikeExpression): ts.LeftHandSideExpression | ts.JsxOpeningElement {
+        return ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)
+    }
+
+    private isImport(node: ts.Node) {
+        // `require()` statement
         // Type check has already been passed in the caller
-        if (ts.isVariableDeclaration(node) && (node.initializer as ts.CallExpression)?.expression?.getText() === 'require') {
-            return true
-        }
         if (ts.isCallExpression(node) && node.expression.getText() === 'require') {
             return true
         }
 
-        // import statement
-        if (ts.isImportDeclaration(node) || ts.isImportSpecifier(node) || ts.isImportClause(node)) {
+        // `import` statement
+        if (ts.isImportSpecifier(node) || node.parent && ts.isImportClause(node.parent)) {
             return true
         }
 
-        if (depth < 2) {
-            return this.isImport(node.parent, depth + 1)
+        return false
+    }
+
+    private isReference(node: ts.Node) {
+        if (ts.isCallLikeExpression(node)) {
+            return true
         }
+
+        if (ts.isPropertyAccessExpression(node) && !this.isReference(node.parent)) { // TODO: What about QualifiedName?
+            return true
+        }
+        // TODO: ElementAccess (x[y])
+
         return false
     }
 
@@ -480,17 +606,17 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             dependentName: this.dependencyName,
             file: path.relative(this.dependencyDirectory!, file.fileName),
             position: { row: line + 1, column: character + 1 },
-            memberName: `${this.getFullQualifiedName(declaration)}.${node.name.text}`,
-            isImport: false,
+            memberName: `${this.getFullQualifiedName(declaration, false)}.${node.name.text}`,
+            type: /* this.isReference(node) ? 'reference' :  */'occurence',
             matchString: node.parent.getText(file),
             alias: node.getText(file)
         })
     }
 
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
-    getFullQualifiedName(declaration: ts.Declaration) {
+    getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
         const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol!
-        const name = this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module ? this.getRelativeQualifiedName(symbol) : symbol.name
+        const name = isImport ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module ? /* this.getRelativeQualifiedName(symbol) */undefined : symbol.name : this.getRelativeQualifiedName(symbol)
         const relativePath = path.relative(this.package.directory!, declaration.getSourceFile().fileName)
         const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
         return name ? `${shortRelativePath}/${name}` : shortRelativePath
@@ -507,12 +633,23 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     }
 
     getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
-        const parent = (<Partial<{parent?: ts.Symbol}>>symbol).parent
+        if (!symbol.valueDeclaration) {
+            return null // TODO: Does this make sense?
+        }
+        let parent = (<Partial<{parent?: ts.Symbol}>>symbol).parent
         if (!parent) {
-            if (!ts.isSourceFile(symbol.valueDeclaration!)) {
+            if (ts.isSourceFile(symbol.valueDeclaration)) {
+                return null
+            }
+            if (this.isDefaultExport(symbol, symbol.valueDeclaration)) {
                 return undefined
             }
-            return null
+        }
+        {
+            let parentNode: ts.Node = symbol.valueDeclaration.parent
+            while (!((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol) && parent.name != '__object')) {
+                parentNode = parentNode.parent
+            }
         }
         const symbolName = this.typeChecker.symbolToString(symbol)
         const parentName = this.getRelativeQualifiedName(parent)

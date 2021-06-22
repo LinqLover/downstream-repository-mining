@@ -4,7 +4,7 @@ import * as util from 'util'
 
 import Package from '../../package'
 import { getCacheDirectory } from '../../npm-deps'
-import { ReferenceSearcher } from '../../references'
+import { Reference, ReferenceSearcher, ReferenceType } from '../../references'
 
 
 export default class Search extends Command {
@@ -21,6 +21,13 @@ export default class Search extends Command {
             options: ['heuristic', 'types']
         }),
         includeImports: flags.boolean({
+            name: 'include-imports', // TODO does not work
+            description: "whether also to find import statements for the package",
+            default: false
+        }),
+        includeOccurences: flags.boolean({
+            name: 'include-occurences',
+            description: "whether also to find indirect occurences of package types",
             description: "whether also find import statements for the package",
             default: false
         }),
@@ -40,12 +47,20 @@ export default class Search extends Command {
         const packageDirectory = flags.source || undefined
         const strategy = flags.strategy
         const includeImports = flags.includeImports
+        const includeOccurences = flags.includeOccurences
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const _package = new Package(packageName)
         _package.directory = packageDirectory ?? path.join(getCacheDirectory(), packageName)
         const searcher = new ReferenceSearcher(_package, undefined, strategy)
-        const references = searcher.searchReferences(includeImports, limit)
+        const includeTypes: ReferenceType[] = ['reference']
+        if (includeImports) {
+            includeTypes.push('import')
+        }
+        if (includeOccurences) {
+            includeTypes.push('occurence')
+        }
+        const references = searcher.searchReferences(limit, includeTypes)
 
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
