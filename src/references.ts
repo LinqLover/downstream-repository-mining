@@ -10,7 +10,6 @@ import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
-import dynamicImport from "./utils/dynamic-import"
 import rex from './utils/rex'
 import Package from './package'
 
@@ -171,6 +170,17 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 
         const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
+        /**
+         * Workaround for https://github.com/microsoft/TypeScript/issues/43329.
+         *
+         * TypeScript will always try to replace dynamic imports with `requires` which doesn't work for importing ESM from CJS.
+         * We work around by "hiding" our dynamic import in a Function constructor (terrible...).
+         *
+         * In particular, we must not extract this call into a separate module.
+         * This would result in sporadic unresolved promises in the jest environment.
+         * See #65.
+         */
+        const dynamicImport = new Function('moduleName', 'return import(moduleName)')
         const escapeRegexp = (await dynamicImport('escape-string-regexp')).default
         const requirePattern = rex`
             (?<alias> ${identifierPattern} ) \s*
@@ -249,9 +259,18 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 // Truly awful hack! There are a few things going on here:
                 // - Jest (or something) can't find parse-imports by just importing its package name
                 //   no matter what. Just give it the path to the src/index.js file
-                // - See the comment in dynamicImport
+                // - Workaround for https://github.com/microsoft/TypeScript/issues/43329.
+                //
+                //   TypeScript will always try to replace dynamic imports with `requires` which doesn't work for importing ESM from CJS.
+                //   We work around by "hiding" our dynamic import in a Function constructor (terrible...).
+                //
+                //   In particular, we must not extract this call into a separate module.
+                //   This would result in sporadic unresolved promises in the jest environment.
+                //   See #65.
+                //
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
                 const parseImportsIndexPath = path.join(path.dirname(__dirname), 'node_modules/parse-imports/src/index.js')
+                const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                 const parseImports = (await dynamicImport(parseImportsIndexPath)).default
 
                 return await parseImports(source)
