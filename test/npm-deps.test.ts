@@ -14,10 +14,10 @@ const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BU
 describe('getNpmDeps', () => {
     it.each`
         packageName     | limit  | countNestedDeps  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
-        ${'glob'}       | ${4}   | ${false}         | ${false}            | ${10}        | ${null}
-        ${'glob'}       | ${4}   | ${false}         | ${true}             | ${10}        | ${0}
-        ${'glob'}       | ${4}   | ${true}          | ${true}             | ${30}        | ${0}
-        ${'gl-matrix'}  | ${4}   | ${false}         | ${false}            | ${30}        | ${null}
+        ${'glob'}       | ${4}   | ${false}         | ${false}            | ${20}        | ${null}
+        ${'glob'}       | ${4}   | ${false}         | ${true}             | ${20}        | ${0}
+        ${'glob'}       | ${4}   | ${true}          | ${true}             | ${60}        | ${0}
+        ${'gl-matrix'}  | ${4}   | ${false}         | ${false}            | ${60}        | ${null}
         `("should return plausible results for $packageName (at least $limit deps)", async (
         { packageName, limit, countNestedDeps, downloadGitHubData, timeoutSecs, nonGitHubThreshold }: {
             packageName: string, limit: number, countNestedDeps: boolean, downloadGitHubData: boolean, timeoutSecs: number, nonGitHubThreshold: number | undefined
