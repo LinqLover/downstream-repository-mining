@@ -88,8 +88,8 @@
                     "index.js": [15]
                 }
             }
-        }
-        /* "occurence": {
+        },
+        "occurence": {
             "index": {
                 "foo": {
                     "index.ts": [25]
@@ -100,7 +100,7 @@
                     "index.ts": [23]
                 }
             }
-        } */
+        }
     },
     "jolo": {
         "import": {
@@ -146,13 +146,13 @@
                     "index.ts": [28]
                 }
             }
-        }
-        /* "occurence": {
+        },
+        "occurence": {
             "src/jolo/dewey": {
                 "foo": {
                     "index.ts": [22]
                 }
             }
-        } */
+        }
     }
 }
