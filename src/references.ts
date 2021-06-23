@@ -584,12 +584,12 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
     protected getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
-        const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol!
-        const name = isImport
+        const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol
+        const name = symbol && (isImport
             ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module
                 ? undefined
                 : symbol.name
-            : this.getRelativeQualifiedName(symbol)
+            : this.getRelativeQualifiedName(symbol))
         const relativePath = path.relative(this.package.directory, declaration.getSourceFile().fileName)
         const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
         return name ? `${shortRelativePath}/${name}` : shortRelativePath
