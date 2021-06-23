@@ -2,7 +2,7 @@
 .env
 
 # node
-node_modules/
+/node_modules/
 yarn-error.log
 
 # docs
@@ -12,3 +12,6 @@ docs/exposé.tex
 # dowdep
 cache/
 cache-*/
+output/
+samples/
+samples-*/

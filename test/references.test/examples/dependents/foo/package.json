@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "heureka": "file:../../packages/heureka",
+        "jolo": "file:../../packages/jolo"
+    }
+}
