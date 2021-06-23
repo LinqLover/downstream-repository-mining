@@ -82,7 +82,7 @@ export class ReferenceSearcher {
     }
 
     async* searchReferences(limit?: number, includeTypes: ReadonlyArray<ReferenceType> | '*' = ['reference']): AsyncIterable<Reference> {
-        yield* this.basicSearchReferences(this.rootDirectory, limit, includeTypes === '*' ? ALL_REFERENCE_TYPES : includeTypes, 0)
+        yield* this.basicSearchReferences(this.rootDirectory, limit, includeTypes == '*' ? ALL_REFERENCE_TYPES : includeTypes, 0)
     }
 
     protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeTypes: ReadonlyArray<ReferenceType>, depth: number): AsyncIterable<Reference> {
@@ -452,11 +452,11 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         // Customize module resolution
         const basicDirectoryExists = host.directoryExists ?? ts.sys.directoryExists
         host.directoryExists = directoryName => {
-            if (directoryName === path.resolve(this.dependencyDirectory, 'node_modules')) {
+            if (directoryName == path.resolve(this.dependencyDirectory, 'node_modules')) {
                 // Pretend this dependent to be installed
                 return true
             }
-            if (path.basename(directoryName) === 'node_modules' && !pathIsInside(path.resolve(directoryName), path.resolve(this.dependencyDirectory))) {
+            if (path.basename(directoryName) == 'node_modules' && !pathIsInside(path.resolve(directoryName), path.resolve(this.dependencyDirectory))) {
                 // Stop module resolution outside dependent folder - this might cause unintended side effects and will slow down search significantly
                 return false
             }
@@ -482,7 +482,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     protected findImportReference(node: ts.Node) {
         // `require()` statement
-        if (ts.isCallExpression(node) && node.expression.getText() === 'require') {
+        if (ts.isCallExpression(node) && node.expression.getText() == 'require') {
             let targetNode: ts.Node = node
             if (ts.isVariableDeclaration(targetNode.parent)) {
                 targetNode = targetNode.parent
@@ -550,7 +550,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             dependentName: this.dependencyName,
             file: path.relative(this.dependencyDirectory, file.fileName),
             position: { row: line + 1, column: character + 1 },
-            memberName: this.getFullQualifiedName(declaration, type === 'import'),
+            memberName: this.getFullQualifiedName(declaration, type == 'import'),
             type: type,
             matchString: matchString,
             alias: aliasCallback ? aliasCallback(file) : matchString
