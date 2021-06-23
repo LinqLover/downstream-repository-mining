@@ -33,7 +33,7 @@ describe('ReferenceSearcher', () => {
             directory: `test/references.test/examples/packages/${packageName}`
         })
         const searcher = new ReferenceSearcher(_package, 'test/references.test/examples/dependents', packageReferenceSearcher)
-        const references = await asyncIteratorToArray(searcher.searchReferences(undefined, ['import', 'reference']))
+        const references = await asyncIteratorToArray(searcher.searchReferences(undefined, ['import', 'usage']))
 
         /** Since null and undefined are invalid keys in JS objects, we stringify them for compatibility with lodash. See Reference.memberName. */
         function stringify(key: string | null | undefined) {

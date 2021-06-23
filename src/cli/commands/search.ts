@@ -60,7 +60,7 @@ export default class Search extends Command {
             directory: packageDirectory ?? path.join(getCacheDirectory(), packageName)
         })
         const searcher = new ReferenceSearcher(_package, undefined, strategy)
-        const includeTypes: ReferenceType[] = ['reference']
+        const includeTypes: ReferenceType[] = ['usage']
         if (includeImports) {
             includeTypes.push('import')
         }

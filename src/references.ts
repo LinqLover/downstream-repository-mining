@@ -27,7 +27,14 @@ export class FilePosition {
     }
 }
 
-const ALL_REFERENCE_TYPES = ['import', 'occurence', 'reference'] as const
+const ALL_REFERENCE_TYPES = [
+    /** Member calls */
+    'usage',
+    /** Import and require statements */
+    'import',
+    /** Any kind of expression that is related to the package or a part of it. Very broad. Experimental. */
+    'occurence'
+] as const
 export type ReferenceType = (typeof ALL_REFERENCE_TYPES)[number]
 
 export class Reference {
@@ -81,7 +88,7 @@ export class ReferenceSearcher {
         }
     }
 
-    async* searchReferences(limit?: number, includeTypes: ReadonlyArray<ReferenceType> | '*' = ['reference']): AsyncIterable<Reference> {
+    async* searchReferences(limit?: number, includeTypes: ReadonlyArray<ReferenceType> | '*' = ['usage']): AsyncIterable<Reference> {
         yield* this.basicSearchReferences(this.rootDirectory, limit, includeTypes == '*' ? ALL_REFERENCE_TYPES : includeTypes, 0)
     }
 
@@ -240,7 +247,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                     dependentName: this.dependencyName,
                     file: filePath,
                     position: { row: lineNo + 1 },
-                    type: isImport ? 'import' : 'reference',
+                    type: isImport ? 'import' : 'usage',
                     memberName: binding.memberName,
                     alias: binding.alias,
                     matchString: line
@@ -266,6 +273,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 // Truly awful hack! There are a few things going on here:
                 // - Jest (or something) can't find parse-imports by just importing its package name
                 //   no matter what. Just give it the path to the src/index.js file
+                //
                 // - Workaround for https://github.com/microsoft/TypeScript/issues/43329.
                 //
                 //   TypeScript will always try to replace dynamic imports with `requires` which doesn't work for importing ESM from CJS.
@@ -476,7 +484,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     findReference(node: ts.Node) {
         return this.findImportReference(node)
-            || this.findReferenceReference(node)
+            || this.findUsageReference(node)
             || this.findOccurrenceReference(node)
     }
 
@@ -497,12 +505,12 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
     }
 
-    protected findReferenceReference(node: ts.Node) {
+    protected findUsageReference(node: ts.Node) {
         // Function calls, template function invocations, etc.
         if (ts.isCallLikeExpression(node)) {
             const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, this.getCallLikeNode(node))
             const symbol = type?.symbol ?? type?.aliasSymbol
-            return symbol?.declarations && this.createReference(node, 'reference', symbol)
+            return symbol?.declarations && this.createReference(node, 'usage', symbol)
         }
 
         // Property accesses (excluding accesses to called functions)
@@ -511,7 +519,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         ) {
             // TODO: Do we already support ElementAccess (x[y]) here?
             const symbol = this.typeChecker.getSymbolAtLocation(node)
-            return symbol?.declarations && this.createReference(node, 'reference', symbol)
+            return symbol?.declarations && this.createReference(node, 'usage', symbol)
         }
     }
 
@@ -530,9 +538,6 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         reference.matchString = targetNode.parent.getText()
         return reference
 
-        ///* if (!this.isImport(node) && (node.getText().includes('require') || node.parent.getText().includes('* as') || node.getText().includes('import'))) {
-        //    console.warn("Suspicious isImport = false", {fileName: file.fileName, kind: node.kind, parentKind: node.parent.kind, parent2Kind: node.parent.parent?.kind, line, character})
-        //} */
     }
 
     protected createReference(node: ts.Node, type: ReferenceType, symbol?: ts.Symbol, aliasCallback?: (file: ts.SourceFile) => string | undefined) {

@@ -23,7 +23,7 @@
                 }
             }
         },
-        "reference": {
+        "usage": {
             "<null>": {
                 "foo": {
                     "index.ts": [12, 13, 14, 16, 25],
@@ -70,7 +70,7 @@
                 }
             }
         },
-        "reference": {
+        "usage": {
             "<null>": {
                 "foo": {
                     "index.ts": [7]
