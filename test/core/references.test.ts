@@ -2,12 +2,15 @@ import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
 import { jsonc as json } from 'jsonc'
 
-import Package from '../src/package'
-import { ReferenceSearcher, ReferenceKind } from '../src/references'
-import ifCurtailed from '../src/utils/if-curtailed'
-import { printDiff } from './_utils/printDiff'
-import { lodashClassifyNested } from '../src/utils/lodash-classify'
+import Package from '@core/package'
+import { ReferenceSearcher, ReferenceKind } from '@core/references'
+import ifCurtailed from '@utils/if-curtailed'
+import { lodashClassifyNested } from '@utils/lodash-classify'
+import { getCwd } from '../_utils/cwd'
+import { printDiff } from '../_utils/printDiff'
 
+
+const CWD = getCwd(__filename)
 
 type PackageReferences = {
     [kind: string]: {
@@ -22,8 +25,8 @@ type References = {
     [packageName: string]: PackageReferences
 }
 
-const expectedHeuristicReferences = <References>json.readSync('./test/references.test/expectedReferences-heuristic.jsonc')
-const expectedTypeReferences = <References>json.readSync('./test/references.test/expectedReferences-types.jsonc')
+const expectedHeuristicReferences = <References>json.readSync(`${CWD}/expectedReferences-heuristic.jsonc`)
+const expectedTypeReferences = <References>json.readSync(`${CWD}/expectedReferences-types.jsonc`)
 
 
 describe('ReferenceSearcher', () => {
@@ -36,9 +39,9 @@ describe('ReferenceSearcher', () => {
         { packageReferenceSearcher, packageName, expectedReferences }) => {
         const _package = new Package({
             name: packageName,
-            directory: `test/references.test/examples/packages/${packageName}`
+            directory: `${CWD}/examples/packages/${packageName}`
         })
-        const searcher = new ReferenceSearcher(_package, 'test/references.test/examples/dependents', packageReferenceSearcher)
+        const searcher = new ReferenceSearcher(_package, `${CWD}/examples/dependents`, packageReferenceSearcher)
         const references = await asyncIteratorToArray(searcher.searchReferences(undefined, '*'))
 
         /** Since null and undefined are invalid keys in JS objects, we stringify them for compatibility with lodash. See Reference.memberName. */

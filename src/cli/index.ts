@@ -1,3 +1,3 @@
 #!/usr/bin/env ts-node
 
-export {run} from '@oclif/command'
+export { run } from '@oclif/command'

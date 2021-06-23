@@ -1,2 +1,2 @@
 src/utils/escape-string-regexp.ts linguist-vendored
-test/*.test -linguist-detectable
+test/**/*.test/**/* -linguist-detectable

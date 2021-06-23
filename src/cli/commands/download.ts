@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command'
 import tqdm from 'ntqdm'
 
-import { getNpmDeps, downloadDep } from '../../npm-deps'
+import { getNpmDeps, downloadDep } from '../../core/npm-deps'
 
 
 export default class Download extends Command {
