@@ -444,7 +444,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         return ts.parseJsonConfigFileContent(config, ts.sys, rootDirectory, overrideOptions)
     }
 
-    createCompilerHost(options: ts.CompilerOptions) {
+    protected createCompilerHost(options: ts.CompilerOptions) {
         const host = ts.createCompilerHost(options)
 
         host.getCurrentDirectory = () => this.dependencyDirectory
@@ -480,7 +480,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             || this.findOccurrenceReference(node)
     }
 
-    private findImportReference(node: ts.Node) {
+    protected findImportReference(node: ts.Node) {
         // `require()` statement
         if (ts.isCallExpression(node) && node.expression.getText() === 'require') {
             let targetNode: ts.Node = node
@@ -497,7 +497,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
     }
 
-    private findReferenceReference(node: ts.Node) {
+    protected findReferenceReference(node: ts.Node) {
         // Function calls, template function invocations, etc.
         if (ts.isCallLikeExpression(node)) {
             const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, this.getCallLikeNode(node))
@@ -515,7 +515,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
     }
 
-    private findOccurrenceReference(node: ts.Node) {
+    protected findOccurrenceReference(node: ts.Node) {
         const targetNode = ts.isCallLikeExpression(node)
             ? ts.isTaggedTemplateExpression(node)
                 ? node.tag
@@ -535,7 +535,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         //} */
     }
 
-    private createReference(node: ts.Node, type: ReferenceType, symbol?: ts.Symbol, aliasCallback?: (file: ts.SourceFile) => string | undefined) {
+    protected createReference(node: ts.Node, type: ReferenceType, symbol?: ts.Symbol, aliasCallback?: (file: ts.SourceFile) => string | undefined) {
         const declaration = symbol ? this.findDeclarationForSymbol(symbol) : this.findDeclarationForNode(node)
         if (!declaration) {
             return
@@ -557,7 +557,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         })
     }
 
-    private findDeclarationForNode(node: ts.Node) {
+    protected findDeclarationForNode(node: ts.Node) {
         const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node)
         const symbol = type?.symbol ?? type?.aliasSymbol
         if (!symbol?.declarations) {
@@ -566,19 +566,19 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         return this.findDeclarationForSymbol(symbol)
     }
 
-    private findDeclarationForSymbol(symbol: ts.Symbol) {
+    protected findDeclarationForSymbol(symbol: ts.Symbol) {
         return (symbol.declarations ?? []).find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
             path.resolve(this.package.directory))
         )
     }
 
-    private getCallLikeNode(node: ts.CallLikeExpression): ts.LeftHandSideExpression | ts.JsxOpeningElement {
+    protected getCallLikeNode(node: ts.CallLikeExpression): ts.LeftHandSideExpression | ts.JsxOpeningElement {
         return ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)
     }
 
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
-    private getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
+    protected getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
         const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol!
         const name = isImport
             ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module
@@ -590,7 +590,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         return name ? `${shortRelativePath}/${name}` : shortRelativePath
     }
 
-    private getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
+    protected getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
         if (!symbol.valueDeclaration) {
             return null // TODO: Does this make sense?
         }
