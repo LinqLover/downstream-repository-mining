@@ -1,0 +1,91 @@
+{
+    "heureka": {
+        "import": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [2],
+                    "util.js": [1]
+                }
+            },
+            "<undefined>": {
+                "bar": {
+                    "index.js": [1]
+                }
+            },
+            "util": {
+                "bar": {
+                    "index.js": [2]
+                }
+            },
+            "utilSync": {
+                "bar": {
+                    "index.js": [3]
+                }
+            }
+        },
+        "usage": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [12, 13, 14, 16, 25],
+                    "util.js": [3]
+                }
+            },
+            "<undefined>": {
+                "bar": {
+                    "index.js": [5, 10]
+                }
+            },
+            "util": {
+                "bar": {
+                    "index.js": [14]
+                }
+            },
+            "utilSync": {
+                "bar": {
+                    "index.js": [15]
+                }
+            }
+        }
+    },
+    "jolo": {
+        "import": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [4]
+                }
+            },
+            "<undefined>": {
+                "foo": {
+                    "index.ts": [4]
+                }
+            },
+            "dewey": {
+                "foo": {
+                    "index.ts": [3]
+                }
+            },
+            "huey": {
+                "foo": {
+                    "index.ts": [3]
+                }
+            }
+        },
+        "usage": {
+            "<null>": {
+                "foo": {
+                    "index.ts": [7]
+                }
+            },
+            "dewey": {
+                "foo": {
+                    "index.ts": [22]
+                }
+            },
+            "huey": {
+                "foo": {
+                    "index.ts": [21]
+                }
+            }
+        }
+    }
+}

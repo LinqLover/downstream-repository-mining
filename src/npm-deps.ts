@@ -9,6 +9,10 @@ import path from 'path'
 
 
 export class Dependent {
+    constructor(init: Dependent) {
+        Object.assign(this, init)
+    }
+
     public name!: string
     public github?: GitHubRepository
     public tarballUrl!: string
@@ -40,7 +44,9 @@ export async function getNpmDeps(packageName: string, limit?: number, countNeste
         },
     })
 
-    let dependents = await asyncIteratorToArray(getNpmDependents(packageName, limit))
+    let dependents = (
+        await asyncIteratorToArray(getNpmDependents(packageName, limit))
+    ).map(name => (<Dependent>{ name }))
 
     for (const dependent of tqdm(dependents, { desc: "Gathering metadata" })) {
         const metadata = await RegistryClient.getMetadata(dependent.name, { fullMetadata: true })
@@ -79,7 +85,7 @@ export async function getNpmDeps(packageName: string, limit?: number, countNeste
 
     dependents = dependents.sort((a, b) => (a.github?.stargazerCount ?? 0) - (b.github?.stargazerCount ?? 0))
 
-    return dependents
+    return dependents.map(proto => new Dependent(proto))
 }
 
 export async function downloadDep(dependent: Dependent) {
@@ -103,7 +109,7 @@ export function getCacheDirectory() {
 async function* getNpmDependents(packageName: string, limit?: number) {
     let count = 0
     for await (const dependent of npmDependants(packageName)) {
-        yield <Dependent>{ name: <string>dependent, github: undefined, dependentCount: undefined }
+        yield dependent
         if (limit && ++count >= limit) break
     }
 }

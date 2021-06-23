@@ -1,23 +1,23 @@
 import { FullMetadata as PackageJson } from 'package-json'
 import * as path from 'path'
-import readJsonCallback from 'read-package-json'
+import readPackageJsonCallback from 'read-package-json'
 import rimRaf from 'rimraf'
 import { promisify } from 'util'
 
 import { getNpmDeps, downloadDep, Dependent } from "../src/npm-deps"
 
-const readJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
-    promisify(readJsonCallback)
+const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
+    promisify(readPackageJsonCallback)
 
 
 // TODO: Extract all fixtures into separate files?
 describe('getNpmDeps', () => {
     it.each`
         packageName     | limit  | countNestedDeps  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
-        ${'glob'}       | ${4}   | ${false}         | ${false}            | ${10}        | ${null}
-        ${'glob'}       | ${4}   | ${false}         | ${true}             | ${10}        | ${0}
-        ${'glob'}       | ${4}   | ${true}          | ${true}             | ${30}        | ${0}
-        ${'gl-matrix'}  | ${4}   | ${false}         | ${false}            | ${30}        | ${null}
+        ${'glob'}       | ${4}   | ${false}         | ${false}            | ${20}        | ${null}
+        ${'glob'}       | ${4}   | ${false}         | ${true}             | ${20}        | ${0}
+        ${'glob'}       | ${4}   | ${true}          | ${true}             | ${60}        | ${0}
+        ${'gl-matrix'}  | ${4}   | ${false}         | ${false}            | ${60}        | ${null}
         `("should return plausible results for $packageName (at least $limit deps)", async (
         { packageName, limit, countNestedDeps, downloadGitHubData, timeoutSecs, nonGitHubThreshold }: {
             packageName: string, limit: number, countNestedDeps: boolean, downloadGitHubData: boolean, timeoutSecs: number, nonGitHubThreshold: number | undefined
@@ -62,17 +62,18 @@ describe('downloadDep', () => {
         { packageName, version, tarballUrl }: {
             packageName: string, version: string, tarballUrl: string
         }) => {
+        jest.setTimeout(5000)
         await (promisify(rimRaf))(<string>process.env.NPM_CACHE)
 
-        jest.setTimeout(5000)
 
-        const dep = new Dependent()
-        dep.name = packageName
-        dep.tarballUrl = tarballUrl
+        const dep = new Dependent({
+            name: packageName,
+            tarballUrl: tarballUrl
+        })
 
         await downloadDep(dep)
 
-        const data = await readJson(path.join(<string>process.env.NPM_CACHE, packageName, 'package.json'))
+        const data = await readPackageJson(path.join(<string>process.env.NPM_CACHE, packageName, 'package.json'))
         expect(data.version).toBe(version)
     })
 })

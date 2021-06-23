@@ -14,6 +14,7 @@ ignorePatterns:
 - cache-*/
 - src/utils/escape-string-regexp.ts
 - test/*.test/
+- samples/
 parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: 2020
@@ -25,6 +26,7 @@ rules:
   indent:
   - error
   - 4
+  - SwitchCase: 1
   linebreak-style:
   - error
   - unix
@@ -33,6 +35,9 @@ rules:
   - error
   - never
   "@typescript-eslint/explicit-module-boundary-types": 'off'
+  "@typescript-eslint/no-explicit-any":
+    - warn
+    - ignoreRestArgs: true
   "jest/no-disabled-tests": "warn"
   "jest/no-focused-tests": "error"
   "jest/no-identical-title": "error"
