@@ -72,7 +72,7 @@ export default class Search extends Command {
         const allReferences = aggregate && new Array<Reference>()
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
-            if (allReferences) {
+            if (allReferences && reference.type == 'usage') {
                 allReferences.push(reference)
             }
         }
