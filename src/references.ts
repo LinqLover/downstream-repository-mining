@@ -27,7 +27,7 @@ export class FilePosition {
     }
 }
 
-const ALL_REFERENCE_TYPES = [
+const ALL_REFERENCE_KINDS = [
     /** Member calls */
     'usage',
     /** Import and require statements */
@@ -35,7 +35,7 @@ const ALL_REFERENCE_TYPES = [
     /** Any kind of expression that is related to the package or a part of it. Very broad. Experimental. */
     'occurence'
 ] as const
-export type ReferenceType = (typeof ALL_REFERENCE_TYPES)[number]
+export type ReferenceKind = (typeof ALL_REFERENCE_KINDS)[number]
 
 export class Reference {
     constructor(init: Reference) {
@@ -53,7 +53,7 @@ export class Reference {
      */
     memberName: string | null | undefined
     alias!: string | undefined
-    type!: ReferenceType
+    kind!: ReferenceKind
 
     matchString?: string
 
@@ -88,11 +88,11 @@ export class ReferenceSearcher {
         }
     }
 
-    async* searchReferences(limit?: number, includeTypes: ReadonlyArray<ReferenceType> | '*' = ['usage']): AsyncIterable<Reference> {
-        yield* this.basicSearchReferences(this.rootDirectory, limit, includeTypes == '*' ? ALL_REFERENCE_TYPES : includeTypes, 0)
+    async* searchReferences(limit?: number, includeKinds: ReadonlyArray<ReferenceKind> | '*' = ['usage']): AsyncIterable<Reference> {
+        yield* this.basicSearchReferences(this.rootDirectory, limit, includeKinds == '*' ? ALL_REFERENCE_KINDS : includeKinds, 0)
     }
 
-    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeTypes: ReadonlyArray<ReferenceType>, depth: number): AsyncIterable<Reference> {
+    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind>, depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
             let depDirectories: Iterable<Dirent> = (
@@ -106,8 +106,8 @@ export class ReferenceSearcher {
 
             let i = 0
             for await (const depDirectory of depDirectories) {
-                for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), undefined, includeTypes, depth + 1)) {
-                    if (!includeTypes.includes(reference.type)) {
+                for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), undefined, includeKinds, depth + 1)) {
+                    if (!includeKinds.includes(reference.kind)) {
                         continue
                     }
                     yield reference
@@ -247,7 +247,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                     dependentName: this.dependencyName,
                     file: filePath,
                     position: { row: lineNo + 1 },
-                    type: isImport ? 'import' : 'usage',
+                    kind: isImport ? 'import' : 'usage',
                     memberName: binding.memberName,
                     alias: binding.alias,
                     matchString: line
@@ -540,7 +540,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     }
 
-    protected createReference(node: ts.Node, type: ReferenceType, symbol?: ts.Symbol, aliasCallback?: (file: ts.SourceFile) => string | undefined) {
+    protected createReference(node: ts.Node, kind: ReferenceKind, symbol?: ts.Symbol, aliasCallback?: (file: ts.SourceFile) => string | undefined) {
         const declaration = symbol ? this.findDeclarationForSymbol(symbol) : this.findDeclarationForNode(node)
         if (!declaration) {
             return
@@ -555,8 +555,8 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             dependentName: this.dependencyName,
             file: path.relative(this.dependencyDirectory, file.fileName),
             position: { row: line + 1, column: character + 1 },
-            memberName: this.getFullQualifiedName(declaration, type == 'import'),
-            type: type,
+            memberName: this.getFullQualifiedName(declaration, kind == 'import'),
+            kind: kind,
             matchString: matchString,
             alias: aliasCallback ? aliasCallback(file) : matchString
         })

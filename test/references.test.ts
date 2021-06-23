@@ -3,14 +3,14 @@ import _ from 'lodash'
 import { jsonc as json } from 'jsonc'
 
 import Package from '../src/package'
-import { ReferenceSearcher, ReferenceType } from '../src/references'
+import { ReferenceSearcher, ReferenceKind } from '../src/references'
 import ifCurtailed from '../src/utils/if-curtailed'
 import { printDiff } from './_utils/printDiff'
 import { lodashClassifyNested } from '../src/utils/lodash-classify'
 
 
 type PackageReferences = {
-    [type: string]: {
+    [kind: string]: {
         [memberName: string]: {
             [dependent: string]: {
                 [fileName: string]: number[]
@@ -48,7 +48,7 @@ describe('ReferenceSearcher', () => {
             return key
         }
         const aggregatedReferences = <PackageReferences>_.chain(references)
-            .groupBy(reference => reference.type)
+            .groupBy(reference => reference.kind)
             .mapValues(categorizedReferences => _.chain(categorizedReferences)
                 .groupBy(reference => stringify(reference.memberName))
                 .mapValues(memberReferences => _.chain(memberReferences)
@@ -63,13 +63,13 @@ describe('ReferenceSearcher', () => {
             .value()
 
         // Classify actual-expected data by whether we want to do make exact assertions or not
-        const isExactExpectation = (type: ReferenceType) => packageReferenceSearcher != 'heuristic' && type != 'occurence'
+        const isExactExpectation = (kind: ReferenceKind) => packageReferenceSearcher != 'heuristic' && kind != 'occurence'
         const allExpectations = lodashClassifyNested(
             {
                 actual: aggregatedReferences,
                 expected: expectedReferences
             },
-            type => isExactExpectation(<ReferenceType>type)
+            kind => isExactExpectation(<ReferenceKind>kind)
         )
 
         ;[true, false].forEach(isExactExpectation => {

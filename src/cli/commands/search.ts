@@ -5,7 +5,7 @@ import * as util from 'util'
 
 import Package from '../../package'
 import { getCacheDirectory } from '../../npm-deps'
-import { Reference, ReferenceSearcher, ReferenceType } from '../../references'
+import { Reference, ReferenceSearcher, ReferenceKind } from '../../references'
 
 
 export default class Search extends Command {
@@ -60,19 +60,19 @@ export default class Search extends Command {
             directory: packageDirectory ?? path.join(getCacheDirectory(), packageName)
         })
         const searcher = new ReferenceSearcher(_package, undefined, strategy)
-        const includeTypes: ReferenceType[] = ['usage']
+        const includeKinds: ReferenceKind[] = ['usage']
         if (includeImports) {
-            includeTypes.push('import')
+            includeKinds.push('import')
         }
         if (includeOccurences) {
-            includeTypes.push('occurence')
+            includeKinds.push('occurence')
         }
-        const references = searcher.searchReferences(limit, includeTypes)
+        const references = searcher.searchReferences(limit, includeKinds)
 
         const allReferences = aggregate && new Array<Reference>()
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
-            if (allReferences && reference.type == 'usage') {
+            if (allReferences && reference.kind == 'usage') {
                 allReferences.push(reference)
             }
         }
