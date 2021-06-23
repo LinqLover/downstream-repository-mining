@@ -13,7 +13,7 @@ ignorePatterns:
 - cache/
 - cache-*/
 - src/utils/escape-string-regexp.ts
-- test/*.test/
+- test/**/*.test/
 - samples/
 parser: "@typescript-eslint/parser"
 parserOptions:
