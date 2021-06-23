@@ -5639,10 +5639,10 @@ parent-module@^1.0.0:
   dependencies:
     callsites "^3.0.0"
 
-parse-imports@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/parse-imports/-/parse-imports-1.0.0.tgz#81d88a188943ac9748168f84421de4fa41210814"
-  integrity sha512-x40Kv0fRhBCs+jM1TfVeCaSh7hZZXz505Cu77nI/CuXMufHBUSRbpOAyI777rxrjxGPONibTA7CbhXzPcvzmGQ==
+parse-imports@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/parse-imports/-/parse-imports-1.1.0.tgz#39a694f293537342eb556d2e5936a2e9893289bb"
+  integrity sha512-ov3Rc9e3wX9+BLR7nFx08+ThdLJfzi8ZXQrqZXfmuxdL+JCCN24m2uuBFBoaa/yyiZ9s8HjcHGDKSXJbKAyDQA==
   dependencies:
     es-module-lexer "0.4.1"
     slashes "2.0.2"
