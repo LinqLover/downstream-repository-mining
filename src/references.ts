@@ -2,8 +2,10 @@ import { Dirent, promises as fsPromises } from 'fs'
 import fs from 'fs'
 import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
+import LinesAndColumns from 'lines-and-columns'
 import _ from "lodash"
 import tqdm from 'ntqdm'
+import type { Import, Options } from 'parse-imports'
 import path from 'path'
 import pathIsInside from 'path-is-inside'
 import tryCatch from 'try-catch'
@@ -72,6 +74,7 @@ type ModuleBinding = {
      */
     memberName: string | null | undefined
     alias: string
+    index: number
 }
 
 export class ReferenceSearcher {
@@ -168,7 +171,6 @@ abstract class PackageReferenceSearcher {
 }
 
 class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
-    static readonly importKeywords = ['import', 'require']
     static readonly maximumFileSize = 100_000  // 100 MB
     protected commonJsPatterns!: ReadonlyArray<RegExp>
 
@@ -196,7 +198,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
          * See #65.
          */
         const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-        const escapeRegexp = (await dynamicImport('escape-string-regexp')).default
+        const escapeRegexp: (regex: string) => string = (await dynamicImport('escape-string-regexp')).default
         const requirePattern = rex`
             (?<alias> ${identifierPattern} ) \s*
             = \s*
@@ -239,20 +241,42 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 
     async* collectReferences(source: string, bindings: Iterable<ModuleBinding>, filePath: string): AsyncGenerator<Reference, void, undefined> {
         const lines = source.split('\n')
-        for (const [lineNo, line] of lines.entries()) {
+        const getPosition = (() => {
+            const linesAndColumns = new LinesAndColumns(source)
+            return (index: number) => {
+                const location = linesAndColumns.locationForIndex(index)
+                if (!location) {
+                    console.warn("Position of match not found", { filePath, index })
+                    return <FilePosition><unknown>undefined
+                }
+                return new FilePosition({
+                    row: location.line + 1,
+                    column: location.column + 1
+                })
+            }
+        })()
+
+        let minIndex = 0
+        for (const line of lines) {
             for (const binding of bindings) {
-                if (!line.includes(binding.alias)) continue
-                const isImport = HeuristicPackageReferenceSearcher.importKeywords.some(keyword => line.includes(keyword))  // as brittle as the rest of this implementation
+                const index = source.indexOf(binding.alias, minIndex) // TODO: Room for optimization
+                if (index == -1 || index - minIndex > line.length) { continue }
+
+                const position = getPosition(index)
+                const bindingPosition = getPosition(binding.index)
+
+                const isImport = position?.row == bindingPosition?.row
                 yield {
                     dependentName: this.dependencyName,
                     file: filePath,
-                    position: { row: lineNo + 1 },
+                    position,
                     kind: isImport ? 'import' : 'usage',
                     memberName: binding.memberName,
                     alias: binding.alias,
                     matchString: line
                 }
             }
+            minIndex += line.length + 1
         }
     }
 
@@ -266,8 +290,6 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
      * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import}.
      */
     async* collectEsmBindings(source: string): AsyncGenerator<ModuleBinding, void, undefined> {
-        //
-
         const imports = await (async () => {
             try {
                 // Truly awful hack! There are a few things going on here:
@@ -286,7 +308,10 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
                 const parseImportsIndexPath = path.join(path.dirname(__dirname), 'node_modules/parse-imports/src/index.js')
                 const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-                const parseImports = (await dynamicImport(parseImportsIndexPath)).default
+                const parseImports: (
+                    code: string,
+                    options?: Options
+                ) => Promise<Iterable<Import>> = (await dynamicImport(parseImportsIndexPath)).default
 
                 return await parseImports(source)
             } catch (parseError) {
@@ -298,41 +323,44 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
             }
         })()
 
-        for (const _import of imports) {
-            if (!(['builtin', 'package'].includes(_import.moduleSpecifier.type))) {
+        for (const $import of imports) {
+            if (!(['builtin', 'package'].includes($import.moduleSpecifier.type))) {
                 continue
             }
-            if (!_import.moduleSpecifier.isConstant) {
+            if (!$import.moduleSpecifier.isConstant) {
                 continue
             }
-            const packageName = _import.moduleSpecifier.value
+            const packageName = $import.moduleSpecifier.value
             if (!packageName || packageName != this.package.name) {
                 continue
             }
 
-            if (_import.importClause) {
+            if ($import.importClause) {
                 // `import * as foo from 'bar'`
-                if (_import.importClause.namespace) {
+                if ($import.importClause.namespace) {
                     yield {
                         moduleName: packageName,
                         memberName: null,
-                        alias: _import.importClause.namespace
+                        alias: $import.importClause.namespace,
+                        index: $import.startIndex
                     }
                 }
                 // `import foo from 'bar'`
-                if (_import.importClause.default) {
+                if ($import.importClause.default) {
                     yield {
                         moduleName: packageName,
                         memberName: undefined,
-                        alias: _import.importClause.default
+                        alias: $import.importClause.default,
+                        index: $import.startIndex
                     }
                 }
                 // `import {foo1, foo2 as otherFoo} from 'bar'`
-                for (const namedImport of _import.importClause.named) {
+                for (const namedImport of $import.importClause.named) {
                     yield {
                         moduleName: packageName,
                         memberName: namedImport.specifier,
-                        alias: namedImport.binding
+                        alias: namedImport.binding,
+                        index: $import.startIndex
                     }
                 }
             }
@@ -347,25 +375,29 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
         yield* _.chain(this.commonJsPatterns)
             .flatMap(pattern => [...source.matchAll(pattern) ?? []])
             .map(match => {
+                if (!match.index) {
+                    throw new Error("match index not found")
+                }
                 if (!match.groups) {
                     throw new Error("match groups not found")
                 }
-                return match.groups
+
+                return {
+                    moduleName: match.groups.packageName,
+                    memberName: match.groups.memberName
+                        /** `require()` without member name is ambiguous:
+                         * | Exporting package type | `require()` return value |
+                         * | ---------------------- | ------------------------ |
+                         * | CommonJS               | default export           |
+                         * | ECMA Script (ESM)      | `Module` instance        |
+                         * Here we assume the more common CommonJS case and thus fall back to undefined.
+                         *
+                         * TODO: Create parameter to indicate the module type for packageName. */
+                        ?? undefined,
+                    alias: match.groups.alias,
+                    index: match.index
+                }
             })
-            .map(matchGroups => ({
-                moduleName: matchGroups.packageName,
-                memberName: matchGroups.memberName
-                    /** `require()` without member name is ambiguous:
-                      * | Exporting package type | `require()` return value |
-                      * | ---------------------- | ------------------------ |
-                      * | CommonJS               | default export           |
-                      * | ECMA Script (ESM)      | `Module` instance        |
-                      * Here we assume the more common CommonJS case and thus fall back to undefined.
-                      *
-                      * TODO: Create parameter to indicate the module type for packageName. */
-                    ?? undefined,
-                alias: matchGroups.alias
-            }))
             .value()
     }
 }
