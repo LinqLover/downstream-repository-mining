@@ -365,7 +365,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected typeChecker!: ts.TypeChecker
     protected references!: Reference[]
-    protected dependencyDirectory!: string // TODO: Initialize in constructor?
+    protected dependencyDirectory!: string
 
     async* searchReferences(rootDirectory: string) {
         this.dependencyDirectory = rootDirectory
@@ -592,7 +592,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
     protected getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
         if (!symbol.valueDeclaration) {
-            return null // TODO: Does this make sense?
+            return null
         }
         let parent = (<Partial<{parent?: ts.Symbol}>>symbol).parent
         if (!parent) {
