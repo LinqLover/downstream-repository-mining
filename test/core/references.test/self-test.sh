@@ -9,7 +9,7 @@ op() {
 }
 
 echo "###### SELF-TEST - '$0' ######"
-op cd "test/references.test/examples/dependents/" || exit 1
+op cd "$(dirname "$0")/examples/dependents/" || exit 1
 
 for dep in */; do (
     echo "### TEST '$dep' ###"

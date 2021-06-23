@@ -3,17 +3,18 @@ import fs from 'fs'
 import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
 import LinesAndColumns from 'lines-and-columns'
-import _ from "lodash"
+import _ from 'lodash'
 import tqdm from 'ntqdm'
 import type { Import, Options } from 'parse-imports'
 import path from 'path'
 import pathIsInside from 'path-is-inside'
+import pkgDir from 'pkg-dir'
 import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
 import Package from './package'
-import rex from './utils/rex'
+import rex from '@utils/rex'
 
 
 export class FilePosition {
@@ -306,7 +307,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 //   See #65.
                 //
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
-                const parseImportsIndexPath = path.join(path.dirname(__dirname), 'node_modules/parse-imports/src/index.js')
+                const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
                 const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                 const parseImports: (
                     code: string,

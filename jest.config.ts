@@ -14,5 +14,9 @@ module.exports = {
     ],
     "testPathIgnorePatterns": [
         "test/*.test"
-    ]
+    ],
+    "moduleNameMapper": {
+        '^@core/(.*)$': '<rootDir>/src/core/$1',
+        '^@utils/(.*)$': '<rootDir>/src/utils/$1'
+    }
 }
