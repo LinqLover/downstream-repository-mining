@@ -19,12 +19,14 @@ jobs:
           GITHUB_OAUTH_TOKEN: ${{ github.token }}
   test-vscode-extension:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/vscode-extension
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - run: cd src/vscode-extension
       - run: yarn install
       - run: yarn test
   lint:
