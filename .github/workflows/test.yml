@@ -17,6 +17,7 @@ jobs:
       - run: yarn test
         env:
           GITHUB_OAUTH_TOKEN: ${{ github.token }}
+      - run: cd src/vscode-extension && yarn test
   lint:
     runs-on: ubuntu-latest
     steps:
