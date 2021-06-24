@@ -12,6 +12,13 @@ jobs:
       run:
         working-directory: ./src/vscode-extension
     steps:
+      - name: Set git to use LF
+        # to prevent eslint failures on rule linebreak-style
+        # https://github.com/actions/checkout/issues/135#issuecomment-602171132
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
