@@ -2,8 +2,11 @@
 .env
 
 # node
-/node_modules/
+node_modules/
 yarn-error.log
+
+# TypeScript
+out/
 
 # docs
 docs/exposé.pdf
@@ -15,3 +18,8 @@ cache-*/
 output/
 samples/
 samples-*/
+
+# VS Code Extension
+src/vscode-extension/.vscode-test/**
+src/vscode-extension/.vscodeignore
+src/vscode-extension/.yarnrc
