@@ -1,0 +1,25 @@
+name: Test VS Code extension
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./src/vscode-extension
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: yarn install
+        working-directory: .  # since VSCE depends on some dev deps from main package (e.g. for lint)
+      - run: yarn install
+      - run: xvfb-run -a yarn test
+        if: runner.os == 'Linux'
+      - run: yarn test
+        if: runner.os != 'Linux'
