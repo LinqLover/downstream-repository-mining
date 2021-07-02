@@ -51,7 +51,7 @@
         "lodash": "^4.17.21",
         "npm-dependants": "^2.1.2",
         "ntqdm": "^1.0.0",
-        "oclif": "^1.18.0",
+        "oclif": "^1.18.1",
         "package-metadata": "^1.1.2",
         "parse-imports": "^1.1.0",
         "path": "^0.12.7",
