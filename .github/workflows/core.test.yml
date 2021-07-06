@@ -1,10 +1,13 @@
-name: Test
+name: Test core
 
 on: [push]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/core
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -19,6 +22,9 @@ jobs:
           GITHUB_OAUTH_TOKEN: ${{ github.token }}
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/core
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
