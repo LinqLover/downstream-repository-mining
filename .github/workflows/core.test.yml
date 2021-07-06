@@ -15,7 +15,6 @@ jobs:
           node-version: '14'
       - run: yarn install
       - run: git diff --exit-code yarn.lock || (echo "yarn.lock was changed" && exit 1)
-      - run: ./scripts/test-cli.sh
       - run: ./scripts/test-examples.sh
       - run: yarn test
         env:
