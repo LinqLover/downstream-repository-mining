@@ -20,10 +20,6 @@
             "./src/@types/**/*.d.ts",
             "node_modules/@types",
         ],
-        "paths": {
-            "@core/*": ["core/*"],
-            "@utils/*": ["utils/*"]
-        },
         "esModuleInterop": true,
         "strictNullChecks": true,
         "noImplicitAny": true

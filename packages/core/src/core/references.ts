@@ -14,7 +14,7 @@ import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
 import Package from './package'
-import rex from '@utils/rex'
+import rex from '../../src/utils/rex'
 
 
 export class FilePosition {
