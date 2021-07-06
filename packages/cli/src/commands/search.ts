@@ -3,9 +3,9 @@ import { Command, flags } from '@oclif/command'
 import * as path from 'path'
 import * as util from 'util'
 
-import Package from '../../core/package'
-import { getCacheDirectory } from '../../core/npm-deps'
-import { Reference, ReferenceSearcher, ReferenceKind } from '../../core/references'
+import Package from 'core/src/core/package'
+import { getCacheDirectory } from 'core/src/core/npm-deps'
+import { Reference, ReferenceSearcher, ReferenceKind } from 'core/src/core/references'
 
 
 export default class Search extends Command {

@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command'
 import * as util from 'util'
 
-import { getNpmDeps } from '../../core/npm-deps'
+import { getNpmDeps } from 'core/src/core/npm-deps'
 
 
 export default class List extends Command {
