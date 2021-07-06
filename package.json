@@ -72,7 +72,7 @@
         "@typescript-eslint/eslint-plugin": "^4.28.1",
         "@typescript-eslint/parser": "^4.28.1",
         "cross-env": "^7.0.3",
-        "eslint": "^7.29.0",
+        "eslint": "^7.30.0",
         "eslint-plugin-jest": "^24.3.6",
         "jest": "27.0.0-next.9",
         "jsonc": "^2.0.0",
