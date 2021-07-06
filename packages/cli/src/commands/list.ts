@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command'
 import * as util from 'util'
 
-import { getNpmDeps } from 'core/src/core/npm-deps'
+import { getNpmDeps } from 'dowdep'
 
 
 export default class List extends Command {
@@ -31,7 +31,7 @@ export default class List extends Command {
         const { args, flags } = this.parse(List)
 
         const packageName: string = args.packageName
-        if (!packageName) throw new Error("dowdep: Package not specified")
+        if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const deps = await getNpmDeps(

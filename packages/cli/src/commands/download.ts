@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command'
 import tqdm from 'ntqdm'
 
-import { getNpmDeps, downloadDep } from 'core/src/core/npm-deps'
+import { getNpmDeps, downloadDep } from 'dowdep'
 
 
 export default class Download extends Command {
@@ -21,7 +21,7 @@ export default class Download extends Command {
         const { args, flags } = this.parse(Download)
 
         const packageName: string = args.packageName
-        if (!packageName) throw new Error("dowdep: Package not specified")
+        if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
 
         const deps = await getNpmDeps(packageName, limit)

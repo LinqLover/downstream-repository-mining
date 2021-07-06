@@ -1,20 +1,12 @@
 #!/usr/bin/env -S npx ts-node
 
-import { Dependent } from "core/src/core/npm-deps"
-import Package from "core/src/core/package"
-import { FilePosition } from "core/src/core/references"
+import { getCacheDirectory, Package, ReferenceSearcher } from 'dowdep'
 
-const dependent = new Dependent({
-    name: 'foo',
-    tarballUrl: 'https://example.com'
-})
+const cacheDirectory = getCacheDirectory()
 const $package = new Package({
     name: 'name',
     directory: 'directory'
 })
-const position = new FilePosition({
-    row: 42
-})
-console.log(dependent)
+console.log(cacheDirectory)
 console.log($package)
-console.log(position)
+console.log(ReferenceSearcher)

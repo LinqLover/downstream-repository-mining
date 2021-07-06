@@ -3,9 +3,7 @@ import { Command, flags } from '@oclif/command'
 import * as path from 'path'
 import * as util from 'util'
 
-import Package from 'core/src/core/package'
-import { getCacheDirectory } from 'core/src/core/npm-deps'
-import { Reference, ReferenceSearcher, ReferenceKind } from 'core/src/core/references'
+import { getCacheDirectory, Package, Reference, ReferenceSearcher, ReferenceKind } from 'dowdep'
 
 
 export default class Search extends Command {
@@ -47,7 +45,7 @@ export default class Search extends Command {
         const { args, flags } = this.parse(Search)
 
         const packageName: string = args.packageName
-        if (!packageName) throw new Error("dowdep: Package not specified")
+        if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const packageDirectory = flags.source || undefined
         const strategy = flags.strategy
         const includeImports = flags.includeImports

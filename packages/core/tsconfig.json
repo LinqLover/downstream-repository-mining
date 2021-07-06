@@ -25,6 +25,7 @@
         "noImplicitAny": true
     },
     "include": [
+        "index.ts",
         "src/**/*.ts"
     ],
     "ts-node": {
