@@ -1,6 +1,6 @@
 # Software Mining of Downstream Dependency Repositories
 
-[![Test](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml/badge.svg)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml)
+[![GitHub CI](https://img.shields.io/github/checks-status/LinqLover/downstream-repository-mining/master)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/linqlover/downstream-repository-mining/badge)](https://www.codefactor.io/repository/github/linqlover/downstream-repository-mining)
 
 Mine usage information about your JavaScript/TypeScript package from dependent repositories.
