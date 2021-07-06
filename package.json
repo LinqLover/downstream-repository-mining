@@ -69,7 +69,7 @@
         "@types/npm-dependants": "^2.1.0",
         "@types/path-is-inside": "^1.0.0",
         "@types/rimraf": "^3.0.0",
-        "@typescript-eslint/eslint-plugin": "^4.28.1",
+        "@typescript-eslint/eslint-plugin": "^4.28.2",
         "@typescript-eslint/parser": "^4.28.1",
         "cross-env": "^7.0.3",
         "eslint": "^7.29.0",
