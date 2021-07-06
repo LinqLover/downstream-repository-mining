@@ -20,6 +20,9 @@
             "@oclif/plugin-not-found"
         ]
     },
+    "scripts": {
+        "lint": "eslint . --ext=.js,.ts,.json"
+    },
     "dependencies": {
         "@oclif/command": "^1",
         "@oclif/config": "^1",
