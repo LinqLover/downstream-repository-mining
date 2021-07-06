@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "target": "ES2019",
+        "lib": [
+            "ES2020",
+            "ESNext.AsyncIterable"
+        ],
+        "esModuleInterop": true
+    }
+}

@@ -1,28 +1,32 @@
-name: Test
+name: Test cli
 
 on: [push]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/cli
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm install  # yarn does not support file dependencies correctly ...
+      - run: git diff --exit-code package-lock.json || (echo "package-lock.json was changed" && exit 1)
+      - run: ./scripts/test-cli.sh
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/cli
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
       - run: yarn install
-      - run: git diff --exit-code yarn.lock || (echo "yarn.lock was changed" && exit 1)
-      - run: ./scripts/test-cli.sh
-      - run: ./scripts/test-examples.sh
-      - run: yarn test
-        env:
-          GITHUB_OAUTH_TOKEN: ${{ github.token }}
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+        working-directory: .
       - run: yarn install
       - run: yarn lint

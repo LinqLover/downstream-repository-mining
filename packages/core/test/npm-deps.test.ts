@@ -4,7 +4,7 @@ import readPackageJsonCallback from 'read-package-json'
 import rimRaf from 'rimraf'
 import { promisify } from 'util'
 
-import { getNpmDeps, downloadDep, Dependent } from '@core/npm-deps'
+import { getNpmDeps, downloadDep, Dependent } from '../src/npm-deps'
 
 const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readPackageJsonCallback)

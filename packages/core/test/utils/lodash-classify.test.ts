@@ -1,4 +1,4 @@
-import { lodashClassify, lodashClassifyNested } from '@utils/lodash-classify'
+import { lodashClassify, lodashClassifyNested } from '../../src/utils/lodash-classify'
 
 describe('lodashClassify', () => {
     it("should work", () => {

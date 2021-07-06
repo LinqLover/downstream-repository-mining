@@ -2,12 +2,12 @@ import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
 import { jsonc as json } from 'jsonc'
 
-import Package from '@core/package'
-import { ReferenceSearcher, ReferenceKind } from '@core/references'
-import ifCurtailed from '@utils/if-curtailed'
-import { lodashClassifyNested } from '@utils/lodash-classify'
-import { getCwd } from '../_utils/cwd'
-import { printDiff } from '../_utils/printDiff'
+import Package from '../src/package'
+import { ReferenceSearcher, ReferenceKind } from '../src/references'
+import ifCurtailed from '../src/utils/if-curtailed'
+import { lodashClassifyNested } from '../src/utils/lodash-classify'
+import { getCwd } from './_utils/cwd'
+import { printDiff } from './_utils/printDiff'
 
 
 const CWD = getCwd(__filename)

@@ -1,84 +1,10 @@
 {
-    "name": "dowdep",
-    "version": "0.0.0",
-    "author": "Christoph Thiede",
-    "bin": {
-        "dowdep": "./bin/run.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/LinqLover/downstream-repository-mining.git"
-    },
-    "engines": {
-        "node": ">=8.0.0"
-    },
-    "files": [
-        "*"
-    ],
-    "license": "UNLICENSED",
-    "main": "bin/run.js",
-    "scripts": {
-        "lint": "eslint . --ext=.js,.ts,.json",
-        "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
-    },
-    "oclif": {
-        "bin": "dowdep",
-        "commands": "./src/cli/commands",
-        "description": "downstream repository mining CLI",
-        "hooks": {
-            "init": "./src/cli/oclif.init.ts"
-        },
-        "plugins": [
-            "@oclif/plugin-autocomplete",
-            "@oclif/plugin-help",
-            "@oclif/plugin-not-found"
-        ]
-    },
-    "types": "lib/index.d.ts",
-    "dependencies": {
-        "@oclif/plugin-autocomplete": "^0.3.0",
-        "@types/node": "^16.0.0",
-        "callsites": "^3.1.0",
-        "dotenv": "^10.0.0",
-        "download-package-tarball": "^1.0.7",
-        "escape-string-regexp": "^5.0.0",
-        "glob": "^7.1.6",
-        "glob-promise": "^4.2.0",
-        "graphql": "^15.5.1",
-        "graphql-request": "^3.4.0",
-        "it-all": "^1.0.5",
-        "lines-and-columns": "^1.1.6",
-        "lodash": "^4.17.21",
-        "npm-dependants": "^2.1.2",
-        "ntqdm": "^1.0.0",
-        "oclif": "^1.18.1",
-        "package-metadata": "^1.1.2",
-        "parse-imports": "^1.1.0",
-        "path": "^0.12.7",
-        "path-is-inside": "^1.0.2",
-        "pkg-dir": "^5.0.0",
-        "try-catch": "^3.0.0",
-        "ts-node": "^10.0.0",
-        "tslib": "^2",
-        "typescript": "^4.3.5"
-    },
-    "devDependencies": {
-        "@types/got": "^9.6.11",
-        "@types/jest": "^26.0.23",
-        "@types/lodash": "^4.14.170",
-        "@types/npm-dependants": "^2.1.0",
-        "@types/path-is-inside": "^1.0.0",
-        "@types/rimraf": "^3.0.0",
-        "@typescript-eslint/eslint-plugin": "^4.28.2",
-        "@typescript-eslint/parser": "^4.28.1",
-        "cross-env": "^7.0.3",
-        "eslint": "^7.30.0",
-        "eslint-plugin-jest": "^24.3.6",
-        "jest": "27.0.0-next.9",
-        "jsonc": "^2.0.0",
-        "package-json": "^7.0.0",
-        "read-package-json": "^3.0.1",
-        "rimraf": "^3.0.0",
-        "ts-jest": "^27.0.0-next.12"
-    }
+  "name": "dowdep-base",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
+    "eslint": "^7.30.0",
+    "eslint-plugin-jest": "^24.3.6",
+    "typescript": "^4.3.5"
+  }
 }
