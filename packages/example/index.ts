@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env -S npx ts-node
 
 import Package from "core/src/core/package"
 
