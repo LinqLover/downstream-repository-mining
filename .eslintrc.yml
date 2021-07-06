@@ -1,0 +1,32 @@
+extends:
+- eslint:recommended
+- plugin:@typescript-eslint/eslint-recommended
+- plugin:@typescript-eslint/recommended
+globals:
+  Atomics: readonly
+  SharedArrayBuffer: readonly
+parser: "@typescript-eslint/parser"
+plugins:
+- "@typescript-eslint"
+- jest
+rules:
+  indent:
+  - error
+  - 4
+  - SwitchCase: 1
+  linebreak-style:
+  - error
+  - unix
+  quotes: 'off'
+  semi:
+  - error
+  - never
+  "@typescript-eslint/explicit-module-boundary-types": 'off'
+  "@typescript-eslint/no-explicit-any":
+    - warn
+    - ignoreRestArgs: true
+  "jest/no-disabled-tests": "warn"
+  "jest/no-focused-tests": "error"
+  "jest/no-identical-title": "error"
+  "jest/prefer-to-have-length": "warn"
+  "jest/valid-expect": "error"
