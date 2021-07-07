@@ -13,12 +13,13 @@ import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
+import { OnlyData } from 'utils/OnlyData'
 import Package from './package'
 import rex from './utils/rex'
 
 
 export class FilePosition {
-    constructor(init: FilePosition) {
+    constructor(init: OnlyData<FilePosition>) {
         Object.assign(this, init)
     }
 
@@ -41,7 +42,7 @@ const ALL_REFERENCE_KINDS = [
 export type ReferenceKind = (typeof ALL_REFERENCE_KINDS)[number]
 
 export class Reference {
-    constructor(init: Reference) {
+    constructor(init: OnlyData<Reference>) {
         Object.assign(this, init)
     }
 
