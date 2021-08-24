@@ -1,4 +1,4 @@
-name: Test example
+name: Test example-ts
 
 on: [push]
 
@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./packages/example
+        working-directory: ./packages/example-ts
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
