@@ -26,7 +26,7 @@ jobs:
           node-version: '14'
       - run: yarn install
         working-directory: .  # since VSCE depends on some dev deps from main package (e.g. for lint)
-      - run: yarn install
+      - run: npm install  # yarn does not support file dependencies correctly .
       - run: xvfb-run -a yarn test
         if: runner.os == 'Linux'
       - run: yarn test
@@ -43,5 +43,5 @@ jobs:
           node-version: '14'
       - run: yarn install
         working-directory: .
-      - run: yarn install
+      - run: npm install  # yarn does not support file dependencies correctly .
       - run: yarn lint
