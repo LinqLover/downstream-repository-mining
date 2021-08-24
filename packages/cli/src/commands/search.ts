@@ -53,11 +53,11 @@ export default class Search extends Command {
         const aggregate = flags.aggregate
         const limit = flags.limit == -1 ? undefined : flags.limit
 
-        const _package = new Package({
+        const $package = new Package({
             name: packageName,
             directory: packageDirectory ?? path.join(getCacheDirectory(), packageName)
         })
-        const searcher = new ReferenceSearcher(_package, undefined, strategy)
+        const searcher = new ReferenceSearcher($package, undefined, strategy)
         const includeKinds: ReferenceKind[] = ['usage']
         if (includeImports) {
             includeKinds.push('import')

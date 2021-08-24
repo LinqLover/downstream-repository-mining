@@ -13,12 +13,13 @@ import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
+import { OnlyData } from 'utils/OnlyData'
 import Package from './package'
 import rex from './utils/rex'
 
 
 export class FilePosition {
-    constructor(init: FilePosition) {
+    constructor(init: OnlyData<FilePosition>) {
         Object.assign(this, init)
     }
 
@@ -41,7 +42,7 @@ const ALL_REFERENCE_KINDS = [
 export type ReferenceKind = (typeof ALL_REFERENCE_KINDS)[number]
 
 export class Reference {
-    constructor(init: Reference) {
+    constructor(init: OnlyData<Reference>) {
         Object.assign(this, init)
     }
 
@@ -84,8 +85,8 @@ export class ReferenceSearcher {
     packageReferenceSearcher: ConcretePackageReferenceSearcher = HeuristicPackageReferenceSearcher
     private static readonly maximumReportableDepth = 2
 
-    constructor(_package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
-        this.package = _package
+    constructor($package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
+        this.package = $package
         this.rootDirectory = rootDirectory ?? getCacheDirectory()
         if (packageReferenceSearcher) {
             this.packageReferenceSearcher = PackageReferenceSearcher.named(packageReferenceSearcher)
@@ -151,8 +152,8 @@ abstract class PackageReferenceSearcher {
         }
     }
 
-    constructor(_package: Package, dependencyName: string) {
-        this.package = _package
+    constructor($package: Package, dependencyName: string) {
+        this.package = $package
         this.dependencyName = dependencyName
     }
 

@@ -7,9 +7,11 @@ import tqdm from 'ntqdm'
 import { RegistryClient } from 'package-metadata'
 import path from 'path'
 
+import { OnlyData } from 'utils/OnlyData'
+
 
 export class Dependent {
-    constructor(init: Dependent) {
+    constructor(init: OnlyData<Dependent>) {
         Object.assign(this, init)
     }
 
