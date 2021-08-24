@@ -63,7 +63,8 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "dowdep": "file:./../core"
+        "dowdep": "file:./../core",
+        "it-all": "^1.0.5"
     },
     "devDependencies": {
         "@types/glob": "^7.1.3",
