@@ -85,8 +85,8 @@ export class ReferenceSearcher {
     packageReferenceSearcher: ConcretePackageReferenceSearcher = HeuristicPackageReferenceSearcher
     private static readonly maximumReportableDepth = 2
 
-    constructor(_package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
-        this.package = _package
+    constructor($package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
+        this.package = $package
         this.rootDirectory = rootDirectory ?? getCacheDirectory()
         if (packageReferenceSearcher) {
             this.packageReferenceSearcher = PackageReferenceSearcher.named(packageReferenceSearcher)
@@ -152,8 +152,8 @@ abstract class PackageReferenceSearcher {
         }
     }
 
-    constructor(_package: Package, dependencyName: string) {
-        this.package = _package
+    constructor($package: Package, dependencyName: string) {
+        this.package = $package
         this.dependencyName = dependencyName
     }
 

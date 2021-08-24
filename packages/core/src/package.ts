@@ -4,6 +4,7 @@ import { OnlyData } from "utils/OnlyData"
 
 export default class Package {
     constructor(init: OnlyData<Package>) {
+        Object.assign(this, init)
     }
 
     name!: string
