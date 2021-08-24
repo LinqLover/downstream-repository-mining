@@ -2,8 +2,9 @@
     "name": "dowdep",
     "version": "0.0.0",
     "author": "Christoph Thiede",
-    "main": "index.ts",
-    "types": "index.ts",
+    "module": "./out/index.js",
+    "exports": "./out/index.js",
+    "types": "./out/index.d.ts",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/LinqLover/downstream-repository-mining.git"
@@ -17,6 +18,8 @@
     "license": "UNLICENSED",
     "scripts": {
         "lint": "eslint . --ext=.js,.ts,.json",
+        "postinstall": "sed -i 's:import(\"src/PackageJson\"):import(\"./PackageJson\"):g' node_modules/package-metadata/dist/findPackageVersion.d.ts # WORKAROUND: https://github.com/jd-carroll/package-metadata/issues/3",
+        "build": "tsc",
         "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
     },
     "dependencies": {
