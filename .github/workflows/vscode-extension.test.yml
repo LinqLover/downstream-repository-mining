@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: ./src/vscode-extension
+        working-directory: ./packages/vscode-extension
     steps:
       - name: Set git to use LF
         # to prevent eslint failures on rule linebreak-style
@@ -31,3 +31,17 @@ jobs:
         if: runner.os == 'Linux'
       - run: yarn test
         if: runner.os != 'Linux'
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/vscode-extension
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: yarn install
+        working-directory: .
+      - run: yarn install
+      - run: yarn lint
