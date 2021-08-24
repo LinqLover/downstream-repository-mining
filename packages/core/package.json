@@ -2,8 +2,9 @@
     "name": "dowdep",
     "version": "0.0.0",
     "author": "Christoph Thiede",
-    "main": "index.ts",
-    "types": "index.ts",
+    "module": "./out/index.js",
+    "exports": "./out/index.js",
+    "types": "./out/index.d.ts",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/LinqLover/downstream-repository-mining.git"
