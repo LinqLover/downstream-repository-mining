@@ -28,5 +28,5 @@ jobs:
           node-version: '14'
       - run: yarn install
         working-directory: .
-      - run: yarn install
+      - run: npm install  # yarn does not support file dependencies correctly ...
       - run: yarn lint
