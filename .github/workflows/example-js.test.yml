@@ -1,0 +1,20 @@
+name: Test example-ts
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/example-js
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: tsc
+        working-directory: ./packages/core
+      - run: npm install  # yarn does not support file dependencies correctly ...
+      - run: git diff --exit-code package-lock.json || (echo "package-lock.json was changed" && exit 1)
+      - run: ./index.js
