@@ -1,4 +1,4 @@
-name: Test example-ts
+name: Test example-js
 
 on: [push]
 
@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - run: tsc
+      - run: yarn install && tsc
         working-directory: ./packages/core
       - run: npm install  # yarn does not support file dependencies correctly ...
       - run: git diff --exit-code package-lock.json || (echo "package-lock.json was changed" && exit 1)
