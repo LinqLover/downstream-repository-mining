@@ -13,7 +13,7 @@ import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
-import { OnlyData } from 'utils/OnlyData'
+import { OnlyData } from './utils/OnlyData'
 import Package from './package'
 import rex from './utils/rex'
 
