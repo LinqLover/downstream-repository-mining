@@ -12,6 +12,9 @@ out/
 docs/exposé.pdf
 docs/exposé.tex
 
+# typescript
+out/
+
 # dowdep
 cache/
 cache-*/

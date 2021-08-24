@@ -1,6 +1,6 @@
 # Software Mining of Downstream Dependency Repositories
 
-[![Test](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml/badge.svg)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml)
+[![GitHub CI](https://img.shields.io/github/checks-status/LinqLover/downstream-repository-mining/master)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/linqlover/downstream-repository-mining/badge)](https://www.codefactor.io/repository/github/linqlover/downstream-repository-mining)
 
 Mine usage information about your JavaScript/TypeScript package from dependent repositories.
@@ -8,41 +8,12 @@ Mine usage information about your JavaScript/TypeScript package from dependent r
 For more information, read the [exposé](./docs/exposé.md):  
 [![Exposé](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/expos%C3%A9.yml/badge.svg?branch=master)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/exposé.yml?query=branch%3Amaster)
 
-## Installation 
+## Repository Structure
 
-```sh
-$ yarn install
-$ npm link
-
-# Install autocompletion (optional)
-$ dowdep autocomplete
-```
-
-## Usage
-
-Find downstream dependencies of a package:
-
-```sh
-dowdep list <your-package> [--limit=<number>]
-```
-
-Download downstream dependencies:
-
-```sh
-NPM_CACHE=<path/to/cache> dowdep download <your-package> [--limit=<number>]
-```
-
-Search downloaded dependencies for references to package:
-
-```sh
-NPM_CACHE=<path/to/cache> dowdep search <your-package> [--limit=<number>]
-```
-
-Show help:
-
-```sh
-dowdep help [<command>]
-```
+- **[`packages/core/`](./packages/core):** Contains the core logic
+- **[`packages/cli/`](./packages/cli):** Provides a simple command-line interface
+- **[`docs/`](./docs):** Documents examining the scientific background of this project
+- **[`./`](./) (this folder):** Holds everything together, contains [CI](./github) and [`eslint`](./.eslintrc) definitions
 
 ## Acknowledgements
 

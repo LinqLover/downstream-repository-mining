@@ -1,0 +1,35 @@
+name: Test core
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/core
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: yarn install
+      - run: git diff --exit-code yarn.lock || (echo "yarn.lock was changed" && exit 1)
+      - run: ./scripts/test-examples.sh
+      - run: yarn test
+        env:
+          GITHUB_OAUTH_TOKEN: ${{ github.token }}
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/core
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: yarn install
+        working-directory: .
+      - run: yarn install
+      - run: yarn lint
