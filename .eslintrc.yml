@@ -18,6 +18,7 @@ rules:
   - error
   - unix
   quotes: 'off'
+  require-yield: 'off'
   semi:
   - error
   - never

@@ -5,6 +5,9 @@
 node_modules/
 yarn-error.log
 
+# TypeScript
+out/
+
 # docs
 docs/exposé.pdf
 docs/exposé.tex
@@ -18,3 +21,8 @@ cache-*/
 output/
 samples/
 samples-*/
+
+# VS Code Extension
+packages/vscode-extension/.vscode-test/**
+packages/vscode-extension/.vscodeignore
+packages/vscode-extension/.yarnrc
