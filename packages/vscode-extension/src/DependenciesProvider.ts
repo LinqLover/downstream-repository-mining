@@ -117,7 +117,7 @@ class DependencyProject extends DependencyItem {
     }
 
     public static async fromDependent(dependent: Dependent) {
-        return new DependencyProject(dependent, vscode.TreeItemCollapsibleState.Collapsed)
+        return new DependencyProject(dependent, vscode.TreeItemCollapsibleState.None)
     }
 
     async* getChildren() {
