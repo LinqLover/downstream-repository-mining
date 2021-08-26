@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import { DependenciesProvider } from './DependenciesProvider'
 
@@ -19,10 +17,9 @@ export function activate(context: vscode.ExtensionContext) {
         // Display a message box to the user
         vscode.window.showInformationMessage("Hello World from dowdep! 🚀")
 
-        vscode.window.registerTreeDataProvider(
-            'dowdepDependencies',
-            new DependenciesProvider(vscode.workspace.workspaceFolders)
-        )
+        vscode.window.createTreeView('dowdepDependencies', {
+            treeDataProvider: new DependenciesProvider(vscode.workspace.workspaceFolders)
+        })
 
     })
 

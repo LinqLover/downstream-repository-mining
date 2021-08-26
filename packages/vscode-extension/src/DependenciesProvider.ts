@@ -1,6 +1,5 @@
 import asyncIteratorToArray from 'it-all'
 import * as vscode from 'vscode'
-//import * as path from 'path'
 
 import { Dependent, Package } from 'dowdep'
 
@@ -37,44 +36,6 @@ export class DependenciesProvider implements vscode.TreeDataProvider<DependencyI
             yield $package
         }
     }
-
-    /* /**
-     * Given the path to package.json, read all its dependencies and devDependencies.
-     * /
-    private async getDepsInPackageJson(packageJsonUri: vscode.Uri): Promise<Dependency[]> {
-        if (await this.uriExists(packageJsonUri)) {
-            const packageJson = JSON.parse(Buffer.from(await vscode.workspace.fs.readFile(packageJsonUri)).toString('utf-8'))
-
-            const toDep = async (moduleName: string, version: string): Promise<Dependency> => {
-                if (await this.uriExists(vscode.Uri.joinPath(this.workspaceFolders![0]?.uri, 'node_modules', moduleName))) {
-                    return new Dependency(
-                        moduleName,
-                        version,
-                        vscode.TreeItemCollapsibleState.Collapsed
-                    )
-                } else {
-                    return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None)
-                }
-            }
-
-            const deps = Object.keys(packageJson.dependencies ?? {}).map(dep =>
-                toDep(dep, packageJson.dependencies[dep]))
-            const devDeps = Object.keys(packageJson.devDependencies ?? {}).map(dep =>
-                toDep(dep, packageJson.devDependencies[dep]))
-            return await Promise.all(deps.concat(devDeps))
-        } else {
-            return []
-        }
-    }
-
-    private async uriExists(uri: vscode.Uri): Promise<boolean> {
-        try {
-            await vscode.workspace.fs.stat(uri)
-        } catch (err) {
-            return false
-        }
-        return true
-    } */
 }
 
 // TODO: Icons
