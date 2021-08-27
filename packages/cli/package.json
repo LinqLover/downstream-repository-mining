@@ -41,7 +41,7 @@
         "@types/chai": "^4",
         "@types/lodash": "^4.14.170",
         "@types/mocha": "^5",
-        "@types/node": "^10",
+        "@types/node": "^16",
         "chai": "^4",
         "eslint": "^7.30.0",
         "eslint-config-oclif": "^3.1",
