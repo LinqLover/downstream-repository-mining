@@ -13,6 +13,6 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "npm"
-    directory: "packages/vscode-extensio"
+    directory: "packages/vscode-extension"
     schedule:
       interval: "daily"
