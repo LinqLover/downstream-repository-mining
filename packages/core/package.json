@@ -55,7 +55,7 @@
     },
     "devDependencies": {
         "@types/got": "^9.6.12",
-        "@types/jest": "^26.0.23",
+        "@types/jest": "^27.0.1",
         "@types/lodash": "^4.14.170",
         "@types/npm-dependants": "^2.1.0",
         "@types/path-is-inside": "^1.0.0",
