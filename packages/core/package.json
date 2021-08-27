@@ -54,7 +54,7 @@
         "typescript": "^4.3.5"
     },
     "devDependencies": {
-        "@types/got": "^9.6.11",
+        "@types/got": "^9.6.12",
         "@types/jest": "^26.0.23",
         "@types/lodash": "^4.14.170",
         "@types/npm-dependants": "^2.1.0",
