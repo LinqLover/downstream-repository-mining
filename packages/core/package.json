@@ -28,7 +28,7 @@
     },
     "dependencies": {
         "@oclif/plugin-autocomplete": "^0.3.0",
-        "@types/node": "^16.0.0",
+        "@types/node": "^16.7.3",
         "callsites": "^3.1.0",
         "dotenv": "^10.0.0",
         "download-package-tarball": "^1.0.7",
