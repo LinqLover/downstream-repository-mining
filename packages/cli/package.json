@@ -39,7 +39,7 @@
         "@oclif/dev-cli": "^1",
         "@oclif/test": "^1",
         "@types/chai": "^4",
-        "@types/lodash": "^4.14.170",
+        "@types/lodash": "^4.14.172",
         "@types/mocha": "^5",
         "@types/node": "^16",
         "chai": "^4",
