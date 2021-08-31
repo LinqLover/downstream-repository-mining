@@ -1,10 +1,13 @@
 name: rebase dependabot pull requests
-on: [push]
+on:
+  push:
+    branches:
+      - refs/heads/master
+
 jobs:
   auto-rebase:
     name: rebase dependabot PRs
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     timeout-minutes: 5
     steps:
       - name: rebase
