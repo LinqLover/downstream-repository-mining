@@ -19,4 +19,4 @@ For more information, read the [exposé](./docs/exposé.md):
 
 This is currently a student project for the course "Software Mining and Applications" offered by the Computer Graphics System Group ([@hpicgs](https://github.com/hpicgs)/[@varg-dev](https://github.com/varg-dev)) at the Hasso Plattner Institute (HPI), Potsdam, Germany.
 Thanks to my supervisors, Daniel Limberger ([@cgcostume](https://github.com/cgcostume)) and Willy Scheibel ([@scheibel](https://github.com/scheibel))!
-For further information, see [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md)).
+For further information, see [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
