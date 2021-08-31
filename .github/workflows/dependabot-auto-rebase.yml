@@ -8,6 +8,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: rebase
-        uses: "bbeesley/gha-auto-dependabot-rebase@main"
+        uses: LinqLover/gha-auto-dependabot-rebase@feat/one-at-a-time
+        with:
+          one-at-a-time: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN_DEPENDABOT_AUTO_REBASE_PRS }}
