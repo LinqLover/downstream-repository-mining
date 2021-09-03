@@ -16,3 +16,7 @@ jobs:
         with:
           root_file: paper.tex
           working_directory: docs/paper
+      - uses: actions/upload-artifact@master
+        with:
+          name: paper.pdf
+          path: docs/paper/paper.pdf
