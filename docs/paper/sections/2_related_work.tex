@@ -1,4 +1,59 @@
 \section{Related work}
 \label{sec:related_work}
 
-Foo.
+To our knowledge, the design of proper tooling for improving package developers' knowledge about interface usages in dependencies has not yet attracted significant attention in the scientific community.
+Nevertheless, programmatic analysis of dependency graphs and API usage mining are already common techniques in the field of \emph{mining software repositories} (MSR).
+\citet{chaturvedi2013tools} provide a broad overview of existing achievements and ongoing research topics in this field.
+Besides source code repositories, they also describe various other data sources worthwhile to examine -- including version control systems, telemetry data from IDEs, issue trackers, and discussion platforms -- as well as different directions for evaluating the retrieved data -- such as classifying or ranking repositories, analyzing the evolution of projects, studying development communities, but also inspecting the relationships and dependencies between projects.
+In the following, we will consider the different problems that our research issue can be decomposed into.
+
+\subsection{Mining dependencies}
+
+A common purpose for \emph{analyzing dependency graphs} is to discover transitive (indirect) upstream dependencies of a project and assess their impact on the stability and vulnerability of the project.
+This is done by \citet{kikas2017structure} which apply their methodology to the JavaScript, Ruby, and Rust ecosystems and gain statistical insights into the centrality and evolution of these ecosystems.
+\citet{decan2018impact} pursue a similar approach in order to measure the spreading of security vulnerabilities along the chain of downstream dependencies.
+
+However, existing research about dependency graphs primarily takes a broad statistical perspective, and researchers often rely on a large corpus of downloaded software repositories \citep{abdalkareem2017developers,katz2020libraries,kikas2017structure}.
+% and researchers usually either access certain package registries such as the npm registry that already contain bidirectional dependency data, or they collect large amounts of software repositories from development platforms such as GitHub, extract dependency lists from each repository's metadata, and finally invert all adjacency lists to get the downstream dependencies.
+As opposed to this approach, these capacities will not be appropriate for scenarios that are occasionally performed by developers of a single package only.
+In this case, developers will often use a public \emph{code search} service such as GitHub code search\footnote{\url{https://docs.github.com/en/github/searching-for-information-on-github}} or Sourcegraph\footnote{\url{https://sourcegraph.com/}} instead.
+\citet{liu2020opportunities} survey current methods and trends in code search tools that include, besides simple full-text search, newer approaches such as structural or semantic search queries, code similarity metrics, or Machine Learning methods.
+
+\subsection{Mining usage information}
+
+Dependency graphs do not provide information about package usage on a finer granularity, so reference insights about single package members such as classes or methods remain unknown.
+The process of extracting fine-granular information about all references to individual elements of an interface is often referred to as \emph{API usage analysis}.
+A simple approach to this problem is to perform a string search for package names or members in the dependencies \citep{mileva2010mining}.
+\citet{qiu2016understanding} propose a more elaborated approach that operates on the AST of each parsed dependency to avoid false positive matches that can be caused by ambivalent identifier names.
+A very similar approach is also chosen by \citet{sawant2017fine} who evaluate the collected usage data in order to analyze the historical importance of certain features supported by an API.
+
+However, the precision of ASTs is limited for dynamically typed languages such as JavaScript.
+For this reason, a common data structure that can be used to improve type information are \emph{call graphs} that are either \emph{static} (i.e., the result of a theoretical analysis of the source code) or \emph{dynamic} (i.e., empirically recorded during program execution).
+While the latter type has a higher potential for including a maximum of contextual information, the former has the advantage of being applicable to a larger probe of source code for that no concrete entry points are available.
+There are many solutions that analyze the structure of programs and extract the relevant information to build call graphs:
+
+\citet{collard2013srcml} propose an infrastructure called \caps{srcML} that is aimed to create a unified representation of multilingual source code snippets for arbitrary analysis purposes, including the construction of call graphs.
+Another solution is proposed by \citet{bogar2018lightweight} who focus on analyzing multilingual codebases and who utilize an island parser to build call graphs.
+Furthermore, \citet{antal2018static} compare several call graph generators for JavaScript.
+They also emphasize that for languages supporting dynamic typing or meta-programming mechanisms, static call graph generators have a limited precision by design.
+
+To bring together dependency graphs and call graphs, \emph{ecosystem call graphs} can be constructed by applying call graphs to entire ecosystems, crossing repository boundaries.
+\citet{hejderup2018software} propose an approach to do so for the JavaScript/npm ecosystem in which they also model the semantic version numbers of packages and perform an impact analysis for vulnerabilities based on their graph.
+\citet{nielsen2021modular} elaborate on this work by developing a call graph generator tailored to this problem that comes with significant improvements in terms of recall and performance; a very similar method is also sketched by \citet{boldi2020fine}.
+\citet{wang2020empirical} describe a similar approach for the same ecosystem and apply it to the domain of locating security issues in a project's upstream dependencies.
+With \caps{Pr\"azi}, \citet{hejderup2021präzi} also describe their implementation of a dependency-scale call graph for the Rust/Cratesio ecosystem in-depth.
+For Java/Maven, \citet{keshani2021scalable} proposes another solution.
+
+After collecting these usage data, additional processing is possible to extract general usage information from the extensive raw data.
+Next to straightforward grouping and counting operations, such aggregations can be built by detecting popular \emph{usage patterns} of API features in the downstream dependencies.
+\citet{zhong2009mapo} propose a framework to do so that, for instance, finds sequences of API members that are invoked frequently and even uses these patterns for guiding API users by giving them recommendations.
+\citet{hanam2019aiding} pursue a different goal in their tool that helps package developers assess the impact of breaking API changes on the functionality of downstream dependencies.
+
+\subsection{Presentation of results}
+
+To establish an adequate developer experience, any collected usage data still need to be presented in a suitable manner.
+A common approach for this is a hierarchical and navigatable representation of the collected call tree.
+The first form of this representation has been invented as the ``message set'' tool for browsing senders and implementors in an object-oriented system for the Smalltalk programming environment \citep[section~10.1f.]{goldberg1984smalltalk}.
+Modern alternatives include the \caps{Stacksplorer} \citep{karrer2011stacksplorer} or \caps{Blaze} \citep{kramer2012blaze} that list next to the currently focused method other methods which are adjacent to this method in the call graph.
+With a focus on exploring references to API members, \citet{de2013multi} propose a set of additional views, including hierarchical lists and word clouds for highly referenced identifiers.
+Focusing on exploring APIs in a non-code-centric way, \citet{hora2015apiwave} propose a dashboard that allows developers to browse existing APIs and track possibly breaking changes in their interfaces.
