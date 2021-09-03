@@ -1,10 +1,10 @@
-name: Exposé
+name: ✒ Exposé
 
 on:
   push:
     paths:
       - docs/**
-      - scripts/docs/**
+      - scripts/docs/exposé/**
       - .github/workflows/exposé.yml
 
 jobs:
