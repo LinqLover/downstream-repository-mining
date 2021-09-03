@@ -5,7 +5,7 @@ on:
     paths:
       - docs/paper/**
       - scripts/docs/**
-      - .github/workflows/paper.yml
+      - .github/workflows/docs.paper.yml
 
 jobs:
   latex:
