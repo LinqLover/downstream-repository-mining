@@ -1,6 +1,9 @@
 name: Test example-ts
 
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
   test:

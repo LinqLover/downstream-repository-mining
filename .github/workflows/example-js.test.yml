@@ -1,6 +1,9 @@
 name: Test example-js
 
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
   test:
