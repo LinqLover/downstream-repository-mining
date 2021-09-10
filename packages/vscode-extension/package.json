@@ -10,7 +10,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:dowdep.helloWorld"
+        "onCommand:dowdep.refreshPackages"
     ],
     "main": "./out/extension.js",
     "capabilities": {
@@ -22,15 +22,25 @@
     "contributes": {
         "commands": [
             {
-                "command": "dowdep.helloWorld",
-                "title": "Hello World",
+                "command": "dowdep.refreshPackages",
+                "title": "Refresh packages",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshAllDependencies",
+                "title": "Refresh all dependencies",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshAllReferences",
+                "title": "Refresh all references",
                 "icon": "$(refresh)"
             }
         ],
         "menus": {
             "view/title": [
                 {
-                    "command": "dowdep.helloWorld",
+                    "command": "dowdep.refreshPackages",
                     "when": "view == dowdepDependencies",
                     "group": "navigation"
                 }
@@ -63,13 +73,20 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
+        "@types/try-catch": "^3.0.0",
         "dowdep": "file:./../core",
-        "it-all": "^1.0.5"
+        "it-all": "^1.0.5",
+        "lodash": "^4.17.21",
+        "normalize-package-data": "^3.0.3",
+        "try-catch": "^3.0.0",
+        "try-to-catch": "^3.0.0"
     },
     "devDependencies": {
         "@types/glob": "^7.1.3",
+        "@types/lodash": "^4.14.172",
         "@types/mocha": "^8.2.2",
         "@types/node": "14.x",
+        "@types/normalize-package-data": "^2.4.1",
         "@types/vscode": "^1.57.0",
         "@typescript-eslint/eslint-plugin": "^4.26.0",
         "@typescript-eslint/parser": "^4.26.0",

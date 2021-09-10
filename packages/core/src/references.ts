@@ -13,9 +13,11 @@ import tryCatch from 'try-catch'
 import ts from 'typescript'
 
 import { getCacheDirectory } from './npm-deps'
+import { Package } from './packages'
 import { OnlyData } from './utils/OnlyData'
-import Package from './package'
 import rex from './utils/rex'
+import { Dependency } from './dependencies'
+
 
 
 export class FilePosition {
@@ -46,16 +48,19 @@ export class Reference {
         Object.assign(this, init)
     }
 
-    dependentName!: string
+    dependency!: Dependency
     file!: string
     position!: FilePosition
+    memberPath?: string[]
     /**
      * - `undefined`: is default import
      * - `null`: imports root
      *
      * @todo Primitive obsession! Model ExportMember class hierarchy.
      */
-    memberName: string | null | undefined
+    declarationMemberName: string | null | undefined
+    declarationFile?: string
+    declarationMemberPath: string[] | null | undefined
     alias!: string | undefined
     kind!: ReferenceKind
 
@@ -125,21 +130,30 @@ export class ReferenceSearcher {
         }
 
         const dependencyName = path.basename(rootDirectory)
-        const packageSearcher = new this.packageReferenceSearcher(this.package, dependencyName)
+        const packageSearcher = new this.packageReferenceSearcher(this.package, new Dependency(dependencyName, new Package("hack", path.dirname(rootDirectory))))
         await packageSearcher.initialize()
         yield* packageSearcher.searchReferences(rootDirectory)
     }
 }
 
-type ConcretePackageReferenceSearcher = (new (_package: Package, rootDirectory: string) => PackageReferenceSearcher)
+type ConcretePackageReferenceSearcher = (new ($package: Package, dependency: Dependency) => PackageReferenceSearcher)
 
-abstract class PackageReferenceSearcher {
+const ALL_REFERENCE_SEARCHER_STRATEGIES = [
+    'heuristic',
+    'types'
+] as const
+export type ReferenceSearcherStrategy = (typeof ALL_REFERENCE_SEARCHER_STRATEGIES)[number]
+
+export abstract class PackageReferenceSearcher {
     /** TODOS for later:
      * Honor package-specific module configurations such as webpack that can rename modules
      * What about babel transformations? 😱
      */
-    package: Package
-    dependencyName: string
+    constructor(
+        public $package: Package,
+        public dependency: Dependency,
+        public includeKinds: ReadonlyArray<ReferenceKind> | '*' = ['usage']
+    ) { }
 
     static named(name: string): ConcretePackageReferenceSearcher {
         switch (name) {
@@ -152,16 +166,37 @@ abstract class PackageReferenceSearcher {
         }
     }
 
-    constructor($package: Package, dependencyName: string) {
-        this.package = $package
-        this.dependencyName = dependencyName
+    static create($package: Package, dependency: Dependency, strategy: ReferenceSearcherStrategy) {
+        return new (this.forStrategy(strategy))($package, dependency)
+    }
+
+    static forStrategy(strategy: ReferenceSearcherStrategy): ConcretePackageReferenceSearcher {
+        switch (strategy) {
+            case 'heuristic':
+                return HeuristicPackageReferenceSearcher
+            case 'types':
+                return TypePackageReferenceSearcher
+        }
     }
 
     async initialize() {
         // Stub method for subclasses.
     }
 
-    abstract searchReferences(rootDirectory: string): AsyncGenerator<Reference, void, undefined>
+    async* searchReferences(rootDirectory: string) {
+        const allReferences = this.basicSearchReferences(rootDirectory)
+        if (this.includeKinds == '*') {
+            return allReferences
+        }
+
+        for await (const reference of allReferences) {
+            if (this.includeKinds.includes(reference.kind)) {
+                yield reference
+            }
+        }
+    }
+
+    protected abstract basicSearchReferences(rootDirectory: string): AsyncGenerator<Reference, void, undefined>
 
     protected async findAllSourceFiles(rootDirectory: string) {
         // Exclude bundled and minified files
@@ -206,7 +241,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
             = \s*
             require \s* \( \s*
                 (?<quote>['"])
-                (?<packageName> ${escapeRegexp(this.package.name)} )
+                (?<packageName> ${escapeRegexp(this.$package.name)} )
                 (
                     \/ (?<memberName> ${identifierPattern} )
                 )?
@@ -217,7 +252,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
         this.commonJsPatterns = [requirePattern]
     }
 
-    async* searchReferences(rootDirectory: string) {
+    async* basicSearchReferences(rootDirectory: string) {
         for (const file of await this.findAllSourceFiles(rootDirectory)) {
             yield* this.searchReferencesInFile(rootDirectory, file)
         }
@@ -227,7 +262,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
         const fullPath = path.join(rootDirectory, filePath)
         const fileSize = (await fsPromises.stat(fullPath)).size
         if (fileSize > HeuristicPackageReferenceSearcher.maximumFileSize) {
-            console.warn(`Skipping very large file`, { dependencyName: this.dependencyName, fullPath })
+            console.warn(`Skipping very large file`, { dependencyName: this.dependency.name, fullPath })
             return
         }
 
@@ -241,7 +276,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
         yield* this.collectReferences(source, importBindings, filePath)
     }
 
-    async* collectReferences(source: string, bindings: Iterable<ModuleBinding>, filePath: string): AsyncGenerator<Reference, void, undefined> {
+    async* collectReferences(source: string, bindings: Iterable<ModuleBinding>, filePath: string) {
         const lines = source.split('\n')
         const getPosition = (() => {
             const linesAndColumns = new LinesAndColumns(source)
@@ -268,15 +303,16 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 const bindingPosition = getPosition(binding.index)
 
                 const isImport = position?.row == bindingPosition?.row
-                yield {
-                    dependentName: this.dependencyName,
+                yield new Reference({
+                    dependency: this.dependency,
                     file: filePath,
                     position,
                     kind: isImport ? 'import' : 'usage',
-                    memberName: binding.memberName,
+                    declarationMemberName: binding.memberName,
+                    declarationMemberPath: binding.memberName == null || binding.memberName == undefined ? binding.memberName : [binding.memberName],
                     alias: binding.alias,
                     matchString: line
-                }
+                })
             }
             minIndex += line.length + 1
         }
@@ -317,7 +353,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
 
                 return await parseImports(source)
             } catch (parseError) {
-                console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100), dependencyName: this.dependencyName })
+                console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100), dependencyName: this.dependency.name }) // TODO: Make getter denedencyName?
                 // This includes syntax errors but also TypeScript syntax which is not (yet?) supported by parse-imports.
                 // See: https://github.com/TomerAberbach/parse-imports/issues/1
                 // TODO: Increase robustness by stripping of everything below import statements
@@ -333,7 +369,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 continue
             }
             const packageName = $import.moduleSpecifier.value
-            if (!packageName || packageName != this.package.name) {
+            if (!packageName || packageName != this.$package.name) {
                 continue
             }
 
@@ -409,7 +445,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected references!: Reference[]
     protected dependencyDirectory!: string
 
-    async* searchReferences(rootDirectory: string) {
+    async* basicSearchReferences(rootDirectory: string) {
         this.dependencyDirectory = rootDirectory
         try {
             const options = this.loadOptions()
@@ -418,7 +454,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 await this.findAllSourceFiles(this.dependencyDirectory)
             ).map(file => path.join(this.dependencyDirectory, file))
             if (!options.fileNames.length) {
-                console.warn("No file names passed, searching whole repository", { dependencyName: this.dependencyName })
+                console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
                 options.fileNames = allFileNames
             }
 
@@ -438,6 +474,9 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
                 this.references = []  // A generator would be nicer but also more complicated
                 ts.forEachChild(sourceFile, (node) => this.visitNode(node))
+                if (this.includeKinds != '*') {
+                    this.references = this.references.filter(reference => this.includeKinds.includes(reference.kind))
+                }
                 yield* this.references
             }
         } finally {
@@ -456,14 +495,14 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             paths: {
                 ...options.options.paths,
                 // Map our package of interest to known location
-                [this.package.name]: [
-                    ...((options.options.paths ?? {})[this.package.name] ?? []),
-                    path.resolve(this.package.directory)
+                [this.$package.name]: [
+                    ...((options.options.paths ?? {})[this.$package.name] ?? []),
+                    path.resolve(this.$package.directory)
                 ],
                 // Same for submodules of our package
-                [`${this.package.name}/*`]: [
-                    ...((options.options.paths ?? {})[`${this.package.name}/*`] ?? []),
-                    `${path.resolve(this.package.directory)}/*`
+                [`${this.$package.name}/*`]: [
+                    ...((options.options.paths ?? {})[`${this.$package.name}/*`] ?? []),
+                    `${path.resolve(this.$package.directory)}/*`
                 ]
             },
             // Prevent the compiler from searching all parent folders for type definitions - these are not relevant
@@ -585,11 +624,16 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
 
         const matchString = node.getText(file)
 
+        const memberPath = this.getNodePath(node.parent)
+        const { file: declarationFile, memberPath: declarationMemberPath, memberName: declarationMemberName } = this.getFullQualifiedName(declaration, kind == 'import')
         return new Reference({
-            dependentName: this.dependencyName,
+            dependency: this.dependency,
             file: path.relative(this.dependencyDirectory, file.fileName),
-            position: { row: line + 1, column: character + 1 },
-            memberName: this.getFullQualifiedName(declaration, kind == 'import'),
+            position: new FilePosition({ row: line + 1, column: character + 1 }),
+            memberPath,
+            declarationFile: declarationFile,
+            declarationMemberPath: declarationMemberPath,
+            declarationMemberName: declarationMemberName,
             kind: kind,
             matchString: matchString,
             alias: aliasCallback ? aliasCallback(file) : matchString
@@ -608,7 +652,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected findDeclarationForSymbol(symbol: ts.Symbol) {
         return (symbol.declarations ?? []).find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
-            path.resolve(this.package.directory))
+            path.resolve(this.$package.directory))
         )
     }
 
@@ -616,20 +660,40 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         return ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)
     }
 
+    protected getNodePath(node: ts.Node): string[] | undefined {
+        //console.log({node})
+        const symbol = !(ts.isVariableDeclaration(node) || ts.isExportAssignment(node) || ts.isPropertyAssignment(node) || ts.isExportDeclaration(node))
+            && (<Partial<{ symbol: ts.Symbol }>>node).symbol
+        if (!symbol) {
+            return this.getNodePath(node.parent)
+        }
+
+        const result = this.getShortRelativeQualifiedName(symbol)?.path
+        if (result && node.getSourceFile().fileName.endsWith('gatsby-remark-images/index.js')) {
+            //console.log({result, node, symbol, fileName: node.getSourceFile().fileName})
+        }
+        //console.log('-')
+        return result
+    }
+
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
     protected getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
         const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol
-        const name = symbol && (isImport
+        const nameAndPath = symbol && (isImport
             ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module
                 ? undefined
-                : symbol.name
+                : { name: symbol.name, path: [] }
             : this.getRelativeQualifiedName(symbol))
-        const relativePath = path.relative(this.package.directory, declaration.getSourceFile().fileName)
+        const relativePath = path.relative(this.$package.directory, declaration.getSourceFile().fileName)
         const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
-        return name ? `${shortRelativePath}/${name}` : shortRelativePath
+        return {
+            file: relativePath,
+            memberPath: nameAndPath?.path,
+            memberName: nameAndPath?.name ? `${shortRelativePath}/${nameAndPath.name}` : shortRelativePath
+        }
     }
 
-    protected getRelativeQualifiedName(symbol: ts.Symbol): string | null | undefined {
+    protected getRelativeQualifiedName(symbol: ts.Symbol): { name: string, path: string[] } | null | undefined {
         if (!symbol.valueDeclaration) {
             return null
         }
@@ -649,12 +713,67 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             }
         }
         const symbolName = this.typeChecker.symbolToString(symbol)
-        const parentName = this.getRelativeQualifiedName(parent)
+        const parentNameAndPath = this.getRelativeQualifiedName(parent)
+        const parentName = parentNameAndPath?.name
+        const parentPath = parentNameAndPath?.path
         if (!parentName) {
-            return symbolName
+            return {
+                name: symbolName,
+                path: [symbolName]
+            }
         }
         const parentShortName = parentName.replace(/\.(js|ts|d\.ts)$/, '')
-        return `${parentShortName}.${symbolName}`
+        return {
+            name: `${parentShortName}.${symbolName}`,
+            path: [...parentPath ?? [], symbolName]
+        }
+    }
+
+    protected getShortRelativeQualifiedName(symbol: ts.Symbol): { name: string, path: string[] } | null | undefined {
+        if (!symbol.valueDeclaration) {
+            return null
+        }
+        let parent = (<Partial<{parent?: ts.Symbol}>>symbol).parent
+        if (!parent) {
+            if (ts.isSourceFile(symbol.valueDeclaration)) {
+                return null
+            }
+            if (this.isDefaultExport(symbol, symbol.valueDeclaration)) {
+                return undefined
+            }
+        }
+        {
+            //console.log('+<')
+            //console.log({symbol})
+            let parentNode: ts.Node = symbol.valueDeclaration.parent
+            //console.log({parentNode, parentNodeText: parentNode?.getText()})
+            while (!((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol)
+                && !(['__object', 'export=', 'exports'].includes(parent.name))
+                && !(ts.isVariableDeclaration(parentNode) || ts.isExportAssignment(parentNode) || ts.isPropertyAssignment(parentNode) || ts.isExportDeclaration(parentNode)))
+            ) {
+                parentNode = parentNode.parent
+                //console.log({parentNode, parent, parentNodeText: parentNode?.getText()})
+            }
+            //console.log('>-')
+        }
+        if (!parent) {
+            return undefined
+        }
+        const symbolName = this.typeChecker.symbolToString(symbol)
+        const parentNameAndPath = this.getShortRelativeQualifiedName(parent)
+        const parentName = parentNameAndPath?.name
+        const parentPath = parentNameAndPath?.path
+        if (!parentName) {
+            return {
+                name: symbolName,
+                path: [symbolName]
+            }
+        }
+        const parentShortName = parentName.replace(/\.(js|ts|d\.ts)$/, '')
+        return {
+            name: `${parentShortName}.${symbolName}`,
+            path: [...parentPath ?? [], symbolName]
+        }
     }
 
     private isDefaultExport(symbol: ts.Symbol, declaration: ts.Declaration) {

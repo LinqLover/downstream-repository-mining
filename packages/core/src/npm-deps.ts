@@ -16,13 +16,13 @@ export class Dependent {
     }
 
     public name!: string
-    public github?: GitHubRepository
+    public github?: GithubRepository
     public tarballUrl!: string
 
     public dependentCount?: number
 }
 
-class GitHubRepository {
+class GithubRepository {
     constructor(owner: string, name: string) {
         this.owner = owner
         this.name = name
@@ -67,7 +67,7 @@ export async function getNpmDeps(packageName: string, limit?: number, countNeste
                 console.warn("Package has no GitHub link", { metadata, url: repositoryUrl })
                 continue
             }
-            dependent.github = new GitHubRepository(match.groups.owner, match.groups.name)
+            dependent.github = new GithubRepository(match.groups.owner, match.groups.name)
         }
     }
 
