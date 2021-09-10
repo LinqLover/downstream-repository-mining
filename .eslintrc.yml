@@ -2,9 +2,18 @@ extends:
 - eslint:recommended
 - plugin:@typescript-eslint/eslint-recommended
 - plugin:@typescript-eslint/recommended
+ignorePatterns:
+- out/
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
+overrides:
+  - files: ['*(!.d).ts']
+    parserOptions:
+      project:
+      - tsconfig.json
+    rules:
+      "@typescript-eslint/no-floating-promises": error
 parser: "@typescript-eslint/parser"
 plugins:
 - "@typescript-eslint"

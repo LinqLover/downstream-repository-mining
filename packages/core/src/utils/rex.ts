@@ -22,12 +22,12 @@ import assert from 'assert'
  * https://github.com/Canop/miaou/blob/803a7fc5ee8a2d36b896aa0ef1deedfd89c1b670/libs/rex.js
  */
 export default function (templates: TemplateStringsArray, ...args: (string | RegExp)[]) {
-    assert(templates.raw.length == args.length + 1)
+    assert(templates.raw.length === args.length + 1)
     const raws = templates.raw.map(raw => raw
         .replace(/(?<![^\\](?:\\{2})*\\)\s/gm, '')  // remove unescaped whitespace
         .replace(/\/\/.*/gm, '')  // remove comments
     )
-    let flags = ""
+    let flags = ''
     for (const arg of args) {
         if (arg instanceof RegExp) {
             flags += arg.flags
