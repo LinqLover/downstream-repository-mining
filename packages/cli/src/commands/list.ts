@@ -13,11 +13,6 @@ export default class List extends Command {
             description: "maximum number of results to return (-1 for unlimited)",
             default: 20
         }),
-        countNestedDependents: flags.boolean({
-            name: 'count-nested-dependents', // TODO: Does not work!
-            description: "count nested dependents",
-            default: true
-        }),
         downloadGitHubData: flags.boolean({
             name: 'download-github-metadata', // TODO: Does not work!
             description: "download GitHub metadata",
@@ -37,7 +32,6 @@ export default class List extends Command {
         const deps = await getNpmDeps(
             packageName,
             limit,
-            flags.countNestedDependents,
             flags.downloadGitHubData
         )
 

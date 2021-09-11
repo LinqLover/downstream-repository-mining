@@ -20,22 +20,22 @@ export class Dependency {
     get references() { return this._references }
     get urls() { return new Map() }
 
-    async update(dowdep: Dowdep, updateCallback: () => Promise<void>) {
+    async update(dowdep: Dowdep, updateCallback?: () => Promise<void>) {
         await Promise.allSettled([
             async () => {
                 if (await this.updateFromGithub(dowdep)) {
-                    await updateCallback()
+                    await updateCallback?.()
                 }
             },
             async () => {
                 if (await this.updateSource(dowdep)) {
-                    updateCallback()
+                    updateCallback?.()
                 }
             }
         ])
     }
 
-    updateSource(_dowdep: Dowdep): Promise<boolean> {
+    updateSource(dowdep: Dowdep): Promise<boolean> {
         throw new Error("Not implemented") // Could use GitHub data for this
     }
 
@@ -92,6 +92,9 @@ export class GithubRepository {
 
     async updateMetadata(dowdep: Dowdep) {
         const githubGraphql = this.githubClient(dowdep)
+        if (!githubGraphql) {
+            return
+        }
 
         const query = gql`
             query githubDeps($owner: String!, $name: String!) {
@@ -110,7 +113,10 @@ export class GithubRepository {
 
     githubClient(dowdep: Dowdep) {
         if (dowdep.githubClient) {
-            return dowdep.githubClient
+            return <typeof graphql>dowdep.githubClient
+        }
+        if (!dowdep.githubAccessToken) {
+            return null
         }
 
         return dowdep.githubClient = graphql.defaults({

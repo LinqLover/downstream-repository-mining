@@ -47,7 +47,7 @@ export class NpmDependency extends Dependency {
         const cacheDirectory = dowdep.sourceCacheDirectory
         this.sourceDirectory = dowdep.fileSystem.join(cacheDirectory, this.name)
         if (await dowdep.fileSystem.exists(this.sourceDirectory)) {
-            return true // TODO: What to return here=
+            return true // TODO: What to return here?
         }
 
         // TODO: Check system-wide npm/yarn caches?

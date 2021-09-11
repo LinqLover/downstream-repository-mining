@@ -16,7 +16,7 @@ export class Dowdep {
     dependencyLimit?: number
     fileSystem: FileSystem = defaultFileSystem
     githubAccessToken?: string
-    githubClient: any
+    githubClient: unknown
     sourceCacheDirectory!: string
     referenceSearchStrategy: ReferenceSearcherStrategy = 'types'
 

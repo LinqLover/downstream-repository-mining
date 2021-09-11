@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert'
 import { Dirent, promises as fsPromises } from 'fs'
 import fs from 'fs'
 import glob from 'glob-promise'
@@ -17,7 +18,6 @@ import { Package } from './packages'
 import { OnlyData } from './utils/OnlyData'
 import rex from './utils/rex'
 import { Dependency } from './dependencies'
-
 
 
 export class FilePosition {
@@ -102,7 +102,7 @@ export class ReferenceSearcher {
         yield* this.basicSearchReferences(this.rootDirectory, limit, includeKinds == '*' ? ALL_REFERENCE_KINDS : includeKinds, 0)
     }
 
-    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind>, depth: number): AsyncIterable<Reference> {
+    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind> | '*', depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
             let depDirectories: Iterable<Dirent> = (
@@ -117,9 +117,6 @@ export class ReferenceSearcher {
             let i = 0
             for await (const depDirectory of depDirectories) {
                 for await (const reference of this.basicSearchReferences(path.join(rootDirectory, depDirectory.name), undefined, includeKinds, depth + 1)) {
-                    if (!includeKinds.includes(reference.kind)) {
-                        continue
-                    }
                     yield reference
                     if (limit && ++i >= limit) {
                         return
@@ -130,13 +127,21 @@ export class ReferenceSearcher {
         }
 
         const dependencyName = path.basename(rootDirectory)
-        const packageSearcher = new this.packageReferenceSearcher(this.package, new Dependency(dependencyName, new Package("hack", path.dirname(rootDirectory))))
+        const packageSearcher = new this.packageReferenceSearcher(
+            this.package,
+            new Dependency(dependencyName, new Package("hack", path.dirname(rootDirectory))),
+            includeKinds
+        )
         await packageSearcher.initialize()
         yield* packageSearcher.searchReferences(rootDirectory)
     }
 }
 
-type ConcretePackageReferenceSearcher = (new ($package: Package, dependency: Dependency) => PackageReferenceSearcher)
+type ConcretePackageReferenceSearcher = (new (
+    $package: Package,
+    dependency: Dependency,
+    includeKinds?: ReadonlyArray<ReferenceKind> | '*'
+) => PackageReferenceSearcher)
 
 const ALL_REFERENCE_SEARCHER_STRATEGIES = [
     'heuristic',
@@ -445,6 +450,12 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected references!: Reference[]
     protected dependencyDirectory!: string
 
+    protected get packageDirectory() {
+        const directory = this.$package.directory
+        assert(directory, `No package directory was specified for package ${this.$package.name}`)
+        return directory
+    }
+
     async* basicSearchReferences(rootDirectory: string) {
         this.dependencyDirectory = rootDirectory
         try {
@@ -497,12 +508,12 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 // Map our package of interest to known location
                 [this.$package.name]: [
                     ...((options.options.paths ?? {})[this.$package.name] ?? []),
-                    path.resolve(this.$package.directory)
+                    path.resolve(this.packageDirectory)
                 ],
                 // Same for submodules of our package
                 [`${this.$package.name}/*`]: [
                     ...((options.options.paths ?? {})[`${this.$package.name}/*`] ?? []),
-                    `${path.resolve(this.$package.directory)}/*`
+                    `${path.resolve(this.packageDirectory)}/*`
                 ]
             },
             // Prevent the compiler from searching all parent folders for type definitions - these are not relevant
@@ -652,7 +663,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected findDeclarationForSymbol(symbol: ts.Symbol) {
         return (symbol.declarations ?? []).find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
-            path.resolve(this.$package.directory))
+            path.resolve(this.packageDirectory))
         )
     }
 
@@ -684,7 +695,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 ? undefined
                 : { name: symbol.name, path: [] }
             : this.getRelativeQualifiedName(symbol))
-        const relativePath = path.relative(this.$package.directory, declaration.getSourceFile().fileName)
+        const relativePath = path.relative(this.packageDirectory, declaration.getSourceFile().fileName)
         const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
         return {
             file: relativePath,

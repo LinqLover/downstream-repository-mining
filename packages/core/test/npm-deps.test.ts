@@ -1,10 +1,13 @@
+import assert from 'assert'
 import { FullMetadata as PackageJson } from 'package-json'
 import * as path from 'path'
 import readPackageJsonCallback from 'read-package-json'
 import rimRaf from 'rimraf'
 import { promisify } from 'util'
+import { Package } from '../src'
+import { NpmDependency } from '../src/npm-dependencies'
 
-import { getNpmDeps, downloadDep, Dependent } from '../src/npm-deps'
+import { getNpmDeps, downloadDep } from '../src/npm-deps'
 
 const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readPackageJsonCallback)
@@ -13,36 +16,30 @@ const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BU
 // TODO: Extract all fixtures into separate files?
 describe('getNpmDeps', () => {
     it.each`
-        packageName     | limit  | countNestedDeps  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
-        ${'glob'}       | ${4}   | ${false}         | ${false}            | ${20}        | ${null}
-        ${'glob'}       | ${4}   | ${false}         | ${true}             | ${20}        | ${0}
-        ${'glob'}       | ${4}   | ${true}          | ${true}             | ${60}        | ${0}
-        ${'gl-matrix'}  | ${4}   | ${false}         | ${false}            | ${60}        | ${null}
+        packageName     | limit  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
+        ${'glob'}       | ${4}   | ${false}            | ${ 60}       | ${null}
+        ${'glob'}       | ${4}   | ${true}             | ${120}       | ${0}
+        ${'gl-matrix'}  | ${4}   | ${false}            | ${ 60}       | ${null}
         `("should return plausible results for $packageName (at least $limit deps)", async (
-        { packageName, limit, countNestedDeps, downloadGitHubData, timeoutSecs, nonGitHubThreshold }: {
-            packageName: string, limit: number, countNestedDeps: boolean, downloadGitHubData: boolean, timeoutSecs: number, nonGitHubThreshold: number | undefined
+        { packageName, limit, downloadGitHubData, timeoutSecs, nonGitHubThreshold }: {
+            packageName: string, limit: number, downloadGitHubData: boolean, timeoutSecs: number, nonGitHubThreshold: number | undefined
         }) => {
         jest.setTimeout(timeoutSecs * 1000)
 
-        const deps = await getNpmDeps(packageName, limit, countNestedDeps, downloadGitHubData)
+        const deps = await getNpmDeps(packageName, limit, downloadGitHubData)
 
-        // NOTE: FLAKE TEST (at least 4 incidences).
-        // Raised the glob limit to 4, did this solve the issue?
         expect(deps).toHaveLength(limit)
 
         for (const dep of deps) {
             expect(dep.name).toBeTruthy()
-            if (countNestedDeps) {
-                expect(dep.dependentCount).toBeGreaterThanOrEqual(limit)
-            }
         }
 
         if (nonGitHubThreshold) {
-            expect(deps.filter(dep => !dep.github).length).toBeGreaterThanOrEqual(nonGitHubThreshold)
+            expect(deps.filter(dep => !dep.githubRepository).length).toBeGreaterThanOrEqual(nonGitHubThreshold)
         }
 
         for (const dep of deps) {
-            const github = dep.github
+            const github = dep.githubRepository
             if (!github) continue
 
             expect(github.name).toBeTruthy()
@@ -63,13 +60,11 @@ describe('downloadDep', () => {
             packageName: string, version: string, tarballUrl: string
         }) => {
         jest.setTimeout(5000)
-        await (promisify(rimRaf))(<string>process.env.NPM_CACHE)
+        assert(process.env.NPM_CACHE)
+        await (promisify(rimRaf))(process.env.NPM_CACHE)
 
-
-        const dep = new Dependent({
-            name: packageName,
-            tarballUrl: tarballUrl
-        })
+        const dep = new NpmDependency(packageName, <Package><unknown>undefined)
+        dep.tarballUrl = tarballUrl
 
         await downloadDep(dep)
 
