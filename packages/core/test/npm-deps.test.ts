@@ -47,7 +47,7 @@ describe('getNpmDeps', () => {
             expect(github.stargazerCount).toBeGreaterThanOrEqual(10)
             expect(github.forkCount).toBeGreaterThanOrEqual(10)
         }
-    })
+    }, 60000)
 })
 
 describe('downloadDep', () => {

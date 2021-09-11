@@ -4,3 +4,18 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "packages/cli"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "packages/core"
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: "callsites"
+        # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/140#issuecomment-909264249
+  - package-ecosystem: "npm"
+    directory: "packages/vscode-extension"
+    schedule:
+      interval: "daily"
