@@ -18,7 +18,7 @@
     "license": "UNLICENSED",
     "scripts": {
         "lint": "eslint . --ext=.js,.ts,.json",
-        "postinstall": "if [ -f node_modules/package-metadata/dist/findPackageVersion.d.ts ]; then sed -i 's:import(\"src/PackageJson\"):import(\"./PackageJson\"):g' node_modules/package-metadata/dist/findPackageVersion.d.ts; fi",
+        "postinstall": "sed -i 's:import(\"src/PackageJson\"):import(\"./PackageJson\"):g' node_modules/package-metadata/dist/findPackageVersion.d.ts || echo \"Cannot patch package-metadata\"",
         "build": "tsc",
         "watch": "tsc -watch -p ./",
         "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
