@@ -1,6 +1,7 @@
 import { Dowdep } from './dowdep'
 import { Dependency } from './dependencies'
 import { isPromisePending } from 'promise-status-async'
+import { Reference } from '.'
 
 
 export class Package {
@@ -14,7 +15,12 @@ export class Package {
     }
 
     _dependencies: Dependency[] = []
-    get dependencies(): ReadonlyArray<Dependency> { return this._dependencies }
+    get dependencies(): ReadonlyArray<Dependency> {
+        return this._dependencies
+    }
+    get allReferences(): ReadonlyArray<Reference> {
+        return this.dependencies.flatMap(depedendency => depedendency.references)
+    }
 
     async updateDependencies(dowdep: Dowdep, updateCallback: () => Promise<void>) {
         const searcher = dowdep.createDependencySearcher(this)

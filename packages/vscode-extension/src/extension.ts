@@ -1,11 +1,12 @@
 import normalizePackageData from 'normalize-package-data'
-//import tryToCatch from 'try-to-catch'
-import tryToCatch from './utils/try-to-catch'
-import vscode, { CancellationError } from 'vscode'
+import tryToCatch from 'try-to-catch'
+import vscode from 'vscode'
 
 import { Dependency, Dowdep, Package, Reference } from 'dowdep'
-import { DependenciesProvider } from './DependenciesProvider'
-import isDefined from './utils/isDefined'
+import { DependenciesProvider } from './dependencies'
+import { ReferencesProvider } from './references'
+import isDefined from './utils/node/isDefined'
+import { HierarchyProvider } from './views'
 
 
 let extension: Extension
@@ -30,15 +31,23 @@ export class Extension {
     packages: Package[] = []
     protected dowdep: Dowdep
     protected dependenciesProvider: DependenciesProvider
+    protected referencesProvider: ReferencesProvider
     // protected dependenciesView: vscode.TreeView<DependencyItem> // will be needed to reveal()
-    // TODO: only define type information that are needed here?
+
+    private get modelObservers() {
+        return [
+            this.dependenciesProvider,
+            this.referencesProvider
+        ]
+    }
 
     constructor(
         context: vscode.ExtensionContext
     ) {
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
-            sourceCacheDirectory: vscode.Uri.joinPath(context.storageUri!, 'dowdep-cache').fsPath, // TODO: filesystem ...
+            // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
+            sourceCacheDirectory: vscode.Uri.joinPath(context.storageUri!, 'dowdep-cache').fsPath,
             dependencyLimit: 10,
             githubAccessToken: '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' // 🔺 DO NOT COMMIT 🔺
         })
@@ -46,6 +55,10 @@ export class Extension {
         this.dependenciesProvider = new DependenciesProvider(this)
         vscode.window.createTreeView('dowdepDependencies', {
             treeDataProvider: this.dependenciesProvider
+        })
+        this.referencesProvider = new ReferencesProvider(this)
+        vscode.window.createTreeView('dowdepReferences', {
+            treeDataProvider: this.referencesProvider
         })
 
         this.createCommands(context)
@@ -89,13 +102,18 @@ export class Extension {
             vscode.commands.registerCommand('dowdep.openReference', this.wrapWithLogger(
                 (reference: Reference) => this.openReference(reference)
             )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.openReferenceFileOrFolder', this.wrapWithLogger(
+                (reference: Reference, relativePath: string) => this.openReferenceFileOrFolder(reference, relativePath)
+            )))
     }
 
     private createTreeDataCommands(context: vscode.ExtensionContext) {
-        DependenciesProvider.createCommands((name, callback) =>
-            context.subscriptions.push(
-                vscode.commands.registerCommand(name, this.wrapWithLogger(callback))
-            ))
+        for (const commandProvider of [HierarchyProvider, DependenciesProvider, ReferencesProvider]) {
+            commandProvider.createCommands((name, callback) =>
+                context.subscriptions.push(
+                    vscode.commands.registerCommand(name, this.wrapWithLogger(callback))))
+        }
     }
 
     release() {
@@ -109,7 +127,7 @@ export class Extension {
             // TODO: Only show warning if no error was shown earlier during getPackages()
             // TODO: Do we need to await this?
         }
-        this.notifyModelObservers()
+        await this.notifyModelObservers()
     }
 
     async refreshAllDependencies() {
@@ -211,12 +229,23 @@ export class Extension {
         })
     }
 
+    async openReferenceFileOrFolder(reference: Reference, relativePath: string) {
+        const rootUri = vscode.Uri.file(reference.dependency.$package.directory)
+        const fileUri = vscode.Uri.joinPath(rootUri, relativePath)
+        const isDirectory = (await vscode.workspace.fs.stat(fileUri)).type === vscode.FileType.Directory
+        if (isDirectory) {
+            await vscode.commands.executeCommand('revealInExplorer', fileUri)
+        } else {
+            await vscode.commands.executeCommand('vscode.open', fileUri)
+        }
+    }
+
     async refreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken) {
         await $package.updateDependencies(this.dowdep, async () => {
             if (cancellationToken?.isCancellationRequested) {
                 throw new vscode.CancellationError()
             }
-            this.notifyModelObservers()
+            await this.notifyModelObservers()
         })
     }
 
@@ -225,11 +254,11 @@ export class Extension {
             if (cancellationToken?.isCancellationRequested) {
                 throw new vscode.CancellationError()
             }
-            this.notifyModelObservers()
+            await this.notifyModelObservers()
         })
     }
 
-    private wrapWithLogger<TIn extends any[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
+    private wrapWithLogger<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
         return async (...args: TIn) => {
             try {
                 return await fun(...args)
@@ -240,8 +269,9 @@ export class Extension {
         }
     }
 
-    private notifyModelObservers() {
-        this.dependenciesProvider.updateModel()
+    private async notifyModelObservers() {
+        await Promise.all(this.modelObservers.map(
+            observer => observer.modelChanged()))
     }
 
     private async getPackages() {

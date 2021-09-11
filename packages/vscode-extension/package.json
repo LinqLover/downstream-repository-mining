@@ -60,6 +60,10 @@
                 {
                     "id": "dowdepDependencies",
                     "name": "Downstream Dependencies"
+                },
+                {
+                    "id": "dowdepReferences",
+                    "name": "Downstream References"
                 }
             ]
         }
@@ -77,7 +81,7 @@
         "it-all": "^1.0.5",
         "lodash": "^4.17.21",
         "normalize-package-data": "^3.0.3",
-        "try-catch": "^3.0.0",
+        "truncate": "^2.1.0",
         "try-to-catch": "^3.0.0"
     },
     "devDependencies": {
