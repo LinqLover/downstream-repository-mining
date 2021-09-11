@@ -68,9 +68,9 @@
         "vscode:prepublish": "yarn run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "pretest": "yarn run compile && yarn run lint",
+        "pretest": "tsc -p ./tsconfig.test.json",
         "lint": "eslint src test --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/runTest.js"
     },
     "dependencies": {
         "dowdep": "file:./../core",

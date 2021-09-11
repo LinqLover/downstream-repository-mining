@@ -8,7 +8,6 @@
             "ESNext.AsyncIterable"
         ],
         "outDir": "out",
-        "rootDir": "src",
         "sourceMap": true,
         "strict": true,  /* enable all strict type-checking options */
         "esModuleInterop": true,
