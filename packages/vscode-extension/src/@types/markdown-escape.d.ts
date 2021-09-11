@@ -1,6 +1,5 @@
 declare module 'markdown-escape' {
-    // TODO
-    /* declare const ALL_CHARACTER_SETS = [
+    type CharacterSets = [
         'asterisks',
         'number signs',
         'slashes',
@@ -11,9 +10,9 @@ declare module 'markdown-escape' {
         'angle brackets',
         'angle brackets',
         'underscores'
-    ] as const */
+    ]
 
-    export type CharacterSet = /* (typeof ALL_CHARACTER_SETS) */string[number]
+    export type CharacterSet = CharacterSets[number]
 
     export default function markdownEscape(string: string, skips?: CharacterSet[]): string
 }
