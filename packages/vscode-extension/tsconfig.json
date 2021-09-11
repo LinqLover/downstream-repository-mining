@@ -12,7 +12,7 @@
         "sourceMap": true,
         "strict": true,  /* enable all strict type-checking options */
         "esModuleInterop": true,
-        "types": [],
+        "types": ["node"],
         "typeRoots": [
             "./src/@types/**/*.d.ts",
             "node_modules/@types"
