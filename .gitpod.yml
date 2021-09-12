@@ -1,2 +1,2 @@
-image:
-  file: .gitpod.dockerfile
+tasks:
+  - init: nvm install 16 && nvm use 16 && nvm alias default 16
