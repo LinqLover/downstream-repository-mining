@@ -8,6 +8,9 @@ updates:
     directory: "packages/cli"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "globby"
+        # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/113#issuecomment-917516607
   - package-ecosystem: "npm"
     directory: "packages/core"
     schedule:
