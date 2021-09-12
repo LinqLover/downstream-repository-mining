@@ -12,4 +12,4 @@ echo "$output"
 commands="$(echo "$output" | sed -n '/^COMMANDS$/,$p' | sed -n '/^  /p')"
 number_of_commands="$(echo "$commands" | wc -l)"
 
-(( number_of_commands > 1 )) || fail "Not enough commands provided"
+(( number_of_commands > 4 )) || fail "Not enough commands provided"
