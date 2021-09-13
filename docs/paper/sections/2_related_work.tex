@@ -8,6 +8,7 @@ Besides source code repositories, they also describe various other data sources 
 In the following, we will consider the different problems that our research issue can be decomposed into.
 
 \subsection{Mining dependencies}
+\label{sec:related_work/dependencies}
 
 A common purpose for \emph{analyzing dependency graphs} is to discover transitive (indirect) upstream dependencies of a project and assess their impact on the stability and vulnerability of the project.
 This is done by \citet{kikas2017structure} which apply their methodology to the JavaScript, Ruby, and Rust ecosystems and gain statistical insights into the centrality and evolution of these ecosystems.
@@ -20,6 +21,7 @@ In this case, developers will often use a public \emph{code search} service such
 \citet{liu2020opportunities} survey current methods and trends in code search tools that include, besides simple full-text search, newer approaches such as structural or semantic search queries, code similarity metrics, or Machine Learning methods.
 
 \subsection{Mining usage information}
+\label{sec:related_work/usage_information}
 
 Dependency graphs do not provide information about package usage on a finer granularity, so reference insights about single package members such as classes or methods remain unknown.
 The process of extracting fine-granular information about all references to individual elements of an interface is often referred to as \emph{API usage analysis}.
@@ -50,6 +52,7 @@ Next to straightforward grouping and counting operations, such aggregations can 
 \citet{hanam2019aiding} pursue a different goal in their tool that helps package developers assess the impact of breaking API changes on the functionality of downstream dependencies.
 
 \subsection{Presentation of results}
+\label{sec:related_work/presentation}
 
 To establish an adequate developer experience, any collected usage data still need to be presented in a suitable manner.
 A common approach for this is a hierarchical and navigatable representation of the collected call tree.
