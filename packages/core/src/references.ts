@@ -5,7 +5,6 @@ import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
 import LinesAndColumns from 'lines-and-columns'
 import _ from 'lodash'
-import tqdm from 'ntqdm'
 import type { Import, Options } from 'parse-imports'
 import path from 'path'
 import pathIsInside from 'path-is-inside'
@@ -13,7 +12,6 @@ import pkgDir from 'pkg-dir'
 import tryCatch from 'try-catch'
 import ts from 'typescript'
 
-import { getCacheDirectory } from './npm-deps'
 import { Package } from './packages'
 import { OnlyData } from './utils/OnlyData'
 import rex from './utils/rex'
@@ -90,9 +88,9 @@ export class ReferenceSearcher {
     packageReferenceSearcher: ConcretePackageReferenceSearcher = HeuristicPackageReferenceSearcher
     private static readonly maximumReportableDepth = 2
 
-    constructor($package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
+    constructor($package: Package, rootDirectory: string, packageReferenceSearcher?: string) {
         this.package = $package
-        this.rootDirectory = rootDirectory ?? getCacheDirectory()
+        this.rootDirectory = rootDirectory
         if (packageReferenceSearcher) {
             this.packageReferenceSearcher = PackageReferenceSearcher.named(packageReferenceSearcher)
         }
@@ -105,14 +103,9 @@ export class ReferenceSearcher {
     protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind> | '*', depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
-            let depDirectories: Iterable<Dirent> = (
+            const depDirectories: Iterable<Dirent> = (
                 await fsPromises.readdir(rootDirectory, { withFileTypes: true })
             ).filter(dirent => dirent.isDirectory)
-
-            // TODO: Restructure recursive loop in favor of constant reportable depth
-            if (!(depth > ReferenceSearcher.maximumReportableDepth)) {
-                depDirectories = tqdm(depDirectories, { desc: `Scanning dependents (${rootDirectory})...` })
-            }
 
             let i = 0
             for await (const depDirectory of depDirectories) {

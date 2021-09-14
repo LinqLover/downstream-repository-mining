@@ -31,7 +31,7 @@ export NPM_CACHE="cache-test"
 echo "$ list"
 output=$($bin list --limit 10 --no-downloadGitHubData $packageName 2>&1)
 echo "$output"
-[[ $output == *'tarballUrl:'* ]] || fail "list does not output valid hits"
+[[ $output =~ Dependency[[:space:]]\{[[:space:]]+name: ]] || fail "list does not output valid hits"
 echo
 
 echo "$ download"
@@ -43,7 +43,7 @@ echo
 echo "$ search heuristic"
 output=$($bin search --limit 10 --strategy heuristic $packageName 2>&1)
 echo "$output"
-[[ $output == *'matchString:'* ]] || fail "search heuristic does not output valid hits"
+[[ $output =~ Dependency[[:space:]]\{[[:space:]]+name: ]] || fail "search heuristic does not output valid hits"
 [[ $output != *'ERR_MODULE_NOT_FOUND'* ]] || fail "search heuristic raised node import error"
 echo
 

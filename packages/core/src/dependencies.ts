@@ -1,9 +1,11 @@
 import { graphql } from '@octokit/graphql'
 import { gql } from 'graphql-request'
+import _ from 'lodash'
 
 import { Dowdep } from './dowdep'
 import { Package } from './packages'
 import { Reference } from './references'
+import isDefined from './utils/isDefined'
 
 
 export class Dependency {
@@ -13,30 +15,44 @@ export class Dependency {
     ) { }
 
     description?: string
-    githubRepository?: GithubRepository
+    githubRepository?: GithubRepository | null
     repositoryUrl?: string
     sourceDirectory?: string
     _references: Reference[] = []
+    get isGitHubRepositoryReady() {
+        if (_.isUndefined(this.githubRepository)) {
+            return false
+        }
+        if (this.githubRepository === null) {
+            return true
+        }
+        return isDefined(this.githubRepository.stargazerCount)
+    }
+
     get references() { return this._references }
     get urls() { return new Map() }
 
-    async update(dowdep: Dowdep, updateCallback?: () => Promise<void>) {
-        await Promise.allSettled([
-            async () => {
-                if (await this.updateFromGithub(dowdep)) {
-                    await updateCallback?.()
-                }
-            },
-            async () => {
-                if (await this.updateSource(dowdep)) {
-                    updateCallback?.()
-                }
-            }
-        ])
+    async update(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
+        const jobs = [...this.collectUpdateJobs(dowdep, options)]
+        await Promise.allSettled(jobs.map(async (job, index) =>
+            (await job()) && (await updateCallback?.(this, `job ${index}`))))
+    }
+
+    isSourceCodeReady(dowdep: Dowdep): Promise<boolean> {
+        throw new Error("Not implemented")
     }
 
     updateSource(dowdep: Dowdep): Promise<boolean> {
         throw new Error("Not implemented") // Could use GitHub data for this
+    }
+
+    private *collectUpdateJobs(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}) {
+        if (options.downloadMetadata ?? true) {
+            yield () => this.updateFromGithub(dowdep)
+        }
+        if (options.downloadSource ?? false) {
+            yield () => this.updateSource(dowdep)
+        }
     }
 
     async updateReferences(dowdep: Dowdep, updateCallback: () => Promise<void>) {
@@ -60,7 +76,8 @@ export class Dependency {
     async updateFromGithub(dowdep: Dowdep) {
         const match = this.repositoryUrl?.match(/github\.com[/:](?<owner>[^/]+)\/(?<name>[\w-_.]+?)(?:.git)?$/)
         if (!match?.groups) {
-            return false
+            this.githubRepository = null
+            return true
         }
 
         this.githubRepository = new GithubRepository(match.groups.owner, match.groups.name)
@@ -79,6 +96,13 @@ export abstract class DependencySearcher {
     protected createDependency(name: string) {
         return new Dependency(name, this.$package)
     }
+}
+
+export type DependencyUpdateCallback = (dependency: Dependency, data: any) => void | Promise<void>
+
+export type DependencyUpdateOptions = {
+    downloadMetadata: boolean
+    downloadSource: boolean
 }
 
 export class GithubRepository {

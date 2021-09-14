@@ -53,10 +53,10 @@ export default class Search extends Command {
         const aggregate = flags.aggregate
         const limit = flags.limit == -1 ? undefined : flags.limit
 
-        const $package = new Package({
-            name: packageName,
-            directory: packageDirectory ?? path.join(getCacheDirectory(), packageName)
-        })
+        const $package = new Package(
+            packageName,
+            packageDirectory ?? path.join(getCacheDirectory(), packageName)
+        )
         const searcher = new ReferenceSearcher($package, undefined, strategy)
         const includeKinds: ReferenceKind[] = ['usage']
         if (includeImports) {
@@ -76,7 +76,7 @@ export default class Search extends Command {
         }
         if (allReferences) {
             const aggregatedReferences = _.chain(allReferences)
-                .groupBy(reference => reference.memberName)
+                .groupBy(reference => reference.declarationMemberPath)
                 .mapValues(memberReferences => _.countBy(memberReferences, 'dependentName'))
                 .toPairs()
                 .orderBy(([, countedReferences]) => _.sum(Object.values(countedReferences)), 'desc')

@@ -2,9 +2,10 @@ import downloadPackageTarball from 'download-package-tarball'
 import npmDependants from 'npm-dependants'
 import { RegistryClient } from 'package-metadata'
 
-import { Dependency, DependencySearcher } from './dependencies'
+import { Dependency, DependencySearcher, DependencyUpdateCallback, DependencyUpdateOptions } from './dependencies'
 import { Dowdep } from './dowdep'
 import { Package } from './packages'
+import isDefined from './utils/isDefined'
 import { OnlyData } from './utils/OnlyData'
 
 
@@ -22,21 +23,15 @@ export class NpmDependency extends Dependency {
         return `https://www.npmjs.com/package/${this.name}`
     }
 
-    async update(dowdep: Dowdep, updateCallback: () => Promise<void>) {
-        await Promise.allSettled([
-            (async () => {
-                await this.updateFromRegistry()
-                await updateCallback()
-                if (await this.updateSource(dowdep)) {
-                    await updateCallback()
-                }
-            })(),
-            (async () => {
-                if (await this.updateFromGithub(dowdep)) {
-                    await updateCallback()
-                }
-            })()
-        ])
+    async update(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
+        await this.updateFromRegistry()
+        await updateCallback?.(this, 'registry')
+
+        await super.update(dowdep, options, updateCallback)
+    }
+
+    async isSourceCodeReady(dowdep: Dowdep) {
+        return isDefined(this.sourceDirectory) && await dowdep.fileSystem.exists(this.sourceDirectory)
     }
 
     async updateSource(dowdep: Dowdep) {
@@ -46,7 +41,7 @@ export class NpmDependency extends Dependency {
 
         const cacheDirectory = dowdep.sourceCacheDirectory
         this.sourceDirectory = dowdep.fileSystem.join(cacheDirectory, this.name)
-        if (await dowdep.fileSystem.exists(this.sourceDirectory)) {
+        if (await this.isSourceCodeReady(dowdep)) {
             return true // TODO: What to return here?
         }
 
@@ -101,9 +96,12 @@ export class NpmDependencySearcher extends DependencySearcher {
 
     async* getNpmDependents(packageName: string, limit?: number) {
         let count = 0
+        if (isDefined(limit) && limit <= 0) {
+            return
+        }
         for await (const dependent of npmDependants(packageName)) {
             yield dependent
-            if (limit && ++count >= limit) break
+            if (isDefined(limit) && ++count >= limit) break
         }
     }
 }
