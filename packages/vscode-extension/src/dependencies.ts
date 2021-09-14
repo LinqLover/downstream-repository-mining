@@ -69,6 +69,7 @@ class DependenciesDependencyItem extends DependencyItem<
 
         this.dependencyNodeItem.allLeafs = this.dependency.references
         this.dependencyNodeItem.refresh()
+        this.description = this.dependencyNodeItem.description
     }
 
     protected *getChildrenKeys(): Iterable<undefined | Reference> {

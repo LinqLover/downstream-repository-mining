@@ -81,6 +81,7 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
     }
 
     protected getFullPath(reference: Reference) {
+        assert(reference.dependency.$package.directory)
         const baseUri = vscode.Uri.parse(reference.dependency.$package.directory)
         const fileUri = vscode.Uri.joinPath(baseUri, reference.declarationFile!)
         return { baseUri, fileUri }

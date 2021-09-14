@@ -47,10 +47,10 @@ export class Extension {
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
             // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
-            sourceCacheDirectory: vscode.Uri.joinPath(context.storageUri!, 'dowdep-cache').fsPath,
-            dependencyLimit: 10,
-            githubAccessToken: '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' // 🔺 DO NOT COMMIT 🔺
+            sourceCacheDirectory: vscode.Uri.joinPath(context.storageUri!, 'dowdep-cache').fsPath
         })
+        context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => this.configurationChanged()))
+        this.configurationChanged()
 
         this.dependenciesProvider = new DependenciesProvider(this)
         vscode.window.createTreeView('dowdepDependencies', {
@@ -62,6 +62,12 @@ export class Extension {
         })
 
         this.createCommands(context)
+    }
+
+    private configurationChanged(): any {
+        this.dowdep.dependencyLimit = vscode.workspace.getConfiguration().get<number>('dowdep.dependencyLimit')
+        this.dowdep.githubAccessToken = vscode.workspace.getConfiguration().get('dowdep.githubOAuthToken')
+        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get('dowdep.referenceSearchStrategy', 'types')
     }
 
     private createCommands(context: vscode.ExtensionContext) {
@@ -187,6 +193,9 @@ export class Extension {
     }
 
     async openPackage($package: Package) {
+        if (!$package.directory) {
+            return
+        }
         await vscode.commands.executeCommand(
             'revealInExplorer',
             vscode.Uri.parse($package.directory)
@@ -230,6 +239,9 @@ export class Extension {
     }
 
     async openReferenceFileOrFolder(reference: Reference, relativePath: string) {
+        if (!reference.dependency.$package.directory) {
+            return
+        }
         const rootUri = vscode.Uri.file(reference.dependency.$package.directory)
         const fileUri = vscode.Uri.joinPath(rootUri, relativePath)
         const isDirectory = (await vscode.workspace.fs.stat(fileUri)).type === vscode.FileType.Directory
@@ -241,7 +253,11 @@ export class Extension {
     }
 
     async refreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken) {
-        await $package.updateDependencies(this.dowdep, async () => {
+        await $package.updateDependencies(
+            this.dowdep, {
+                downloadMetadata: true,
+                downloadSource: true
+            }, async () => {
             if (cancellationToken?.isCancellationRequested) {
                 throw new vscode.CancellationError()
             }
