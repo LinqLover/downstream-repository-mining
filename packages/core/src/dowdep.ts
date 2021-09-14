@@ -19,10 +19,20 @@ export class Dowdep {
 
     dependencyLimit?: number
     fileSystem: FileSystem = defaultFileSystem
-    githubAccessToken?: string
-    githubClient: unknown
+    get githubAccessToken() {
+        return this._githubAccessToken
+    }
+    set githubAccessToken(value: string | undefined) {
+        this._githubAccessToken = value
+        this.githubClient?.tokenChanged(value)
+    }
+    githubClient?: {
+        tokenChanged: (value: string | undefined) => void
+    }
     sourceCacheDirectory!: string
     referenceSearchStrategy: ReferenceSearcherStrategy = 'types'
+
+    private _githubAccessToken?: string
 
     createDependencySearcher($package: Package): DependencySearcher {
         return new NpmDependencySearcher($package, {

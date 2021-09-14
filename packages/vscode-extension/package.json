@@ -53,14 +53,17 @@
                         "string",
                         "null"
                     ],
-                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a new token in the [GitHub developer settings](https://github.com/settings/tokens/new).",
+                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a token in the [GitHub developer settings](https://github.com/settings/tokens/new).",
                     "default": null,
-                    "pattern": "ghp_[0-9a-zA-Z]{36}"
+                    "pattern": "^ghp_[0-9a-zA-Z]{36}$"
                 },
                 "dowdep.referenceSearchStrategy": {
                     "type": "string",
                     "description": "Indicates the strategy that is used for finding usage samples in downstream dependencies.",
-                    "enum": ["types", "heuristic"],
+                    "enum": [
+                        "types",
+                        "heuristic"
+                    ],
                     "enumDescriptions": [
                         "Uses the TypeScript compiler for searching references. Recommended.",
                         "Searches dependencies for imports of the analyzed package by using a simple heuristic. For demonstrational purpose only."

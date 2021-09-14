@@ -115,37 +115,59 @@ export class GithubRepository {
     public forkCount?: number
 
     async updateMetadata(dowdep: Dowdep) {
-        const githubGraphql = this.githubClient(dowdep)
-        if (!githubGraphql) {
+        const githubClient = this.githubClient(dowdep)
+
+        const metadata = await githubClient.fetchMetadata(this.owner, this.name)
+        if (!metadata) {
             return
         }
-
-        const query = gql`
-            query githubDeps($owner: String!, $name: String!) {
-                repository(owner: $owner, name: $name) {
-                    url, stargazerCount, forkCount
-                }
-            }
-        `
-        const variables = { owner: this.owner, name: this.name }
-
-        // TODO: Try to bundle queries using aliases: https://stackoverflow.com/a/64267839/13994294
-        const { repository } = await githubGraphql(query, variables)
-        this.forkCount = repository.forkCount
-        this.stargazerCount = repository.stargazerCount
+        [this.forkCount, this.stargazerCount] = [metadata.forkCount, metadata.stargazerCount]
     }
 
     githubClient(dowdep: Dowdep) {
         if (dowdep.githubClient) {
-            return <typeof graphql>dowdep.githubClient
-        }
-        if (!dowdep.githubAccessToken) {
-            return null
+            return <GithubClient>dowdep.githubClient
         }
 
-        return dowdep.githubClient = graphql.defaults({
+        return dowdep.githubClient = new GithubClient(dowdep.githubAccessToken)
+    }
+}
+
+class GithubClient {
+    constructor(accessToken: string | undefined) {
+        this.tokenChanged(accessToken)
+    }
+
+    protected graphql?: typeof graphql
+
+    async fetchMetadata(owner: string, name: string): Promise<{
+        forkCount: number,
+        stargazerCount: number
+    } | undefined> {
+        if (!this.graphql) {
+            return
+        }
+
+        const
+            query = gql`
+                query githubDeps($owner: String!, $name: String!) {
+                    repository(owner: $owner, name: $name) {
+                        url, stargazerCount, forkCount
+                    }
+                }
+            `,
+            variables = { owner, name }
+
+        // TODO: Try to bundle queries using aliases: https://stackoverflow.com/a/64267839/13994294
+        const { repository } = await this.graphql(query, variables)
+
+        return repository
+    }
+
+    tokenChanged(newToken: string | undefined) {
+        this.graphql = !newToken ? undefined : graphql.defaults({
             headers: {
-                authorization: `token ${dowdep.githubAccessToken}`,
+                authorization: `token ${newToken}`,
             }
         })
     }

@@ -2,7 +2,7 @@ import normalizePackageData from 'normalize-package-data'
 import tryToCatch from 'try-to-catch'
 import vscode from 'vscode'
 
-import { Dependency, Dowdep, Package, Reference } from 'dowdep'
+import { Dependency, Dowdep, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
 import isDefined from './utils/node/isDefined'
@@ -64,10 +64,13 @@ export class Extension {
         this.createCommands(context)
     }
 
-    private configurationChanged(): any {
+    private async configurationChanged() {
         this.dowdep.dependencyLimit = vscode.workspace.getConfiguration().get<number>('dowdep.dependencyLimit')
         this.dowdep.githubAccessToken = vscode.workspace.getConfiguration().get('dowdep.githubOAuthToken')
-        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get('dowdep.referenceSearchStrategy', 'types')
+        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get<ReferenceSearcherStrategy>('dowdep.referenceSearchStrategy', 'types')
+        if (this.dowdep.referenceSearchStrategy === 'heuristic') {
+            await vscode.window.showWarningMessage("The heuristic search strategy is currently not supported because of extremely complicated import errors, sigh ...\n\nFurther information: https://github.com/TomerAberbach/parse-imports/issues/3")
+        }
     }
 
     private createCommands(context: vscode.ExtensionContext) {
@@ -239,10 +242,11 @@ export class Extension {
     }
 
     async openReferenceFileOrFolder(reference: Reference, relativePath: string) {
-        if (!reference.dependency.$package.directory) {
+        const packageDirectory = reference.dependency.$package.directory
+        if (!packageDirectory) {
             return
         }
-        const rootUri = vscode.Uri.file(reference.dependency.$package.directory)
+        const rootUri = vscode.Uri.file(packageDirectory)
         const fileUri = vscode.Uri.joinPath(rootUri, relativePath)
         const isDirectory = (await vscode.workspace.fs.stat(fileUri)).type === vscode.FileType.Directory
         if (isDirectory) {
@@ -258,11 +262,11 @@ export class Extension {
                 downloadMetadata: true,
                 downloadSource: true
             }, async () => {
-            if (cancellationToken?.isCancellationRequested) {
-                throw new vscode.CancellationError()
-            }
-            await this.notifyModelObservers()
-        })
+                if (cancellationToken?.isCancellationRequested) {
+                    throw new vscode.CancellationError()
+                }
+                await this.notifyModelObservers()
+            })
     }
 
     async refreshReferences(dependency: Dependency, cancellationToken?: vscode.CancellationToken) {

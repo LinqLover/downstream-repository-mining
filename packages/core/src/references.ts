@@ -12,10 +12,10 @@ import pkgDir from 'pkg-dir'
 import tryCatch from 'try-catch'
 import ts from 'typescript'
 
+import { Dependency } from './dependencies'
 import { Package } from './packages'
 import { OnlyData } from './utils/OnlyData'
 import rex from './utils/rex'
-import { Dependency } from './dependencies'
 import sourceDirectory from './utils/sourceDirectory'
 
 
