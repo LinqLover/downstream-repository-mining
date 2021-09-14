@@ -21,7 +21,8 @@
         ]
     },
     "scripts": {
-        "lint": "eslint . --ext=.js,.ts,.json"
+        "lint": "eslint . --ext=.js,.ts,.json",
+        "test": "./scripts/test-cli.sh"
     },
     "dependencies": {
         "@oclif/command": "^1",
