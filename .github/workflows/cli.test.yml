@@ -17,7 +17,7 @@ jobs:
         working-directory: ./packages/core
       - run: npm install  # yarn does not support file dependencies correctly ...
       - run: git diff --exit-code package-lock.json || (echo "package-lock.json was changed" && exit 1)
-      - run: ./scripts/test-cli.sh
+      - run: npm run test
   lint:
     runs-on: ubuntu-latest
     defaults:
