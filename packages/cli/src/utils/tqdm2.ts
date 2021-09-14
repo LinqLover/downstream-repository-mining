@@ -5,7 +5,7 @@ type Options = {
     description?: string
 }
 
-export default async function *tqdm2<T>(iterable: AsyncGenerator<T>, length?: number, options: Options = {}): AsyncGenerator<T> {
+export default async function *tqdm2<T>(iterable: AsyncIterable<T>, length?: number, options: Options = {}): AsyncGenerator<T> {
     const bar = new SingleBar({
         format: `${
             options.description ? `${options.description} ` : ""

@@ -4,6 +4,7 @@ import * as path from 'path'
 import * as util from 'util'
 
 import { getCacheDirectory, Package, Reference, ReferenceSearcher, ReferenceKind } from 'dowdep'
+import tqdm2 from '../utils/tqdm2'
 
 
 export default class Search extends Command {
@@ -57,7 +58,7 @@ export default class Search extends Command {
             packageName,
             packageDirectory ?? path.join(getCacheDirectory(), packageName)
         )
-        const searcher = new ReferenceSearcher($package, undefined, strategy)
+        const searcher = new ReferenceSearcher($package, getCacheDirectory(), strategy)
         const includeKinds: ReferenceKind[] = ['usage']
         if (includeImports) {
             includeKinds.push('import')
@@ -65,7 +66,10 @@ export default class Search extends Command {
         if (includeOccurences) {
             includeKinds.push('occurence')
         }
-        const references = searcher.searchReferences(limit, includeKinds)
+        let references = searcher.searchReferences(limit, includeKinds)
+        if (aggregate) {
+            references = tqdm2(references)
+        }
 
         const allReferences = aggregate && new Array<Reference>()
         for await (const reference of references) {
