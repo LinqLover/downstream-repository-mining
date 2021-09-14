@@ -10,34 +10,53 @@ bin="./bin/run.js"
 
 
 # First round: Does the help output look plausible?
-output="$($bin help)"
+echo "$ help"
+output="$($bin help 2>&1)"
 echo "$output"
 
 commands="$(echo "$output" | sed -n '/^COMMANDS$/,$p' | sed -n '/^  /p')"
 number_of_commands="$(echo "$commands" | wc -l)"
 
-(( number_of_commands > 4 )) || fail "not enough commands provided"
+(( number_of_commands > 4 )) || fail "❌ not enough commands provided"
+echo
+echo "✔ Help output looks plausible!"
+echo
+echo
 
 
 # Second round: Let's do a real world acceptance test
 packageName="cheerio"
 export NPM_CACHE="cache-test"
 
-output=$($bin list --limit 10 --no-downloadGitHubData $packageName)
+echo "$ list"
+output=$($bin list --limit 10 --no-downloadGitHubData $packageName 2>&1)
 echo "$output"
 [[ $output == *'tarballUrl:'* ]] || fail "list does not output valid hits"
+echo
 
-output=$($bin download --limit 10 $packageName)
+echo "$ download"
+output=$($bin download --limit 10 $packageName 2>&1)
 echo "$output"
 [[ $output == *'Download completed, 10 successful'* ]] ||fail "download was not successful"
+echo
 
-output=$($bin search --limit 10 --strategy heuristic $packageName)
+echo "$ search heuristic"
+output=$($bin search --limit 10 --strategy heuristic $packageName 2>&1)
 echo "$output"
 [[ $output == *'matchString:'* ]] || fail "search heuristic does not output valid hits"
+[[ $output != *'ERR_MODULE_NOT_FOUND'* ]] || fail "search heuristic raised node import error"
+echo
 
 export NPM_CACHE_SRC="$NPM_CACHE-src"
 mkdir $NPM_CACHE_SRC
+echo "$ download-package.sh"
 NPM_CACHE="$NPM_CACHE-src" "$(dirname "$0")/download-package.sh" $packageName
-output=$($bin search --limit 10 --strategy types --source "$NPM_CACHE_SRC/$packageName" $packageName)
+echo "$ search types"
+output=$($bin search --limit 10 --strategy types --source "$NPM_CACHE_SRC/$packageName" $packageName 2>&1)
 echo "$output"
 [[ $output == *'matchString:'* ]] || fail "search types does not output valid hits"
+echo
+
+
+echo
+echo "✅ All tests passed!"
