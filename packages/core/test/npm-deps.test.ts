@@ -49,8 +49,10 @@ describe('getNpmDeps', () => {
 
             expect(github.name).toBeTruthy()
             expect(github.owner).toBeTruthy()
-            expect(github.stargazerCount).toBeGreaterThanOrEqual(10)
-            expect(github.forkCount).toBeGreaterThanOrEqual(10)
+            if (downloadGitHubData) {
+                expect(github.stargazerCount).toBeGreaterThanOrEqual(10)
+                expect(github.forkCount).toBeGreaterThanOrEqual(10)
+            }
         }
     }, 60000)
 })
