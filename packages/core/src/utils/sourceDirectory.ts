@@ -1,9 +1,9 @@
 import callSites from 'callsites'
 import path from 'path'
 
-export function getCwd(filename: string) {
+export function getSourceDirectory(filename: string) {
     const filePath = path.parse(filename)
     return path.resolve(filePath.dir, filePath.name)
 }
 
-export default getCwd(callSites()[1].getFileName()!)
+export default getSourceDirectory(callSites()[1].getFileName()!)

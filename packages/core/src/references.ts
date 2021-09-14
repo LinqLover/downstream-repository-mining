@@ -16,6 +16,7 @@ import { Package } from './packages'
 import { OnlyData } from './utils/OnlyData'
 import rex from './utils/rex'
 import { Dependency } from './dependencies'
+import sourceDirectory from './utils/sourceDirectory'
 
 
 export class FilePosition {
@@ -82,6 +83,7 @@ type ModuleBinding = {
     index: number
 }
 
+// TODO: Eliminate this class or move it to CLI
 export class ReferenceSearcher {
     package: Package
     rootDirectory: string
@@ -342,7 +344,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 //   See #65.
                 //
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
-                const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
+                const parseImportsIndexPath = `${await pkgDir(sourceDirectory)}/node_modules/parse-imports/src/index.js`
                 const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                 let parseImports: (
                     code: string,
@@ -358,7 +360,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                     // This will occur if this package is imported as a local dependency from another package via a symlink.
                     // For now, let's handle this by assuming the depending package is a sibling of ourselves ...
                     // Hardcoded! So many hacks! 😭
-                    const parseImportsIndexPath = `${await pkgDir()}/../core/node_modules/parse-imports/src/index.js`
+                    const parseImportsIndexPath = `${await pkgDir(sourceDirectory)}/../core/node_modules/parse-imports/src/index.js`
                     const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                     parseImports = (await dynamicImport(parseImportsIndexPath)).default
                 }
