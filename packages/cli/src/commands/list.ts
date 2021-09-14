@@ -21,7 +21,8 @@ export default class List extends Command {
         downloadGitHubData: flags.boolean({
             name: 'download-github-metadata', // TODO: Does not work!
             description: "download GitHub metadata",
-            default: true
+            default: true,
+            allowNo: true
         })
     }
 
