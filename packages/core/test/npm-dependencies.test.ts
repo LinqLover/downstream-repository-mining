@@ -7,14 +7,14 @@ import { promisify } from 'util'
 import { Package } from '../src'
 import { NpmDependency } from '../src/npm-dependencies'
 
-import { Dowdep, getCacheDirectory } from '../src/'
+import { Dowdep, getCacheDirectory } from '../src'
 
 const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readPackageJsonCallback)
 
 
 // TODO: Extract all fixtures into separate files?
-describe('getNpmDeps', () => {
+describe('updateDependencies', () => {
     it.each`
         packageName     | limit  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
         ${'glob'}       | ${4}   | ${false}            | ${ 60}       | ${null}
@@ -57,7 +57,7 @@ describe('getNpmDeps', () => {
     }, 60000)
 })
 
-describe('downloadDep', () => {
+describe('updateSource', () => {
     it.each`
         packageName     | version     | tarballUrl
         ${'gl-matrix'}  | ${'3.3.0'}  | ${'https://registry.npmjs.org/gl-matrix/-/gl-matrix-3.3.0.tgz'}
