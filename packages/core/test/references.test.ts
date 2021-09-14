@@ -5,8 +5,8 @@ import { jsonc as json } from 'jsonc'
 import { Package } from '../src/packages'
 import { ReferenceSearcher, ReferenceKind } from '../src/references'
 import ifCurtailed from '../src/utils/if-curtailed'
-import { getSourceDirectory } from '../src/utils/sourceDirectory'
 import { lodashClassifyNested } from '../src/utils/lodash-classify'
+import { getSourceDirectory } from './_utils/sourceDirectory'
 import { printDiff } from './_utils/printDiff'
 
 
