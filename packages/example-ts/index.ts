@@ -3,10 +3,10 @@
 import { getCacheDirectory, Package, ReferenceSearcher } from 'dowdep'
 
 const cacheDirectory = getCacheDirectory()
-const $package = new Package({
-    name: 'name',
-    directory: 'directory'
-})
+const $package = new Package(
+    'name',
+    '/path/to/directory'
+)
 console.log(cacheDirectory)
 console.log($package)
 console.log(ReferenceSearcher)

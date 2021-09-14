@@ -2,15 +2,15 @@ import asyncIteratorToArray from 'it-all'
 import _ from 'lodash'
 import { jsonc as json } from 'jsonc'
 
-import Package from '../src/package'
+import { Package } from '../src/packages'
 import { ReferenceSearcher, ReferenceKind } from '../src/references'
 import ifCurtailed from '../src/utils/if-curtailed'
 import { lodashClassifyNested } from '../src/utils/lodash-classify'
-import { getCwd } from './_utils/cwd'
+import { getSourceDirectory } from './_utils/sourceDirectory'
 import { printDiff } from './_utils/printDiff'
 
 
-const CWD = getCwd(__filename)
+const SOURCE_DIRECTORY = getSourceDirectory(__filename)
 
 type PackageReferences = {
     [kind: string]: {
@@ -25,8 +25,8 @@ type References = {
     [packageName: string]: PackageReferences
 }
 
-const expectedHeuristicReferences = <References>json.readSync(`${CWD}/expectedReferences-heuristic.jsonc`)
-const expectedTypeReferences = <References>json.readSync(`${CWD}/expectedReferences-types.jsonc`)
+const expectedHeuristicReferences = <References>json.readSync(`${SOURCE_DIRECTORY}/expectedReferences-heuristic.jsonc`)
+const expectedTypeReferences = <References>json.readSync(`${SOURCE_DIRECTORY}/expectedReferences-types.jsonc`)
 
 
 describe('ReferenceSearcher', () => {
@@ -37,11 +37,11 @@ describe('ReferenceSearcher', () => {
             ([packageName, expectedReferences]) => ({ packageReferenceSearcher, packageName, expectedReferences }))
     ))("should find relevant references for %s", async (
         { packageReferenceSearcher, packageName, expectedReferences }) => {
-        const $package = new Package({
-            name: packageName,
-            directory: `${CWD}/examples/packages/${packageName}`
-        })
-        const searcher = new ReferenceSearcher($package, `${CWD}/examples/dependents`, packageReferenceSearcher)
+        const $package = new Package(
+            packageName,
+            `${SOURCE_DIRECTORY}/examples/packages/${packageName}`
+        )
+        const searcher = new ReferenceSearcher($package, `${SOURCE_DIRECTORY}/examples/dependents`, packageReferenceSearcher)
         const references = await asyncIteratorToArray(searcher.searchReferences(undefined, '*'))
 
         /** Since null and undefined are invalid keys in JS objects, we stringify them for compatibility with lodash. See Reference.memberName. */
@@ -53,9 +53,9 @@ describe('ReferenceSearcher', () => {
         const aggregatedReferences = <PackageReferences>_.chain(references)
             .groupBy(reference => reference.kind)
             .mapValues(categorizedReferences => _.chain(categorizedReferences)
-                .groupBy(reference => stringify(reference.memberName))
+                .groupBy(reference => stringify(reference.declarationMemberName))
                 .mapValues(memberReferences => _.chain(memberReferences)
-                    .groupBy(reference => reference.dependentName)
+                    .groupBy(reference => reference.dependency.name)
                     .mapValues(dependentReferences => _.chain(dependentReferences)
                         .groupBy(reference => reference.file)
                         .mapValues(fileReferences => _.map(

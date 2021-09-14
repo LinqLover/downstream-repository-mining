@@ -10,7 +10,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:dowdep.helloWorld"
+        "onCommand:dowdep.refreshPackages"
     ],
     "main": "./out/extension.js",
     "capabilities": {
@@ -22,15 +22,60 @@
     "contributes": {
         "commands": [
             {
-                "command": "dowdep.helloWorld",
-                "title": "Hello World",
+                "command": "dowdep.refreshPackages",
+                "title": "Refresh packages",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshAllDependencies",
+                "title": "Refresh all dependencies",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshAllReferences",
+                "title": "Refresh all references",
                 "icon": "$(refresh)"
             }
         ],
+        "configuration": {
+            "title": "Downstream Dependencies",
+            "properties": {
+                "dowdep.dependencyLimit": {
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "markdownDescription": "Indicates how many downstreams dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
+                    "default": 10
+                },
+                "dowdep.githubOAuthToken": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a token in the [GitHub developer settings](https://github.com/settings/tokens/new).",
+                    "default": null,
+                    "pattern": "^ghp_[0-9a-zA-Z]{36}$"
+                },
+                "dowdep.referenceSearchStrategy": {
+                    "type": "string",
+                    "description": "Indicates the strategy that is used for finding usage samples in downstream dependencies.",
+                    "enum": [
+                        "types",
+                        "heuristic"
+                    ],
+                    "enumDescriptions": [
+                        "Uses the TypeScript compiler for searching references. Recommended.",
+                        "Searches dependencies for imports of the analyzed package by using a simple heuristic. For demonstrational purpose only."
+                    ],
+                    "default": "types"
+                }
+            }
+        },
         "menus": {
             "view/title": [
                 {
-                    "command": "dowdep.helloWorld",
+                    "command": "dowdep.refreshPackages",
                     "when": "view == dowdepDependencies",
                     "group": "navigation"
                 }
@@ -50,6 +95,10 @@
                 {
                     "id": "dowdepDependencies",
                     "name": "Downstream Dependencies"
+                },
+                {
+                    "id": "dowdepReferences",
+                    "name": "Downstream References"
                 }
             ]
         }
@@ -58,18 +107,26 @@
         "vscode:prepublish": "yarn run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "pretest": "yarn run compile && yarn run lint",
-        "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "pretest": "tsc -p ./tsconfig.test.json",
+        "lint": "eslint src test --ext ts",
+        "test": "node ./out/runTest.js"
     },
     "dependencies": {
         "dowdep": "file:./../core",
-        "it-all": "^1.0.5"
+        "it-all": "^1.0.5",
+        "lodash": "^4.17.21",
+        "normalize-package-data": "^3.0.3",
+        "truncate": "^2.1.0",
+        "try-to-catch": "^3.0.0"
     },
     "devDependencies": {
+        "@types/assert": "^1.5.6",
         "@types/glob": "^7.1.4",
+        "@types/lodash": "^4.14.172",
         "@types/mocha": "^9.0.0",
         "@types/node": "16.x",
+        "@types/normalize-package-data": "^2.4.1",
+        "@types/try-to-catch": "^3.0.0",
         "@types/vscode": "^1.60.0",
         "@typescript-eslint/eslint-plugin": "^4.31.1",
         "@typescript-eslint/parser": "^4.31.1",

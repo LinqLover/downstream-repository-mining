@@ -1,14 +1,16 @@
-import { Dependent, downloadDep, getCacheDirectory, getNpmDeps } from './npm-deps'
-import Package from './package'
-import { Reference, ReferenceKind, ReferenceSearcher } from './references'
+import { Dependency } from './dependencies'
+import { Dowdep, getCacheDirectory } from './dowdep'
+import { Package } from './packages'
+import { Reference, ReferenceKind, ReferenceSearcher, ReferenceSearcherStrategy } from './references'
+
 
 export {
-    Dependent,
-    downloadDep,
+    Dependency,
+    Dowdep,
     getCacheDirectory,
-    getNpmDeps,
     Package,
     Reference,
     ReferenceKind,
-    ReferenceSearcher
+    ReferenceSearcher,
+    ReferenceSearcherStrategy
 }
