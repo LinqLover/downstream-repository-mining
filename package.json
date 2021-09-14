@@ -1,8 +1,8 @@
 {
     "name": "dowdep-base",
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^4.31.0",
-        "@typescript-eslint/parser": "^4.31.0",
+        "@typescript-eslint/eslint-plugin": "^4.31.1",
+        "@typescript-eslint/parser": "^4.31.1",
         "eslint": "^7.32.0",
         "eslint-plugin-no-floating-promise": "^1.0.2",
         "eslint-plugin-jest": "^24.4.0",
