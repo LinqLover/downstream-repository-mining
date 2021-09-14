@@ -2,7 +2,7 @@
 set -e
 
 fail() {
-    >&2 echo "$1"
+    >&2 echo "❌ $1"
     exit 1
 }
 
@@ -17,7 +17,7 @@ echo "$output"
 commands="$(echo "$output" | sed -n '/^COMMANDS$/,$p' | sed -n '/^  /p')"
 number_of_commands="$(echo "$commands" | wc -l)"
 
-(( number_of_commands > 4 )) || fail "❌ not enough commands provided"
+(( number_of_commands > 4 )) || fail "not enough commands provided"
 echo
 echo "✔ Help output looks plausible!"
 echo
