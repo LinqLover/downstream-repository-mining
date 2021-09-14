@@ -7,14 +7,14 @@ import { promisify } from 'util'
 import { Package } from '../src'
 import { NpmDependency } from '../src/npm-dependencies'
 
-import { getNpmDeps, downloadDep } from '../src/npm-deps'
+import { Dowdep, getCacheDirectory } from '../src'
 
 const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readPackageJsonCallback)
 
 
 // TODO: Extract all fixtures into separate files?
-describe('getNpmDeps', () => {
+describe('updateDependencies', () => {
     it.each`
         packageName     | limit  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
         ${'glob'}       | ${4}   | ${false}            | ${ 60}       | ${null}
@@ -26,31 +26,38 @@ describe('getNpmDeps', () => {
         }) => {
         jest.setTimeout(timeoutSecs * 1000)
 
-        const deps = await getNpmDeps(packageName, limit, downloadGitHubData)
+        const dowdep = new Dowdep({
+            dependencyLimit: limit,
+            githubAccessToken: downloadGitHubData && process.env.GITHUB_OAUTH_TOKEN || undefined
+        })
+        const $package = new Package(packageName, undefined)
+        await $package.updateDependencies(dowdep)
 
-        expect(deps).toHaveLength(limit)
+        expect($package.dependencies).toHaveLength(limit)
 
-        for (const dep of deps) {
+        for (const dep of $package.dependencies) {
             expect(dep.name).toBeTruthy()
         }
 
         if (nonGitHubThreshold) {
-            expect(deps.filter(dep => !dep.githubRepository).length).toBeGreaterThanOrEqual(nonGitHubThreshold)
+            expect($package.dependencies.filter(dep => !dep.githubRepository).length).toBeGreaterThanOrEqual(nonGitHubThreshold)
         }
 
-        for (const dep of deps) {
+        for (const dep of $package.dependencies) {
             const github = dep.githubRepository
             if (!github) continue
 
             expect(github.name).toBeTruthy()
             expect(github.owner).toBeTruthy()
-            expect(github.stargazerCount).toBeGreaterThanOrEqual(10)
-            expect(github.forkCount).toBeGreaterThanOrEqual(10)
+            if (downloadGitHubData) {
+                expect(github.stargazerCount).toBeGreaterThanOrEqual(10)
+                expect(github.forkCount).toBeGreaterThanOrEqual(10)
+            }
         }
     }, 60000)
 })
 
-describe('downloadDep', () => {
+describe('updateSource', () => {
     it.each`
         packageName     | version     | tarballUrl
         ${'gl-matrix'}  | ${'3.3.0'}  | ${'https://registry.npmjs.org/gl-matrix/-/gl-matrix-3.3.0.tgz'}
@@ -66,7 +73,10 @@ describe('downloadDep', () => {
         const dep = new NpmDependency(packageName, <Package><unknown>undefined)
         dep.tarballUrl = tarballUrl
 
-        await downloadDep(dep)
+        const dowdep = new Dowdep({
+            sourceCacheDirectory: getCacheDirectory()
+        })
+        await dep.updateSource(dowdep)
 
         const data = await readPackageJson(path.join(<string>process.env.NPM_CACHE, packageName, 'package.json'))
         expect(data.version).toBe(version)

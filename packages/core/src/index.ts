@@ -1,6 +1,5 @@
 import { Dependency } from './dependencies'
-import { Dowdep } from './dowdep'
-import { getCacheDirectory } from './npm-deps'
+import { Dowdep, getCacheDirectory } from './dowdep'
 import { Package } from './packages'
 import { Reference, ReferenceKind, ReferenceSearcher } from './references'
 

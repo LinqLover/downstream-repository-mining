@@ -8,6 +8,10 @@ import { Package } from './packages'
 import { Dependency, DependencySearcher } from './dependencies'
 
 
+export function getCacheDirectory() {
+    return process.env.NPM_CACHE || 'cache'
+}
+
 export class Dowdep {
     constructor(init: Partial<OnlyData<Dowdep>>) {
         Object.assign(this, init)

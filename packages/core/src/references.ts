@@ -5,7 +5,6 @@ import glob from 'glob-promise'
 import asyncIteratorToArray from 'it-all'
 import LinesAndColumns from 'lines-and-columns'
 import _ from 'lodash'
-import tqdm from 'ntqdm'
 import type { Import, Options } from 'parse-imports'
 import path from 'path'
 import pathIsInside from 'path-is-inside'
@@ -13,7 +12,6 @@ import pkgDir from 'pkg-dir'
 import tryCatch from 'try-catch'
 import ts from 'typescript'
 
-import { getCacheDirectory } from './npm-deps'
 import { Package } from './packages'
 import { OnlyData } from './utils/OnlyData'
 import rex from './utils/rex'
@@ -90,9 +88,9 @@ export class ReferenceSearcher {
     packageReferenceSearcher: ConcretePackageReferenceSearcher = HeuristicPackageReferenceSearcher
     private static readonly maximumReportableDepth = 2
 
-    constructor($package: Package, rootDirectory?: string, packageReferenceSearcher?: string) {
+    constructor($package: Package, rootDirectory: string, packageReferenceSearcher?: string) {
         this.package = $package
-        this.rootDirectory = rootDirectory ?? getCacheDirectory()
+        this.rootDirectory = rootDirectory
         if (packageReferenceSearcher) {
             this.packageReferenceSearcher = PackageReferenceSearcher.named(packageReferenceSearcher)
         }
@@ -105,14 +103,9 @@ export class ReferenceSearcher {
     protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind> | '*', depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
-            let depDirectories: Iterable<Dirent> = (
+            const depDirectories: Iterable<Dirent> = (
                 await fsPromises.readdir(rootDirectory, { withFileTypes: true })
             ).filter(dirent => dirent.isDirectory)
-
-            // TODO: Restructure recursive loop in favor of constant reportable depth
-            if (!(depth > ReferenceSearcher.maximumReportableDepth)) {
-                depDirectories = tqdm(depDirectories, { desc: `Scanning dependents (${rootDirectory})...` })
-            }
 
             let i = 0
             for await (const depDirectory of depDirectories) {
@@ -351,10 +344,24 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
                 const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
                 const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-                const parseImports: (
+                let parseImports: (
                     code: string,
                     options?: Options
-                ) => Promise<Iterable<Import>> = (await dynamicImport(parseImportsIndexPath)).default
+                ) => Promise<Iterable<Import>>
+
+                try {
+                    parseImports = (await dynamicImport(parseImportsIndexPath)).default
+                } catch (parseError) {
+                    if (!(parseError instanceof Error && 'code' in parseError && (<{ code: string }>parseError).code == 'ERR_MODULE_NOT_FOUND')) {
+                        throw parseError
+                    }
+                    // This will occur if this package is imported as a local dependency from another package via a symlink.
+                    // For now, let's handle this by assuming the depending package is a sibling of ourselves ...
+                    // Hardcoded! So many hacks! 😭
+                    const parseImportsIndexPath = `${await pkgDir()}/../core/node_modules/parse-imports/src/index.js`
+                    const dynamicImport = new Function('moduleName', 'return import(moduleName)')
+                    parseImports = (await dynamicImport(parseImportsIndexPath)).default
+                }
 
                 return await parseImports(source)
             } catch (parseError) {

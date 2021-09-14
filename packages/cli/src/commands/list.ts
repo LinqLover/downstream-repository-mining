@@ -1,10 +1,9 @@
-import { Command, flags } from '@oclif/command'
-import * as util from 'util'
+import { flags } from '@oclif/command'
 
-import { getNpmDeps } from 'dowdep'
+import DowdepCommand from '../DowdepCommand'
 
 
-export default class List extends Command {
+export default class List extends DowdepCommand {
     static description = 'list downstream dependencies'
 
     static flags = {
@@ -16,7 +15,8 @@ export default class List extends Command {
         downloadGitHubData: flags.boolean({
             name: 'download-github-metadata', // TODO: Does not work!
             description: "download GitHub metadata",
-            default: true
+            default: true,
+            allowNo: true
         })
     }
 
@@ -28,13 +28,21 @@ export default class List extends Command {
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
+        const downloadGitHubData = flags.downloadGitHubData
 
-        const deps = await getNpmDeps(
+        try { for await (const dependency of this.updateDependencies(
             packageName,
             limit,
-            flags.downloadGitHubData
-        )
-
-        console.log(util.inspect(deps, {showHidden: false, depth: null}))
+            dependency => !downloadGitHubData || dependency.isGitHubRepositoryReady,
+            {
+                downloadMetadata: downloadGitHubData,
+                downloadSource: false
+            }
+        )) {
+            console.dir(dependency, {
+                showHidden: false,
+                depth: 1
+            })
+        } }catch (e) {console.error("Soemehing wore tnwong", e)}
     }
 }

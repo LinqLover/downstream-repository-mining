@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@async-generators/map@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@async-generators/map/-/map-0.1.0.tgz#07d6e9299010937986ddcf3aa8904ed69cccbccc"
+  integrity sha512-BMcuLtZHIefL5yuqOT9hACkIbduOH17IgjjlpiIM8HcSmkyhYZavbHYcmQKnR10ATNGtVtTU9Yc81EDrthAFIw==
+
 "@babel/code-frame@7.12.11":
   version "7.12.11"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.11.tgz#f4ad435aa263db935b8f10f2c552d23fb716a63f"
@@ -5431,11 +5436,6 @@ nth-check@^2.0.0:
   dependencies:
     boolbase "^1.0.0"
 
-ntqdm@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/ntqdm/-/ntqdm-1.0.0.tgz#0a06e136b76749428e8a19bbbc78c4086085942d"
-  integrity sha1-CgbhNrdnSUKOihm7vHjECGCFlC0=
-
 number-is-nan@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/number-is-nan/-/number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d"
@@ -7279,10 +7279,10 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript@^4.4.2:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.2.tgz#6d618640d430e3569a1dfb44f7d7e600ced3ee86"
-  integrity sha512-gzP+t5W4hdy4c+68bfcv0t400HVJMMd2+H9B7gae1nQlBzCqvrXX+6GL/b3GAgyTH966pzrZ70/fRjwAtZksSQ==
+typescript@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
+  integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
 
 union-value@^1.0.0:
   version "1.0.1"
