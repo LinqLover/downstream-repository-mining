@@ -13,6 +13,7 @@ For more information, read the [exposé](./docs/exposé.md):
 
 - **[`packages/core/`](./packages/core):** Contains the core logic
 - **[`packages/cli/`](./packages/cli):** Provides a simple command-line interface
+- **[`packages/vscode-extension/`](./packages/vscode-extension):** Editor integration that presents the data to the user
 - **[`docs/`](./docs):** Documents examining the scientific background of this project
 - **[`./`](./) (this folder):** Holds everything together, contains [CI](./github) and [`eslint`](./.eslintrc) definitions
 
