@@ -6,7 +6,7 @@
         "eslint": "^7.32.0",
         "eslint-plugin-no-floating-promise": "^1.0.2",
         "eslint-plugin-jest": "^24.4.0",
-        "typescript": "^4.4.2"
+        "typescript": "^4.4.3"
     },
     "scripts": {
         "update-lockfiles": "yarn install && cd packages/core && yarn install && yarn build && cd ../example-js && npm install && cd ../example-ts && npm install && cd ../cli && npm install && cd ../vscode-extension && npm install"

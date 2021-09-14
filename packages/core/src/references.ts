@@ -351,10 +351,24 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
                 const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
                 const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-                const parseImports: (
+                let parseImports: (
                     code: string,
                     options?: Options
-                ) => Promise<Iterable<Import>> = (await dynamicImport(parseImportsIndexPath)).default
+                ) => Promise<Iterable<Import>>
+
+                try {
+                    parseImports = (await dynamicImport(parseImportsIndexPath)).default
+                } catch (parseError) {
+                    if (!(parseError instanceof Error && 'code' in parseError && (<{ code: string }>parseError).code == 'ERR_MODULE_NOT_FOUND')) {
+                        throw parseError
+                    }
+                    // This will occur if this package is imported as a local dependency from another package via a symlink.
+                    // For now, let's handle this by assuming the depending package is a sibling of ourselves ...
+                    // Hardcoded! So many hacks! 😭
+                    const parseImportsIndexPath = `${await pkgDir()}/../core/node_modules/parse-imports/src/index.js`
+                    const dynamicImport = new Function('moduleName', 'return import(moduleName)')
+                    parseImports = (await dynamicImport(parseImportsIndexPath)).default
+                }
 
                 return await parseImports(source)
             } catch (parseError) {
