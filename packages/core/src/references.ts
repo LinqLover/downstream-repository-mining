@@ -674,8 +674,14 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         )
     }
 
-    protected getCallLikeNode(node: ts.CallLikeExpression): ts.LeftHandSideExpression | ts.JsxOpeningElement {
-        return ts.isTaggedTemplateExpression(node) ? node.tag : (ts.isJsxOpeningLikeElement(node) ? node : node.expression)
+    protected getCallLikeNode(node: ts.CallLikeExpression) {
+        if (ts.isTaggedTemplateExpression(node)) {
+            return node.tag
+        }
+        if (ts.isJsxOpeningLikeElement(node)) {
+            return node
+        }
+        return node.expression
     }
 
     protected getNodePath(node: ts.Node): string[] | undefined {
@@ -726,12 +732,12 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         {
             let parentNode: ts.Node = symbol.valueDeclaration.parent
-            while (!((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol) && parent.name != '__object')) {
+            while (parentNode && !((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol) && parent.name != '__object')) {
                 parentNode = parentNode.parent
             }
         }
         const symbolName = this.typeChecker.symbolToString(symbol)
-        const parentNameAndPath = this.getRelativeQualifiedName(parent)
+        const parentNameAndPath = parent ? this.getRelativeQualifiedName(parent) : null
         const parentName = parentNameAndPath?.name
         const parentPath = parentNameAndPath?.path
         if (!parentName) {
@@ -761,18 +767,13 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             }
         }
         {
-            //console.log('+<')
-            //console.log({symbol})
             let parentNode: ts.Node = symbol.valueDeclaration.parent
-            //console.log({parentNode, parentNodeText: parentNode?.getText()})
             while (!((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol)
                 && !(['__object', 'export=', 'exports'].includes(parent.name))
                 && !(ts.isVariableDeclaration(parentNode) || ts.isExportAssignment(parentNode) || ts.isPropertyAssignment(parentNode) || ts.isExportDeclaration(parentNode)))
             ) {
                 parentNode = parentNode.parent
-                //console.log({parentNode, parent, parentNodeText: parentNode?.getText()})
             }
-            //console.log('>-')
         }
         if (!parent) {
             return undefined
