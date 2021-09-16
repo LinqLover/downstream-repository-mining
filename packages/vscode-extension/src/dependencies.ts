@@ -105,7 +105,7 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
 
     protected getFullPath(reference: Reference) {
         const baseUri = vscode.Uri.parse(reference.dependency.sourceDirectory!)
-        const fileUri = vscode.Uri.joinPath(baseUri, reference.file)
+        const fileUri = vscode.Uri.joinPath(baseUri, reference.location.file)
         return { baseUri, fileUri }
     }
 
@@ -142,7 +142,7 @@ class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
     }
 
     getPath(reference: Reference) {
-        return reference.memberPath ?? []
+        return reference.location.memberPath ?? []
     }
 
     createItemChild(pathSegmentOrLeaf: string | Reference) {

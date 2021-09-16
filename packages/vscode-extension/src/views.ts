@@ -241,8 +241,8 @@ export class ReferenceItem extends RefreshableHierarchyItem {
 
     refresh() {
         this.label = this.reference.matchString
-        this.description = this.reference.position.toString()
-        this.tooltip = this.reference.declarationMemberName ?? undefined
+        this.description = this.reference.location.position.toString()
+        this.tooltip = this.reference.declarationLocation().memberName
         // TODO: Provide more source code context in tooltip
     }
 

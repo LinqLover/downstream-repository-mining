@@ -83,7 +83,7 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
     protected getFullPath(reference: Reference) {
         assert(reference.dependency.$package.directory)
         const baseUri = vscode.Uri.parse(reference.dependency.$package.directory)
-        const fileUri = vscode.Uri.joinPath(baseUri, reference.declarationFile!)
+        const fileUri = vscode.Uri.joinPath(baseUri, reference.declarationLocation().file)
         return { baseUri, fileUri }
     }
 
@@ -120,10 +120,18 @@ class PackageMemberNodeItem extends HierarchyNodeItem<
         super(path, {
             showCountInDescription: true
         })
+    public getDeclarationLocation() {
+        for (const reference of this.allLeafs) {
+            if (reference.declaration instanceof DeclarationLocation
+                && _.isEqual(reference.declaration.memberPath, this.path)
+            ) {
+                return reference.declarationLocation()
+            }
+        }
     }
 
     getPath(reference: Reference) {
-        return reference.declarationMemberPath ?? []
+        return reference.declarationLocation().memberPath ?? []
     }
 
     protected pathSegmentSorters = []  // Sort members alphabetically.

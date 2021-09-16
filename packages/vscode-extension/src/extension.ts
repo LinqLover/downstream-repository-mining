@@ -238,10 +238,9 @@ export class Extension {
             return
         }
         const directoryUri = vscode.Uri.file(reference.dependency.sourceDirectory)
-        const fileUri = vscode.Uri.joinPath(directoryUri, reference.file)
-        const document = await vscode.workspace.openTextDocument(fileUri)
-        const position = new vscode.Position(reference.position.row - 1, (reference.position.column ?? 1) - 1)
-        await vscode.window.showTextDocument(document, {
+        const fileUri = vscode.Uri.joinPath(directoryUri, reference.location.file)
+        const position = new vscode.Position(reference.location.position.row - 1, (reference.location.position.column ?? 1) - 1) // TODO: Convenience method
+        await vscode.window.showTextDocument(fileUri, {
             preview: true,
             selection: new vscode.Selection(position, position)
         })
