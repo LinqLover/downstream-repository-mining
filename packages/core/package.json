@@ -29,7 +29,7 @@
     "dependencies": {
         "@async-generators/map": "^0.1.0",
         "@oclif/plugin-autocomplete": "^0.3.0",
-        "@octokit/graphql": "^4.6.4",
+        "@octokit/graphql": "^4.8.0",
         "callsites": "^3.1.0",
         "dotenv": "^10.0.0",
         "download-package-tarball": "^1.0.7",
