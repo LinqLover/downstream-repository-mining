@@ -43,7 +43,7 @@
         "@oclif/test": "^1",
         "@types/chai": "^4",
         "@types/cli-progress": "^3.9.2",
-        "@types/lodash": "^4.14.172",
+        "@types/lodash": "^4.14.173",
         "@types/mocha": "^9",
         "@types/node": "^16",
         "chai": "^4",
