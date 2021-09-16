@@ -26,9 +26,77 @@ export class FilePosition {
     row!: number
     column?: number
 
+    toPrimitive() {
+        return this.toString()
+    }
+
     toString() {
         return this.column ? `${this.row}:${this.column}` : `${this.row}`
     }
+}
+
+export type FilePositionPrimitive = ReturnType<typeof FilePosition.prototype.toPrimitive>
+
+export interface Location {
+    file: string
+    position: FilePosition,
+    memberPath?: string[] | null | undefined
+
+    toString(): string
+}
+
+export class ReferenceLocation implements Location {
+    constructor(init: OnlyData<ReferenceLocation>) {
+        Object.assign(this, init)
+    }
+
+    file!: string
+    position!: FilePosition
+    memberPath?: string[]
+
+    keyEquals(location: Location) {
+        return this.file === location.file
+            && this.position.toPrimitive() === location.position.toPrimitive()
+    }
+
+    toString() {
+        return `${this.file}:${this.position}`
+    }
+}
+
+type DeclarationPath = string[] | null | undefined
+
+export class DeclarationLocation implements Location {
+    constructor(init: OnlyData<DeclarationLocation>) {
+        Object.assign(this, init)
+    }
+
+    file!: string
+    position!: FilePosition
+    /**
+     * - `undefined`: is default import
+     * - `null`: imports root
+     */
+    memberPath!: DeclarationPath
+    memberName!: string
+
+    isDefaultImport() {
+        return this.memberPath === undefined
+    }
+
+    isNamespaceImport() {
+        return this.memberPath === null
+    }
+
+    toString() {
+        return `${this.file}:${this.position}`
+    }
+}
+
+export class DeclarationImport {
+    constructor(
+        public memberPath: DeclarationPath
+    ) { }
 }
 
 const ALL_REFERENCE_KINDS = [
@@ -47,25 +115,20 @@ export class Reference {
     }
 
     dependency!: Dependency
-    file!: string
-    position!: FilePosition
-    memberPath?: string[]
-    /**
-     * - `undefined`: is default import
-     * - `null`: imports root
-     *
-     * @todo Primitive obsession! Model ExportMember class hierarchy.
-     */
-    declarationMemberName: string | null | undefined
-    declarationFile?: string
-    declarationMemberPath: string[] | null | undefined
+    location!: ReferenceLocation
+    declaration!: DeclarationLocation | DeclarationImport
     alias!: string | undefined
     kind!: ReferenceKind
 
     matchString?: string
 
+    declarationLocation() {
+        assert(this.declaration instanceof DeclarationLocation)
+        return this.declaration
+    }
+
     toString() {
-        return `${this.file}:${this.position}`
+        return `${this.location} (\`${this.matchString}\`)`
     }
 }
 
@@ -304,11 +367,16 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 const isImport = position?.row == bindingPosition?.row
                 yield new Reference({
                     dependency: this.dependency,
-                    file: filePath,
-                    position,
+                    location: new ReferenceLocation({
+                        file: filePath,
+                        memberPath: undefined,
+                        position
+                    }),
                     kind: isImport ? 'import' : 'usage',
-                    declarationMemberName: binding.memberName,
-                    declarationMemberPath: binding.memberName == null || binding.memberName == undefined ? binding.memberName : [binding.memberName],
+                    declaration: new DeclarationImport(
+                        binding.memberName == null || binding.memberName == undefined
+                            ? binding.memberName
+                            : [binding.memberName]),
                     alias: binding.alias,
                     matchString: line
                 })
@@ -639,20 +707,23 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
 
         const file = node.getSourceFile()
-        const { line, character } = file.getLineAndCharacterOfPosition(node.getStart())
-
         const matchString = node.getText(file)
 
         const memberPath = this.getNodePath(node.parent)
         const { file: declarationFile, memberPath: declarationMemberPath, memberName: declarationMemberName } = this.getFullQualifiedName(declaration, kind == 'import')
         return new Reference({
             dependency: this.dependency,
-            file: path.relative(this.dependencyDirectory, file.fileName),
-            position: new FilePosition({ row: line + 1, column: character + 1 }),
-            memberPath,
-            declarationFile: declarationFile,
-            declarationMemberPath: declarationMemberPath,
-            declarationMemberName: declarationMemberName,
+            location: new ReferenceLocation({
+                file: path.relative(this.dependencyDirectory, file.fileName),
+                position: this.getPosition(node, file),
+                memberPath
+            }),
+            declaration: new DeclarationLocation({
+                file: declarationFile,
+                position: this.getPosition(declaration),
+                memberPath: declarationMemberPath,
+                memberName: declarationMemberName
+            }),
             kind: kind,
             matchString: matchString,
             alias: aliasCallback ? aliasCallback(file) : matchString
@@ -686,34 +757,31 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     }
 
     protected getNodePath(node: ts.Node): string[] | undefined {
-        //console.log({node})
         const symbol = !(ts.isVariableDeclaration(node) || ts.isExportAssignment(node) || ts.isPropertyAssignment(node) || ts.isExportDeclaration(node))
             && (<Partial<{ symbol: ts.Symbol }>>node).symbol
         if (!symbol) {
             return this.getNodePath(node.parent)
         }
 
-        const result = this.getShortRelativeQualifiedName(symbol)?.path
-        if (result && node.getSourceFile().fileName.endsWith('gatsby-remark-images/index.js')) {
-            //console.log({result, node, symbol, fileName: node.getSourceFile().fileName})
-        }
-        //console.log('-')
-        return result
+        const nameAndPath = this.getShortRelativeQualifiedName(symbol)
+        return nameAndPath?.path
     }
 
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.
     protected getFullQualifiedName(declaration: ts.Declaration, isImport: boolean) {
         const symbol = (<Partial<{ symbol: ts.Symbol }>>declaration).symbol
         const nameAndPath = symbol && (isImport
-            ? this.isDefaultExport(symbol, declaration) || symbol.flags & ts.SymbolFlags.Module
+            ? this.isDefaultExport(symbol, declaration)
                 ? undefined
-                : { name: symbol.name, path: [] }
+                : symbol.flags & ts.SymbolFlags.Module
+                    ? null
+                    : { name: symbol.name, path: [] }
             : this.getRelativeQualifiedName(symbol))
         const relativePath = path.relative(this.packageDirectory, declaration.getSourceFile().fileName)
-        const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')
+        const shortRelativePath = relativePath.replace(/\.([^.]+|d\.ts)$/, '')   // Remove file extension
         return {
             file: relativePath,
-            memberPath: nameAndPath?.path,
+            memberPath: nameAndPath ? nameAndPath.path : nameAndPath,
             memberName: nameAndPath?.name ? `${shortRelativePath}/${nameAndPath.name}` : shortRelativePath
         }
     }
@@ -809,5 +877,17 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         return defaultExport.declarations.some(_export =>
             (_export as unknown as { expression: ts.Expression })?.expression?.getText() == symbol.name
         )
+    }
+
+    private getPosition(node: ts.Node, sourceFile?: ts.SourceFile): FilePosition {
+        if (!sourceFile) {
+            return this.getPosition(node, node.getSourceFile())
+        }
+
+        const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile))
+        return new FilePosition({
+            row: line + 1,
+            column: character + 1
+        })
     }
 }
