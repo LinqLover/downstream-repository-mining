@@ -1,10 +1,10 @@
+import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
 import normalizePackageData from 'normalize-package-data'
 import tryToCatch from 'try-to-catch'
 import vscode from 'vscode'
 
-import { DeclarationLocation, Dependency, Dowdep, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
 import { DeclarationCodeLensProvider } from './codeLens'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
@@ -310,7 +310,7 @@ export class Extension {
         }
         const directoryUri = vscode.Uri.file(reference.dependency.sourceDirectory)
         const fileUri = vscode.Uri.joinPath(directoryUri, reference.location.file)
-        const position = new vscode.Position(reference.location.position.row - 1, (reference.location.position.column ?? 1) - 1) // TODO: Convenience method
+        const position = positionToVscode(reference.location.position)
         await vscode.window.showTextDocument(fileUri, {
             preview: true,
             selection: new vscode.Selection(position, position)
@@ -339,7 +339,7 @@ export class Extension {
         }
         const rootUri = vscode.Uri.file(packageDirectory)
         const fileUri = vscode.Uri.joinPath(rootUri, location.file)
-        const position = new vscode.Position(location.position.row - 1, (location.position.column ?? 1) - 1) // TODO: Conveineince
+        const position = positionToVscode(location.position)
         await vscode.window.showTextDocument(fileUri, {
             preview: true,
             selection: new vscode.Selection(position, position)
@@ -437,4 +437,8 @@ export class Extension {
         normalizePackageData(data)
         return data
     }
+}
+
+export function positionToVscode(position: FilePosition) {
+    return new vscode.Position(position.row - 1, (position.column ?? 1) - 1)
 }

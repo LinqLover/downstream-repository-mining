@@ -1,7 +1,7 @@
+import { DeclarationLocation, FilePositionPrimitive, Reference } from 'dowdep'
 import * as vscode from 'vscode'
 
-import { DeclarationLocation, FilePositionPrimitive, Reference } from 'dowdep'
-import { Extension } from './extension'
+import { Extension, positionToVscode } from './extension'
 import * as mapUtils from './utils/node/mapUtils'
 
 
@@ -118,8 +118,7 @@ class DeclarationCodeLens extends vscode.CodeLens {
     }
 
     static create(references: ReadonlyArray<Reference>) {
-        const dowdepPosition = references[0].declarationLocation().position
-        const position = new vscode.Position(dowdepPosition.row - 1, (dowdepPosition.column ?? 1) - 1)
+        const position = positionToVscode(references[0].declarationLocation().position)
         return new this(references, new vscode.Range(position, position))
     }
 
