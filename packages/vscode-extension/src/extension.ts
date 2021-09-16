@@ -118,6 +118,11 @@ export class Extension {
             vscode.commands.registerCommand('dowdep.openPackageMember', this.wrapWithLogger(
                 ($package: Package, location: DeclarationLocation) => this.openPackageMember($package, location)
             )))
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.browseMemberDependencies', this.wrapWithLogger(
+                ($package: Package, location: DeclarationLocation) => this.browseMemberDependencies($package, location)
+            )))
     }
 
     private createTreeDataCommands(context: vscode.ExtensionContext) {
@@ -274,6 +279,10 @@ export class Extension {
             preview: true,
             selection: new vscode.Selection(position, position)
         })
+    }
+
+    async browseMemberDependencies($package: Package, location: DeclarationLocation) {
+        this.referencesProvider.revealPackageMemberItem($package, location)
     }
         await $package.updateDependencies(
             this.dowdep, {
