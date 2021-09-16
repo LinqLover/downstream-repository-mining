@@ -12,12 +12,14 @@ import { HierarchyProvider } from './views'
 let extension: Extension
 
 /**
- * This method is called the very first time any command is executed.
+ * This method is called on the first activation event.
  */
 export function activate(context: vscode.ExtensionContext) {
     console.log("The extension \"dowdep\" is now active.")
 
     extension = new Extension(context)
+
+    extension.activate()
 }
 
 /**
@@ -123,6 +125,10 @@ export class Extension {
                 context.subscriptions.push(
                     vscode.commands.registerCommand(name, this.wrapWithLogger(callback))))
         }
+    }
+
+    activate() {
+        this.refreshPackages()
     }
 
     release() {

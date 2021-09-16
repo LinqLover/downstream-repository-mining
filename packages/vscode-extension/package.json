@@ -10,13 +10,17 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:dowdep.refreshPackages"
+        "onCommand:dowdep.refreshPackages",
+        "onCommand:dowdep.refreshAllDependencies",
+        "onCommand:dowdep.refreshAllReferences",
+        "onView:dowdepDependencies",
+        "onView:dowdepReferences",
+        "workspaceContains:./package.json"
     ],
     "main": "./out/extension.js",
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only a limited number of dependencies will be mined in untrusted mode."
+            "supported": true
         }
     },
     "contributes": {
