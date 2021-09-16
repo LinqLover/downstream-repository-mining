@@ -122,7 +122,7 @@
     "devDependencies": {
         "@types/assert": "^1.5.6",
         "@types/glob": "^7.1.4",
-        "@types/lodash": "^4.14.172",
+        "@types/lodash": "^4.14.173",
         "@types/mocha": "^9.0.0",
         "@types/node": "16.x",
         "@types/normalize-package-data": "^2.4.1",
