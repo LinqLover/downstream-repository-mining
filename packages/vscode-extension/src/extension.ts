@@ -1,3 +1,5 @@
+import _ from 'lodash'
+import filterAsync from 'node-filter-async'
 import normalizePackageData from 'normalize-package-data'
 import tryToCatch from 'try-to-catch'
 import vscode from 'vscode'
@@ -91,6 +93,10 @@ export class Extension {
             vscode.commands.registerCommand('dowdep.refreshAllReferences', this.wrapWithLogger(
                 () => this.refreshAllReferences()
             )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.wrapWithLogger(
+                () => this.refreshAllDependenciesAndReferences()
+            )))
     }
 
     private createOpenCommands(context: vscode.ExtensionContext) {
@@ -157,54 +163,113 @@ export class Extension {
             // TODO: Do we need to await this?
         }
 
-        return await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Window,
-            title: "Refreshing dependencies...",
-            cancellable: true
-        }, async (progress, cancellationToken) => {
-            let canceling = false
-            cancellationToken.onCancellationRequested(() => {
-                canceling = true
-            })
-
-            let done = 0
-            await Promise.all(
-                this.packages.map(async $package => {
-                    if (canceling) { return }
-                    await this.refreshDependencies($package, cancellationToken)
-                    progress.report({ increment: ++done / this.packages.length * 100 })
+        await this.doCancellable(async () => {
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Window,
+                title: "Refreshing dependencies...",
+                cancellable: true
+            }, async (progress, cancellationToken) => {
+                let canceling = false
+                cancellationToken.onCancellationRequested(() => {
+                    canceling = true
                 })
-            )
+                let progressValue = 0
+
+                await Promise.all(
+                    this.packages.map(async $package => {
+                        if (canceling) { return }
+                        await this.refreshDependencies($package, cancellationToken, async () => {
+                            if (this.dowdep.dependencyLimit) {
+                                const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep))))
+                                const newProgressValue = _.sumBy(
+                                    readyPackageDependencies,
+                                    dependencies => dependencies.length
+                                ) / (this.packages.length * this.dowdep.dependencyLimit) * 100
+                                const increment = newProgressValue - progressValue
+                                progressValue = newProgressValue
+                                progress.report({ increment })
+                            }
+                        })
+                    })
+                )
+            })
         })
     }
 
     async refreshAllReferences() {
-        const allDependencies = this.packages.flatMap($package => $package.dependencies)
+        const allDependencies = this.packages
+            .flatMap($package => $package.dependencies)
+            .filter(dependency => dependency.sourceDirectory)
         if (!allDependencies.length) {
             await vscode.window.showWarningMessage("No dependencies were found in this workspace.")
             // TODO: Do we need to await this?
         }
 
-        const thenable = vscode.window.withProgress({
-            location: vscode.ProgressLocation.Window,
-            title: "Refreshing references...",
-            cancellable: true
-        }, async (progress, cancellationToken) => {
-            let canceling = false
-            cancellationToken.onCancellationRequested(() => {
-                canceling = true
-            })
-
-            let done = 0
-            await Promise.all(
-                allDependencies.map(async dependency => {
-                    if (canceling) { return }
-                    await this.refreshReferences(dependency, cancellationToken)
-                    progress.report({ increment: ++done / allDependencies.length * 100 })
+        this.doCancellable(async () => {
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Window,
+                title: "Refreshing references...",
+                cancellable: true
+            }, async (progress, cancellationToken) => {
+                let canceling = false
+                cancellationToken.onCancellationRequested(() => {
+                    canceling = true
                 })
-            )
+
+                await Promise.all(
+                    allDependencies.map(async dependency => {
+                        if (canceling) { return }
+                        await this.refreshReferences(dependency, cancellationToken)
+                        progress.report({ increment: 100 / allDependencies.length })
+                    })
+                )
+            })
         })
-        return Promise.resolve(thenable)
+    }
+
+    async refreshAllDependenciesAndReferences() {
+        // TODO: Deduplicate
+        if (!this.packages.length) {
+            await vscode.window.showWarningMessage("No packages were found in this workspace.")
+            // TODO: Do we need to await this?
+        }
+
+        await this.doCancellable(async () => {
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Window,
+                title: "Refreshing dependencies...",
+                cancellable: true
+            }, async (progress, cancellationToken) => {
+                let canceling = false
+                cancellationToken.onCancellationRequested(() => {
+                    canceling = true
+                })
+                const readyDependencies: Dependency[] = []
+
+                await Promise.all(
+                    this.packages.map(async $package => {
+                        if (canceling) { return }
+                        await this.refreshDependencies($package, cancellationToken, async () => {
+                            const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep)))) // TODO: thread-safe?
+                            const newReadyDependencies = readyPackageDependencies.flat().filter(dependency => !readyDependencies.includes(dependency))
+                            readyDependencies.push(...newReadyDependencies)
+
+                            if (canceling) { return }
+
+                            await Promise.all(newReadyDependencies.map(async dependency => {
+                                if (this.dowdep.dependencyLimit) {
+                                    progress.report({ increment: 100 / (this.packages.length * this.dowdep.dependencyLimit) / 2 })
+                                }
+                                await this.refreshReferences(dependency, cancellationToken)
+                                if (this.dowdep.dependencyLimit) {
+                                    progress.report({ increment: 100 / (this.packages.length * this.dowdep.dependencyLimit) / 2 })
+                                }
+                            }))
+                        })
+                    })
+                )
+            })
+        })
     }
 
     async openPackage($package: Package) {
@@ -284,6 +349,8 @@ export class Extension {
     async browseMemberDependencies($package: Package, location: DeclarationLocation) {
         this.referencesProvider.revealPackageMemberItem($package, location)
     }
+
+    async refreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken, updateCallback?: () => Promise<void>) {
         await $package.updateDependencies(
             this.dowdep, {
                 downloadMetadata: true,
@@ -292,6 +359,7 @@ export class Extension {
                 if (cancellationToken?.isCancellationRequested) {
                     throw new vscode.CancellationError()
                 }
+                await updateCallback?.()
                 await this.notifyModelObservers()
             })
     }
@@ -303,6 +371,18 @@ export class Extension {
             }
             await this.notifyModelObservers()
         })
+    }
+
+    private doCancellable<TIn extends unknown[], TOut>(fun: (...args: TIn) => TOut, ...args: TIn) {
+        try {
+            return fun(...args)
+        } catch (error) {
+            if (error instanceof vscode.CancellationError) {
+                // Ignore
+            } else {
+                throw error
+            }
+        }
     }
 
     private wrapWithLogger<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {

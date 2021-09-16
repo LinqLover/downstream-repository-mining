@@ -13,6 +13,7 @@
         "onCommand:dowdep.refreshPackages",
         "onCommand:dowdep.refreshAllDependencies",
         "onCommand:dowdep.refreshAllReferences",
+        "onCommand:dowdep.refreshAllDependenciesAndReferences",
         "onView:dowdepDependencies",
         "onView:dowdepReferences",
         "workspaceContains:./package.json"
@@ -27,17 +28,26 @@
         "commands": [
             {
                 "command": "dowdep.refreshPackages",
+                "category": "Downstream Dependencies",
                 "title": "Refresh packages",
                 "icon": "$(refresh)"
             },
             {
                 "command": "dowdep.refreshAllDependencies",
+                "category": "Downstream Dependencies",
                 "title": "Refresh all dependencies",
                 "icon": "$(refresh)"
             },
             {
                 "command": "dowdep.refreshAllReferences",
+                "category": "Downstream Dependencies",
                 "title": "Refresh all references",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshAllDependenciesAndReferences",
+                "category": "Downstream Dependencies",
+                "title": "Refresh all dependencies and references",
                 "icon": "$(refresh)"
             }
         ],
@@ -124,6 +134,7 @@
         "dowdep": "file:./../core",
         "it-all": "^1.0.5",
         "lodash": "^4.17.21",
+        "node-filter-async": "^2.0.0",
         "normalize-package-data": "^3.0.3",
         "truncate": "^2.1.0",
         "try-to-catch": "^3.0.0"
