@@ -111,8 +111,12 @@ export class Extension {
                 (reference: Reference) => this.openReference(reference)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openReferenceFileOrFolder', this.wrapWithLogger(
-                (reference: Reference, relativePath: string) => this.openReferenceFileOrFolder(reference, relativePath)
+            vscode.commands.registerCommand('dowdep.openPackageFileOrFolder', this.wrapWithLogger(
+                ($package: Package, relativePath: string) => this.openPackageFileOrFolder($package, relativePath)
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.openPackageMember', this.wrapWithLogger(
+                ($package: Package, location: DeclarationLocation) => this.openPackageMember($package, location)
             )))
     }
 
@@ -243,8 +247,8 @@ export class Extension {
         })
     }
 
-    async openReferenceFileOrFolder(reference: Reference, relativePath: string) {
-        const packageDirectory = reference.dependency.$package.directory
+    async openPackageFileOrFolder($package: Package, relativePath: string) {
+        const packageDirectory = $package.directory
         if (!packageDirectory) {
             return
         }
@@ -258,7 +262,19 @@ export class Extension {
         }
     }
 
-    async refreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken) {
+    async openPackageMember($package: Package, location: DeclarationLocation) {
+        const packageDirectory = $package.directory
+        if (!packageDirectory) {
+            return
+        }
+        const rootUri = vscode.Uri.file(packageDirectory)
+        const fileUri = vscode.Uri.joinPath(rootUri, location.file)
+        const position = new vscode.Position(location.position.row - 1, (location.position.column ?? 1) - 1) // TODO: Conveineince
+        await vscode.window.showTextDocument(fileUri, {
+            preview: true,
+            selection: new vscode.Selection(position, position)
+        })
+    }
         await $package.updateDependencies(
             this.dowdep, {
                 downloadMetadata: true,

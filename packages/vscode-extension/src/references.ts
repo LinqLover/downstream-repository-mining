@@ -1,5 +1,6 @@
 import assert from 'assert'
-import { Dependency, Package, Reference } from 'dowdep'
+import { DeclarationLocation, Dependency, Package, Reference } from 'dowdep'
+import _ from 'lodash'
 import * as vscode from 'vscode'
 
 import { Extension } from './extension'
@@ -20,12 +21,34 @@ export class ReferencesProvider extends HierarchyProvider<ReferencesPackagesItem
     ) {
         registerCallback('dowdep.dowdepReferences.openPackage', (item: ReferencesPackageItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openPackageFileNode', (item: PackageFileNodeItem) => item.open())
+        registerCallback('dowdep.dowdepReferences.openPackageMemberNode', (item: PackageMemberNodeItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openDependency', (item: ReferencesDependencyItem) => item.open())
     }
 
     register() {
         this.basicRegister('dowdepReferences')
         return this
+    }
+
+    revealPackageMemberItem($package: Package, location: DeclarationLocation) {
+        const item = this.findPackageMemberItem($package, location)
+        if (!item) {
+            return
+        }
+        this.treeView?.reveal(item, {
+            focus: true,
+            expand: true
+        })
+    }
+
+    private findPackageMemberItem($package: Package, location: DeclarationLocation) {
+        return this.findPackageItem($package)?.findPackageMemberItem(location)
+    }
+
+    private findPackageItem($package: Package) {
+        return this.findItem<ReferencesPackageItem>(item =>
+            item instanceof ReferencesPackageItem
+                && item.$package === $package)
     }
 }
 
@@ -60,6 +83,12 @@ class ReferencesPackageItem extends PackageItem<
     protected createItemChild(_model: Dependency): never {
         assert(false)
     }
+
+    public findPackageMemberItem(location: DeclarationLocation): PackageMemberNodeItem | undefined {
+        return this.findItem(item =>
+            item instanceof PackageMemberNodeItem
+                && item.getDeclarationLocation() === location)
+    }
 }
 
 class PackageFileNodeItem extends ReferenceFileNodeItem<
@@ -81,8 +110,9 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
 
     protected pathSegmentSorters = []
 
-    protected get reference() {
-        return this.allLeafs[0]
+    protected get $package() {
+        const anyReference = this.allLeafs[0]
+        return anyReference.dependency.$package
     }
 
     protected getFullPath(reference: Reference) {
@@ -106,8 +136,8 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
 
     async open() {
         await vscode.commands.executeCommand(
-            'dowdep.openReferenceFileOrFolder',
-            this.reference,
+            'dowdep.openPackageFileOrFolder',
+            this.$package,
             this.path.join('/')
         )
     }
@@ -125,6 +155,19 @@ class PackageMemberNodeItem extends HierarchyNodeItem<
         super(path, {
             showCountInDescription: true
         })
+
+        this.command = {
+            title: "Browse member",
+            command: 'dowdep.dowdepReferences.openPackageMemberNode',
+            arguments: [this]
+        }
+    }
+
+    public get $package() {
+        const anyReference = this.allLeafs[0]
+        return anyReference.dependency.$package
+    }
+
     public getDeclarationLocation() {
         for (const reference of this.allLeafs) {
             if (reference.declaration instanceof DeclarationLocation
@@ -175,6 +218,19 @@ class PackageMemberNodeItem extends HierarchyNodeItem<
     labelFromPathSegment(pathSegment: string | Dependency): string {
         assert(!(pathSegment instanceof Dependency))
         return pathSegment
+    }
+
+    async open() {
+        const location = this.getDeclarationLocation()
+        if (!location) {
+            return
+        }
+
+        await vscode.commands.executeCommand(
+            'dowdep.openPackageMember',
+            this.$package,
+            location
+        )
     }
 }
 

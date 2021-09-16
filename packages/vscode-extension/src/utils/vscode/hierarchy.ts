@@ -19,6 +19,7 @@ export abstract class HierarchyDataProvider<
         = new vscode.EventEmitter<HierarchyItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<HierarchyItem | undefined | null | void>
         = this._onDidChangeTreeData.event;
+    protected treeView?: vscode.TreeView<HierarchyItem>
 
     getChildren(item?: HierarchyItem) {
         return [...!item ? this.getRoots() : item.getChildren()]
@@ -28,13 +29,12 @@ export abstract class HierarchyDataProvider<
         return item
     }
 
-    
-    
-    
-    
-    
-    
-    
+
+    getParent(childItem: HierarchyItem) {
+        // This is NOT efficient!
+        return this.findItem(item => iterUtils.includes(item.getChildren(), childItem))
+    }
+
     protected getRoots = this._synchronizer.spy(() => {
         return this.basicGetRoots()
     })
@@ -46,25 +46,30 @@ export abstract class HierarchyDataProvider<
     public async modelChanged() {
         return await this.refresh()
     }
-    
-    protected basicRegister(viewId: string) {
-        this.treeView = this.build(viewId)
+
+    protected refresh() {
+        this.rootItem.refresh()
+
+        return this._synchronizer.fire(this._onDidChangeTreeData)
     }
-    
+
     private build(viewId: string) {
         return vscode.window.createTreeView(viewId, {
             treeDataProvider: this
         })
     }
-    
-    protected async refresh() {
-        this.rootItem.refresh()
 
-        const promise = new Promise(resolve => {
-            this._pendingResolvers.push(() => resolve(undefined))
-        })
-        this._onDidChangeTreeData.fire()
-        await promise
+    protected basicRegister(viewId: string) {
+        this.treeView = this.build(viewId)
+    }
+
+    protected findItem<T extends HierarchyItem>(predicate: (item: HierarchyItem) => boolean) {
+        for (const rootItem of this.basicGetRoots()) {
+            const item = rootItem.findItem<T>(predicate)
+            if (item) {
+                return item
+            }
+        }
     }
 }
 
@@ -73,6 +78,18 @@ export abstract class HierarchyItem extends vscode.TreeItem {
         super("", collapsibleState)
     }
     abstract getChildren(): IterableIterator<HierarchyItem>
+
+    public findItem<T extends HierarchyItem>(predicate: (item: HierarchyItem) => boolean): T | undefined {
+        if (predicate(this)) {
+            return <T><unknown>this
+        }
+        for (const childItem of this.getChildren()) {
+            const item = childItem.findItem(predicate)
+            if (item) {
+                return <T>item
+            }
+        }
+    }
 }
 
 export abstract class RefreshableHierarchyItem extends HierarchyItem {
