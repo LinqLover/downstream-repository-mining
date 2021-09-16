@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 
 import * as iterUtils from '../node/iterUtils'
 import * as mapUtils from '../node/mapUtils'
+import { Synchronizer } from './synchronizer'
 
 
 export abstract class HierarchyDataProvider<
@@ -13,7 +14,7 @@ export abstract class HierarchyDataProvider<
         private rootItem: TRootItem
     ) { }
 
-    private _pendingResolvers: (() => void)[] = []
+    private _synchronizer = new Synchronizer()
     private _onDidChangeTreeData: vscode.EventEmitter<HierarchyItem | undefined | null | void>
         = new vscode.EventEmitter<HierarchyItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<HierarchyItem | undefined | null | void>
@@ -27,11 +28,18 @@ export abstract class HierarchyDataProvider<
         return item
     }
 
-    protected getRoots() {
-        for (let i = this._pendingResolvers.length - 1; i >= 0; i--) {
-            this._pendingResolvers.splice(0, 1)[0]()
-        }
+    
+    
+    
+    
+    
+    
+    
+    protected getRoots = this._synchronizer.spy(() => {
+        return this.basicGetRoots()
+    })
 
+    protected basicGetRoots() {
         return this.rootItem.getChildren()
     }
 
