@@ -94,9 +94,16 @@ export class DeclarationLocation implements Location {
 }
 
 export class DeclarationImport {
-    constructor(
-        public memberPath: DeclarationPath
-    ) { }
+    constructor(init: OnlyData<DeclarationImport>) {
+        Object.assign(this, init)
+    }
+
+    memberPath!: DeclarationPath
+    /**
+     * - `undefined`: is default import
+     * - `null`: imports root
+     */
+    memberName!: string | null | undefined
 }
 
 const ALL_REFERENCE_KINDS = [
@@ -373,10 +380,12 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                         position
                     }),
                     kind: isImport ? 'import' : 'usage',
-                    declaration: new DeclarationImport(
-                        binding.memberName == null || binding.memberName == undefined
+                    declaration: new DeclarationImport({
+                        memberPath: binding.memberName == null || binding.memberName == undefined
                             ? binding.memberName
-                            : [binding.memberName]),
+                            : [binding.memberName],
+                        memberName: binding.memberName
+                    }),
                     alias: binding.alias,
                     matchString: line
                 })
