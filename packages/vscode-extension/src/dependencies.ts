@@ -146,6 +146,12 @@ class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
         })
     }
 
+    // Sort items by position in file
+    protected leafSorters = [
+        (reference: Reference) => reference.location.position.row,
+        (reference: Reference) => reference.location.position.column,
+    ]
+
     getPath(reference: Reference) {
         return reference.location.memberPath ?? []
     }

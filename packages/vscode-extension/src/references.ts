@@ -108,7 +108,12 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
         }
     }
 
-    protected pathSegmentSorters = []
+    // Sort items by type (complex items first)
+    protected pathSegmentSorters = [
+        (pathSegment: string) =>
+            pathSegment !== PackageFileNodeItem.leafPathSegment,
+        (pathSegmentOrLeaf: string | Dependency | Reference) => pathSegmentOrLeaf
+    ]
 
     protected get $package() {
         const anyReference = this.allLeafs[0]
@@ -182,7 +187,17 @@ class PackageMemberNodeItem extends HierarchyNodeItem<
         return reference.declarationLocation().memberPath ?? []
     }
 
-    protected pathSegmentSorters = []  // Sort members alphabetically.
+    // Sort items by type (complex items first)
+    protected pathSegmentSorters = [
+        (pathSegmentOrLeaf: string | Dependency | Reference) =>
+            [
+                _.isString,
+                (obj: string | Dependency | Reference) => obj instanceof Dependency
+            ].findIndex(predicate =>
+                predicate(pathSegmentOrLeaf)) + 1 || Infinity,
+        (pathSegmentOrLeaf: string | Dependency | Reference) => pathSegmentOrLeaf
+    ]
+
     protected getPathSegment(reference: Reference) {
         const pathSegment = super.getPathSegment(reference)
         return pathSegment || reference.dependency
@@ -239,6 +254,12 @@ class ReferencesDependencyItem extends DependencyItem<ReferencesDependencyItem, 
         const anyReference = this.allLeafs[0]
         return anyReference.dependency
     }
+
+    // Sort items by position in file
+    protected leafSorters = [
+        (reference: Reference) => reference.location.position.row,
+        (reference: Reference) => reference.location.position.column,
+    ]
 
     createItemChild(pathSegmentOrLeaf: undefined | Reference) {
         assert(pathSegmentOrLeaf instanceof Reference)

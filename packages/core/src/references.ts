@@ -26,6 +26,10 @@ export class FilePosition {
     row!: number
     column?: number
 
+    toLodashPrimitive() {
+        return [this.row, this.column]
+    }
+
     toPrimitive() {
         return this.toString()
     }
@@ -36,6 +40,7 @@ export class FilePosition {
 }
 
 export type FilePositionPrimitive = ReturnType<typeof FilePosition.prototype.toPrimitive>
+export type FilePositionLodashPrimitive = ReturnType<typeof FilePosition.prototype.toLodashPrimitive>
 
 export interface Location {
     file: string

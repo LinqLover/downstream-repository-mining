@@ -160,7 +160,7 @@ export abstract class ReferenceFileNodeItem<
     }
 
     /** Magic number to denote leaves, @see {@link getPathSegment}. */
-    private static readonly leafPathSegment = '//'
+    protected static readonly leafPathSegment = '//'
 
     get dependency() {
         const anyReference = this.allLeafs[0]

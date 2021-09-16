@@ -161,6 +161,7 @@ export abstract class HierarchyNodeItem<
     public allLeafs: ReadonlyArray<TLeafKey> = []
     /** If set, will be used to sort all complex item keys. */
     protected pathSegmentSorters?: ReadonlyArray<_.Many<_.ListIteratee<TPathSegment>>>
+    protected leafSorters?: ReadonlyArray<_.Many<_.ListIteratee<TLeafKey>>>
     private complexBuckets: Map<TPathSegment, TLeafKey[]>
     protected showCountInDescription = false
 
@@ -179,8 +180,12 @@ export abstract class HierarchyNodeItem<
         if (this.pathSegmentSorters) {
             complexKeys = _.sortBy([...complexKeys], ...this.pathSegmentSorters)
         }
+        let finalLeafKeys: Iterable<TLeafKey> = leafKeys
+        if (this.leafSorters) {
+            finalLeafKeys = _.sortBy([...finalLeafKeys], ...this.leafSorters)
+        }
         yield* complexKeys
-        yield* leafKeys
+        yield* finalLeafKeys
     }
 
     protected getPathSegment(leafKey: TLeafKey) {
