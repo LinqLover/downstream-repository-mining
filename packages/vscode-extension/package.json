@@ -52,6 +52,11 @@
                     "markdownDescription": "Indicates how many downstreams dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
                     "default": 10
                 },
+                "dowdep.enableCodeLens": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Controls whether references from downstream dependencies will be displayed in the editor."
+                },
                 "dowdep.githubOAuthToken": {
                     "type": [
                         "string",

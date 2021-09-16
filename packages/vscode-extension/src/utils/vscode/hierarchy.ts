@@ -38,7 +38,17 @@ export abstract class HierarchyDataProvider<
     public async modelChanged() {
         return await this.refresh()
     }
-
+    
+    protected basicRegister(viewId: string) {
+        this.treeView = this.build(viewId)
+    }
+    
+    private build(viewId: string) {
+        return vscode.window.createTreeView(viewId, {
+            treeDataProvider: this
+        })
+    }
+    
     protected async refresh() {
         this.rootItem.refresh()
 

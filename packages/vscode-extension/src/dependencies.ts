@@ -22,6 +22,11 @@ export class DependenciesProvider extends HierarchyProvider<DependenciesPackages
         registerCallback('dowdep.dowdepDependencies.openDependency', (item: DependenciesDependencyItem) => item.open())
         registerCallback('dowdep.dowdepDependencies.openDependencyFileNode', (item: DependencyFileNodeItem) => item.open())
     }
+
+    register() {
+        this.basicRegister('dowdepDependencies')
+        return this
+    }
 }
 
 class DependenciesPackagesItem extends PackagesItem<DependenciesPackageItem> {

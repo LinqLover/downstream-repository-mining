@@ -2,7 +2,8 @@ import normalizePackageData from 'normalize-package-data'
 import tryToCatch from 'try-to-catch'
 import vscode from 'vscode'
 
-import { Dependency, Dowdep, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
+import { DeclarationLocation, Dependency, Dowdep, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
+import { DeclarationCodeLensProvider } from './codeLens'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
 import isDefined from './utils/node/isDefined'
@@ -34,12 +35,13 @@ export class Extension {
     protected dowdep: Dowdep
     protected dependenciesProvider: DependenciesProvider
     protected referencesProvider: ReferencesProvider
-    // protected dependenciesView: vscode.TreeView<DependencyItem> // will be needed to reveal()
+    protected codeLensProvider: DeclarationCodeLensProvider
 
     private get modelObservers() {
         return [
             this.dependenciesProvider,
-            this.referencesProvider
+            this.referencesProvider,
+            this.codeLensProvider
         ]
     }
 
@@ -54,14 +56,9 @@ export class Extension {
         context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => this.configurationChanged()))
         this.configurationChanged()
 
-        this.dependenciesProvider = new DependenciesProvider(this)
-        vscode.window.createTreeView('dowdepDependencies', {
-            treeDataProvider: this.dependenciesProvider
-        })
-        this.referencesProvider = new ReferencesProvider(this)
-        vscode.window.createTreeView('dowdepReferences', {
-            treeDataProvider: this.referencesProvider
-        })
+        this.dependenciesProvider = new DependenciesProvider(this).register()
+        this.referencesProvider = new ReferencesProvider(this).register()
+        this.codeLensProvider = new DeclarationCodeLensProvider(this).register()
 
         this.createCommands(context)
     }

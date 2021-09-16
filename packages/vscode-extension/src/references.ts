@@ -22,6 +22,11 @@ export class ReferencesProvider extends HierarchyProvider<ReferencesPackagesItem
         registerCallback('dowdep.dowdepReferences.openPackageFileNode', (item: PackageFileNodeItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openDependency', (item: ReferencesDependencyItem) => item.open())
     }
+
+    register() {
+        this.basicRegister('dowdepReferences')
+        return this
+    }
 }
 
 class ReferencesPackagesItem extends PackagesItem<ReferencesPackageItem> {
