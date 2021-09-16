@@ -777,8 +777,7 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
             return this.getNodePath(node.parent)
         }
 
-        const nameAndPath = this.getShortRelativeQualifiedName(symbol)
-        return nameAndPath?.path
+        return this.getShortRelativeQualifiedName(symbol)?.path
     }
 
     // TODO: Align format with heuristic approach later? On the other hand, maybe we will not need it anyway.

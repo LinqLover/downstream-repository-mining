@@ -231,7 +231,6 @@ export class Extension {
         // TODO: Deduplicate
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
-            // TODO: Do we need to await this?
         }
 
         await this.doCancellable(async () => {
