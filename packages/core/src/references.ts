@@ -837,7 +837,8 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
         }
         {
             let parentNode: ts.Node = symbol.valueDeclaration.parent
-            while (!((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol)
+            while (parentNode
+                && !((parent = (<{ symbol: ts.Symbol }><unknown>parentNode).symbol)
                 && !(['__object', 'export=', 'exports'].includes(parent.name))
                 && !(ts.isVariableDeclaration(parentNode) || ts.isExportAssignment(parentNode) || ts.isPropertyAssignment(parentNode) || ts.isExportDeclaration(parentNode)))
             ) {
