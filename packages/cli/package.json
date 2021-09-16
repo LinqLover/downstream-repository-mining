@@ -29,7 +29,7 @@
         "@oclif/config": "^1",
         "@oclif/plugin-autocomplete": "^0.3.0",
         "@oclif/plugin-help": "^3",
-        "cli-progress": "^3.9.0",
+        "cli-progress": "^3.9.1",
         "dotenv": "^10.0.0",
         "dowdep": "file:./../core",
         "it-all": "^1.0.5",
