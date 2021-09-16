@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 
 import * as iterUtils from '../node/iterUtils'
 import * as mapUtils from '../node/mapUtils'
+import { Synchronizer } from './synchronizer'
 
 
 export abstract class HierarchyDataProvider<
@@ -13,11 +14,12 @@ export abstract class HierarchyDataProvider<
         private rootItem: TRootItem
     ) { }
 
-    private _pendingResolvers: (() => void)[] = []
+    private _synchronizer = new Synchronizer()
     private _onDidChangeTreeData: vscode.EventEmitter<HierarchyItem | undefined | null | void>
         = new vscode.EventEmitter<HierarchyItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<HierarchyItem | undefined | null | void>
         = this._onDidChangeTreeData.event;
+    protected treeView?: vscode.TreeView<HierarchyItem>
 
     getChildren(item?: HierarchyItem) {
         return [...!item ? this.getRoots() : item.getChildren()]
@@ -27,11 +29,17 @@ export abstract class HierarchyDataProvider<
         return item
     }
 
-    protected getRoots() {
-        for (let i = this._pendingResolvers.length - 1; i >= 0; i--) {
-            this._pendingResolvers.splice(0, 1)[0]()
-        }
 
+    getParent(childItem: HierarchyItem) {
+        // This is NOT efficient!
+        return this.findItem(item => iterUtils.includes(item.getChildren(), childItem))
+    }
+
+    protected getRoots = this._synchronizer.spy(() => {
+        return this.basicGetRoots()
+    })
+
+    protected basicGetRoots() {
         return this.rootItem.getChildren()
     }
 
@@ -39,14 +47,29 @@ export abstract class HierarchyDataProvider<
         return await this.refresh()
     }
 
-    protected async refresh() {
+    protected refresh() {
         this.rootItem.refresh()
 
-        const promise = new Promise(resolve => {
-            this._pendingResolvers.push(() => resolve(undefined))
+        return this._synchronizer.fire(this._onDidChangeTreeData)
+    }
+
+    private build(viewId: string) {
+        return vscode.window.createTreeView(viewId, {
+            treeDataProvider: this
         })
-        this._onDidChangeTreeData.fire()
-        await promise
+    }
+
+    protected basicRegister(viewId: string) {
+        this.treeView = this.build(viewId)
+    }
+
+    protected findItem<T extends HierarchyItem>(predicate: (item: HierarchyItem) => boolean) {
+        for (const rootItem of this.basicGetRoots()) {
+            const item = rootItem.findItem<T>(predicate)
+            if (item) {
+                return item
+            }
+        }
     }
 }
 
@@ -55,6 +78,18 @@ export abstract class HierarchyItem extends vscode.TreeItem {
         super("", collapsibleState)
     }
     abstract getChildren(): IterableIterator<HierarchyItem>
+
+    public findItem<T extends HierarchyItem>(predicate: (item: HierarchyItem) => boolean): T | undefined {
+        if (predicate(this)) {
+            return <T><unknown>this
+        }
+        for (const childItem of this.getChildren()) {
+            const item = childItem.findItem(predicate)
+            if (item) {
+                return <T>item
+            }
+        }
+    }
 }
 
 export abstract class RefreshableHierarchyItem extends HierarchyItem {
@@ -126,6 +161,7 @@ export abstract class HierarchyNodeItem<
     public allLeafs: ReadonlyArray<TLeafKey> = []
     /** If set, will be used to sort all complex item keys. */
     protected pathSegmentSorters?: ReadonlyArray<_.Many<_.ListIteratee<TPathSegment>>>
+    protected leafSorters?: ReadonlyArray<_.Many<_.ListIteratee<TLeafKey>>>
     private complexBuckets: Map<TPathSegment, TLeafKey[]>
     protected showCountInDescription = false
 
@@ -144,8 +180,12 @@ export abstract class HierarchyNodeItem<
         if (this.pathSegmentSorters) {
             complexKeys = _.sortBy([...complexKeys], ...this.pathSegmentSorters)
         }
+        let finalLeafKeys: Iterable<TLeafKey> = leafKeys
+        if (this.leafSorters) {
+            finalLeafKeys = _.sortBy([...finalLeafKeys], ...this.leafSorters)
+        }
         yield* complexKeys
-        yield* leafKeys
+        yield* finalLeafKeys
     }
 
     protected getPathSegment(leafKey: TLeafKey) {

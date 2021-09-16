@@ -14,6 +14,15 @@ export function *flatMap<T, U, This = undefined>(
     }
 }
 
+export function includes<T>(iterator: IterableIterator<T>, searchElement: T) {
+    for (const element of iterator) {
+        if (element === searchElement) {
+            return true
+        }
+    }
+    return false
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isIterable<T>(obj: any): obj is Iterable<T> {
     // eslint-disable-next-line eqeqeq

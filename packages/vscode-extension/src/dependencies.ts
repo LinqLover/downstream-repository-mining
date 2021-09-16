@@ -22,6 +22,11 @@ export class DependenciesProvider extends HierarchyProvider<DependenciesPackages
         registerCallback('dowdep.dowdepDependencies.openDependency', (item: DependenciesDependencyItem) => item.open())
         registerCallback('dowdep.dowdepDependencies.openDependencyFileNode', (item: DependencyFileNodeItem) => item.open())
     }
+
+    register() {
+        this.basicRegister('dowdepDependencies')
+        return this
+    }
 }
 
 class DependenciesPackagesItem extends PackagesItem<DependenciesPackageItem> {
@@ -105,7 +110,7 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
 
     protected getFullPath(reference: Reference) {
         const baseUri = vscode.Uri.parse(reference.dependency.sourceDirectory!)
-        const fileUri = vscode.Uri.joinPath(baseUri, reference.file)
+        const fileUri = vscode.Uri.joinPath(baseUri, reference.location.file)
         return { baseUri, fileUri }
     }
 
@@ -141,8 +146,14 @@ class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
         })
     }
 
+    // Sort items by position in file
+    protected leafSorters = [
+        (reference: Reference) => reference.location.position.row,
+        (reference: Reference) => reference.location.position.column,
+    ]
+
     getPath(reference: Reference) {
-        return reference.memberPath ?? []
+        return reference.location.memberPath ?? []
     }
 
     createItemChild(pathSegmentOrLeaf: string | Reference) {

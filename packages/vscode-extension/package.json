@@ -10,30 +10,44 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:dowdep.refreshPackages"
+        "onCommand:dowdep.refreshPackages",
+        "onCommand:dowdep.refreshAllDependencies",
+        "onCommand:dowdep.refreshAllReferences",
+        "onCommand:dowdep.refreshAllDependenciesAndReferences",
+        "onView:dowdepDependencies",
+        "onView:dowdepReferences",
+        "workspaceContains:./package.json"
     ],
     "main": "./out/extension.js",
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only a limited number of dependencies will be mined in untrusted mode."
+            "supported": true
         }
     },
     "contributes": {
         "commands": [
             {
                 "command": "dowdep.refreshPackages",
+                "category": "Downstream Dependencies",
                 "title": "Refresh packages",
                 "icon": "$(refresh)"
             },
             {
                 "command": "dowdep.refreshAllDependencies",
+                "category": "Downstream Dependencies",
                 "title": "Refresh all dependencies",
                 "icon": "$(refresh)"
             },
             {
                 "command": "dowdep.refreshAllReferences",
+                "category": "Downstream Dependencies",
                 "title": "Refresh all references",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshAllDependenciesAndReferences",
+                "category": "Downstream Dependencies",
+                "title": "Refresh all dependencies and references",
                 "icon": "$(refresh)"
             }
         ],
@@ -47,6 +61,11 @@
                     ],
                     "markdownDescription": "Indicates how many downstreams dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
                     "default": 10
+                },
+                "dowdep.enableCodeLens": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Controls whether references from downstream dependencies will be displayed in the editor."
                 },
                 "dowdep.githubOAuthToken": {
                     "type": [
@@ -115,6 +134,7 @@
         "dowdep": "file:./../core",
         "it-all": "^1.0.5",
         "lodash": "^4.17.21",
+        "node-filter-async": "^2.0.0",
         "normalize-package-data": "^3.0.3",
         "truncate": "^2.1.0",
         "try-to-catch": "^3.0.0"

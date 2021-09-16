@@ -160,7 +160,7 @@ export abstract class ReferenceFileNodeItem<
     }
 
     /** Magic number to denote leaves, @see {@link getPathSegment}. */
-    private static readonly leafPathSegment = '//'
+    protected static readonly leafPathSegment = '//'
 
     get dependency() {
         const anyReference = this.allLeafs[0]
@@ -241,8 +241,7 @@ export class ReferenceItem extends RefreshableHierarchyItem {
 
     refresh() {
         this.label = this.reference.matchString
-        this.description = this.reference.position.toString()
-        this.tooltip = this.reference.declarationMemberName ?? undefined
+        this.tooltip = this.reference.declarationLocation().memberName
         // TODO: Provide more source code context in tooltip
     }
 

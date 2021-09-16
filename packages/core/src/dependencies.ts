@@ -61,7 +61,7 @@ export class Dependency {
         // TODO: Don't pass directory separately
         for await (const reference of searcher.searchReferences(this.sourceDirectory!)) {
             const existingReference = this._references.find(existingReference =>
-                [existingReference.file, existingReference.position] == [reference.file, reference.position])
+                existingReference.location.keyEquals(reference.location))
             if (existingReference) {
                 // reference.updateFrom(existingReference)
                 // await updateCallback()
