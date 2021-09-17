@@ -48,22 +48,23 @@ Finally, we can download the source code for a small number of relevant reposito
 	\newcommand\highlight[1]{\textcolor{red}{#1}}
 	\centering
 	\begin{subfigure}[t]{.32\linewidth}
-		\include{sections/3_approach_assets/patterns/CallExpression}
+		\input{sections/3_approach_assets/patterns/CallExpression}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}[t]{.32\linewidth}
-		\include{sections/3_approach_assets/patterns/PropertyAccessExpression}
+		\input{sections/3_approach_assets/patterns/PropertyAccessExpression}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}[t]{.32\linewidth}
-		\include{sections/3_approach_assets/patterns/JsxOpeningExpression}
+		\input{sections/3_approach_assets/patterns/JsxOpeningExpression}
 	\end{subfigure}
 
-	\caption{Example AST patterns for TypeScript programs.
+	\caption{AST patterns for example JavaScript/TypeScript expressions.
 		The \highlight{highlighted} node contains the link to the declaration of the referenced identifier.
 	}
 	\label{fig:approach/mining/patterns}
 \end{figure*}
+\input{sections/3_approach_assets/patterns/JsxOpeningExpression.postfigure.tex}
 
 Having downloaded the selected downstream dependency repositories, we can proceed to extract usage samples for the target package from each dependency repository.
 Our goal is to identify these usage samples on a fine-granular level so that we can trace them down to the single identifiers that were exposed by the target package.
