@@ -1,0 +1,33 @@
+\section{Implementation}
+\label{sec:implementation}
+
+\subsection{Data collection}
+\label{sec:implementation/data_collection}
+
+Foo!
+
+\subsection{Usage mining}
+\label{sec:implementation/usage_mining}
+
+Foo!
+
+\subsection{Presentation of results}
+\label{sec:implementation/presentation}
+
+After all references have been collected, a proper UI is still required to provide users easy access to these data that fulfills the requirements mentioned above.
+To satisfy \cref{req2} and make our tool available in the usual working environment of users, we implement it as an extension to a popular IDE.
+One of the most popular IDEs that support JavaScript, and the one with the highest annual growth, is Visual Studio Code.\footnote{\url{https://code.visualstudio.com/}}\footnote{Top IDE Index by Pierre Carbonnelle (2021): \url{https://pypl.github.io/IDE.html}}
+As it also provides a comprehensive set of APIs for extension developers, we have decided to roll our tool out as a VS Code extension.
+
+To support developers in answering the questions raised in \cref{sec:framework}, we have designed the following views for our extension:
+
+\begin{enumerate}[label=(\roman*)]
+	\item The \emph{dependency browser} allows to explore all downstream dependencies and, grouped for each dependency, all their references to the target package.
+	\item The \emph{usage browser} displays all public package member and, grouped for each member, all dependencies and their references to this member.
+	\item The \emph{CodeLens integration} provides quick access to a slice of the usage browser that is attached to the definition of each package member right in the source code editor.
+\end{enumerate}
+
+Both references and members are organized in a tree view reflecting the hierarchical structure of the original software repository.
+In addition, we recognize the effort of browsing large lists of dependency data and encounter it by providing an ``I'm felling lucky'' button for every view that redirects the user to a random dependency resp. reference to gain a faster, unbiased impression of usage samples.
+
+Foo!

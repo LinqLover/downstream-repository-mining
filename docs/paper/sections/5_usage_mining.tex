@@ -1,4 +1,36 @@
-\section{Usage mining}
+\section{Usage sample mining}
 \label{sec:usage_mining}
 
-Foo!
+\begin{figure*}
+	\newcommand\lowlight[1]{\textcolor{gray}{#1}}
+	\newcommand\highlight[1]{\textcolor{red}{#1}}
+	\centering
+	\begin{subfigure}[t]{.32\linewidth}
+		\input{sections/5_usage_mining/patterns/CallExpression}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{.32\linewidth}
+		\input{sections/5_usage_mining/patterns/PropertyAccessExpression}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{.32\linewidth}
+		\input{sections/5_usage_mining/patterns/JsxOpeningElement}
+	\end{subfigure}
+
+	\caption{AST patterns for example JavaScript/TypeScript expressions.
+		The \highlight{highlighted} node contains the link to the declaration of the referenced identifier.
+	}
+	\label{fig:usage_mining/patterns}
+\end{figure*}
+\input{sections/5_usage_mining/patterns/JsxOpeningElement.postfigure.tex}
+
+Having downloaded the selected downstream dependency repositories, we can proceed to extract usage samples for the target package from each dependency repository.
+Our goal is to identify these usage samples on a fine-granular level so that we can trace them down to the single identifiers that were exposed by the target package.
+
+To do so, we start by parsing the source code of every dependency repository as well as the source of the target package each into a separate AST.
+
+% TODO: use term "binding"?
+In a second step, every dependency AST is traversed together with the target package AST in order to create links between semantically related nodes, e.g., between an expression and the variable it is assigned to or between a function call and the definition of this function.
+
+In the final step, the AST is traversed again and collect all nodes that are linked to a declaration in the target package.
+To identify these links, we define a set of language-specific patterns of AST subtrees that containing a declaration node (see \cref{fig:usage_mining/patterns}).
