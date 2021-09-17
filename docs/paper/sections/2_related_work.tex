@@ -17,7 +17,7 @@ This is done by \citet{kikas2017structure} which apply their methodology to the 
 However, existing research about dependency graphs primarily takes a broad statistical perspective, and researchers often rely on a large corpus of downloaded software repositories \citep{abdalkareem2017developers,katz2020libraries,kikas2017structure}.
 As opposed to this approach, these capacities will not be appropriate for scenarios that are occasionally performed by developers of a single package only.
 In this case, developers will often use a public \emph{code search} service such as GitHub code search\footnote{\url{https://docs.github.com/en/github/searching-for-information-on-github}} or Sourcegraph\footnote{\url{https://sourcegraph.com/}} instead.
-\citet{liu2020opportunities} survey current methods and trends in code search tools that include, besides simple full-text search, newer approaches such as structural or semantic search queries, code similarity metrics, or Machine Learning methods.
+\citet{liu2020opportunities} provide a (not yet published) survey of current methods and trends in code search tools that include, besides simple full-text search, newer approaches such as structural or semantic search queries, code similarity metrics, or Machine Learning methods.
 
 \subsection{Mining usage information}
 \label{sec:related_work/usage_information}
@@ -42,7 +42,7 @@ To bring together dependency graphs and call graphs, \emph{ecosystem call graphs
 \citet{hejderup2018software} propose an approach to do so for the JavaScript/npm ecosystem in which they also model the semantic version numbers of packages and perform an impact analysis for vulnerabilities based on their graph; a very similar method is described by \citet{boldi2020fine} to formulate the vision of new design for package management systems that provides options for finer-granular reuse of solutions.
 \citet{nielsen2021modular} elaborate on this work by developing a call graph generator tailored to this problem that comes with significant improvements in terms of recall and performance.
 \citet{wang2020empirical} describe a similar approach for the same ecosystem and apply it to the domain of locating security issues in a project's upstream dependencies.
-With \caps{Pr\"azi}, \citet{hejderup2021praezi} also describe their implementation of a dependency-scale call graph for the Rust/Cratesio ecosystem in-depth.
+With \caps{Pr\"azi} (not yet peer-reviewed), \citet{hejderup2021praezi} also describe their implementation of a dependency-scale call graph for the Rust/Cratesio ecosystem in-depth.
 For Java/Maven, \citet{keshani2021scalable} proposes another solution.
 
 After collecting these usage data, additional processing is possible to extract general usage information from the extensive raw data.
