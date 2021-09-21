@@ -36,7 +36,7 @@
         "escape-string-regexp": "^5.0.0",
         "glob": "^7.1.6",
         "glob-promise": "^4.2.0",
-        "graphql": "^15.5.3",
+        "graphql": "^15.6.0",
         "graphql-request": "^3.5.0",
         "it-all": "^1.0.5",
         "lines-and-columns": "^1.1.6",
