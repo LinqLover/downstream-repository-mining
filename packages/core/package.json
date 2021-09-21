@@ -48,7 +48,7 @@
         "path": "^0.12.7",
         "path-is-inside": "^1.0.2",
         "pkg-dir": "^5.0.0",
-        "promise-status-async": "^1.2.3",
+        "promise-status-async": "^1.2.9",
         "try-catch": "^3.0.0",
         "ts-node": "^10.2.1",
         "tslib": "^2",
