@@ -120,7 +120,7 @@ export abstract class DependencyItem<
         yield md`**${this.dependency.name}**`
         if (this.dependency.description) {
             yield
-            yield md`${truncate(this.dependency.description, DependencyItem.maximumDescriptionLength)})}`
+            yield md`${truncate(this.dependency.description, DependencyItem.maximumDescriptionLength)}`
         }
 
         if (this.dependency.urls.size) {
