@@ -2,6 +2,7 @@ import { graphql } from '@octokit/graphql'
 import { gql } from 'graphql-request'
 import _ from 'lodash'
 
+import { NpmDependencySearcher } from './dependencies/npm'
 import { Dowdep } from './dowdep'
 import { Package } from './packages'
 import { Reference } from './references'
@@ -171,4 +172,8 @@ class GithubClient {
             }
         })
     }
+}
+
+export {
+    NpmDependencySearcher
 }

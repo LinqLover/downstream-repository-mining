@@ -1,4 +1,4 @@
-import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
+import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
 import normalizePackageData from 'normalize-package-data'
@@ -68,7 +68,7 @@ export class Extension {
     private async configurationChanged() {
         this.dowdep.dependencyLimit = vscode.workspace.getConfiguration().get<number>('dowdep.dependencyLimit')
         this.dowdep.githubAccessToken = vscode.workspace.getConfiguration().get('dowdep.githubOAuthToken')
-        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get<ReferenceSearcherStrategy>('dowdep.referenceSearchStrategy', 'types')
+        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get<ReferenceSearchStrategy>('dowdep.referenceSearchStrategy', 'types')
         if (this.dowdep.referenceSearchStrategy === 'heuristic') {
             await vscode.window.showWarningMessage("The heuristic search strategy is currently not supported because of extremely complicated import errors, sigh ...\n\nFurther information: https://github.com/TomerAberbach/parse-imports/issues/3")
         }

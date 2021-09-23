@@ -1,11 +1,10 @@
 import pathExists from 'path-exists'
 import path from 'path'
 
-import { NpmDependencySearcher } from './npm-dependencies'
-import { OnlyData } from './utils/OnlyData'
-import { PackageReferenceSearcher, ReferenceSearcherStrategy } from './references'
+import { Dependency, DependencySearcher, DependencySearchStrategy, NpmDependencySearcher } from './dependencies'
 import { Package } from './packages'
-import { Dependency, DependencySearcher } from './dependencies'
+import { PackageReferenceSearcher, ReferenceSearchStrategy } from './references'
+import { OnlyData } from './utils/OnlyData'
 
 
 export function getCacheDirectory() {
@@ -30,7 +29,7 @@ export class Dowdep {
         tokenChanged: (value: string | undefined) => void
     }
     sourceCacheDirectory!: string
-    referenceSearchStrategy: ReferenceSearcherStrategy = 'types'
+    referenceSearchStrategy: ReferenceSearchStrategy = 'types'
 
     private _githubAccessToken?: string
 

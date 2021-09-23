@@ -2,11 +2,11 @@ import downloadPackageTarball from 'download-package-tarball'
 import npmDependants from 'npm-dependants'
 import { RegistryClient } from 'package-metadata'
 
-import { Dependency, DependencySearcher, DependencyUpdateCallback, DependencyUpdateOptions } from './dependencies'
-import { Dowdep } from './dowdep'
-import { Package } from './packages'
-import isDefined from './utils/isDefined'
-import { OnlyData } from './utils/OnlyData'
+import { Dependency, DependencySearcher, DependencyUpdateCallback, DependencyUpdateOptions } from '../dependencies'
+import { Dowdep } from '../dowdep'
+import { Package } from '../packages'
+import isDefined from '../utils/isDefined'
+import { OnlyData } from '../utils/OnlyData'
 
 
 export class NpmDependency extends Dependency {

@@ -212,11 +212,11 @@ type ConcretePackageReferenceSearcher = (new (
     includeKinds?: ReadonlyArray<ReferenceKind> | '*'
 ) => PackageReferenceSearcher)
 
-const ALL_REFERENCE_SEARCHER_STRATEGIES = [
+const ALL_REFERENCE_SEARCH_STRATEGIES = [
     'heuristic',
     'types'
 ] as const
-export type ReferenceSearcherStrategy = (typeof ALL_REFERENCE_SEARCHER_STRATEGIES)[number]
+export type ReferenceSearchStrategy = (typeof ALL_REFERENCE_SEARCH_STRATEGIES)[number]
 
 export abstract class PackageReferenceSearcher {
     /** TODOS for later:
@@ -240,11 +240,11 @@ export abstract class PackageReferenceSearcher {
         }
     }
 
-    static create($package: Package, dependency: Dependency, strategy: ReferenceSearcherStrategy) {
+    static create($package: Package, dependency: Dependency, strategy: ReferenceSearchStrategy) {
         return new (this.forStrategy(strategy))($package, dependency)
     }
 
-    static forStrategy(strategy: ReferenceSearcherStrategy): ConcretePackageReferenceSearcher {
+    static forStrategy(strategy: ReferenceSearchStrategy): ConcretePackageReferenceSearcher {
         switch (strategy) {
             case 'heuristic':
                 return HeuristicPackageReferenceSearcher
