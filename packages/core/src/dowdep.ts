@@ -1,7 +1,7 @@
 import pathExists from 'path-exists'
 import path from 'path'
 
-import { Dependency, DependencySearcher, DependencySearchStrategy, NpmDependencySearcher } from './dependencies'
+import { createDependencySearcher, Dependency, DependencySearcher, DependencySearchStrategy } from './dependencies'
 import { Package } from './packages'
 import { PackageReferenceSearcher, ReferenceSearchStrategy } from './references'
 import { OnlyData } from './utils/OnlyData'
@@ -25,18 +25,24 @@ export class Dowdep {
         this._githubAccessToken = value
         this.githubClient?.tokenChanged(value)
     }
+    sourcegraphToken?: string
     githubClient?: {
         tokenChanged: (value: string | undefined) => void
     }
     sourceCacheDirectory!: string
+    dependencySearchStrategies: readonly DependencySearchStrategy[] | '*' = '*'
     referenceSearchStrategy: ReferenceSearchStrategy = 'types'
 
     private _githubAccessToken?: string
 
-    createDependencySearcher($package: Package): DependencySearcher {
-        return new NpmDependencySearcher($package, {
+    createDependencySearchers($package: Package): readonly DependencySearcher[] {
+        const strategies = this.dependencySearchStrategies == '*'
+            ? <['sourcegraph']>['sourcegraph']
+            : this.dependencySearchStrategies
+        
+        return strategies.map(strategy => createDependencySearcher(strategy, $package, {
             limit: this.dependencyLimit
-        })
+        }))
     }
 
     createReferenceSearcher(dependency: Dependency, $package: Package) {

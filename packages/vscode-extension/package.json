@@ -59,8 +59,25 @@
                         "number",
                         "null"
                     ],
-                    "markdownDescription": "Indicates how many downstreams dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
+                    "markdownDescription": "Indicates how many downstream dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
                     "default": 10
+                },
+                "dowdep.dependencySearchStrategies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "npm",
+                            "sourcegraph"
+                        ],
+                        "minItems": 1,
+                        "markdownEnumDescriptions": [
+                            "Scrapes packages from the [npm registry](https://npmjs.com).",
+                            "Searches repositories on [sourcegraph.com](https://sourcegraph.com)."
+                        ]
+                    },
+                    "description": "Indicates the strategy that is used for searching downstream dependencies.",
+                    "default": null
                 },
                 "dowdep.enableCodeLens": {
                     "type": "boolean",
@@ -72,7 +89,7 @@
                         "string",
                         "null"
                     ],
-                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a token in the [GitHub developer settings](https://github.com/settings/tokens/new).",
+                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a new token in the [GitHub developer settings](https://github.com/settings/tokens/new).",
                     "default": null,
                     "pattern": "^ghp_[0-9a-zA-Z]{36}$"
                 },
@@ -83,11 +100,20 @@
                         "types",
                         "heuristic"
                     ],
-                    "enumDescriptions": [
-                        "Uses the TypeScript compiler for searching references. Recommended.",
+                    "markdownEnumDescriptions": [
+                        "Uses the [TypeScript compiler](https://www.typescriptlang.org/) for searching references. Recommended.",
                         "Searches dependencies for imports of the analyzed package by using a simple heuristic. For demonstrational purpose only."
                     ],
                     "default": "types"
+                },
+                "dowdep.sourcegraphToken": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "markdownDescription": "The token that is used to search dependencies from [Sourcegraph](https://sourcegraph.com/about). You can generate a new token in the [Sourcegraph settings](https://sourcegraph.com/user/settings/tokens).",
+                    "default": null,
+                    "pattern": "^[0-9a-z]{40}$"
                 }
             }
         },

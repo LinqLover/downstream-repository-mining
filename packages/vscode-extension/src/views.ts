@@ -148,12 +148,12 @@ export abstract class DependencyItem<
 export abstract class ReferenceFileNodeItem<
     TFileNodeItem extends ReferenceFileNodeItem<TFileNodeItem, TMemberNodeItem, TLeafItem>,
     TMemberNodeItem extends RefreshableHierarchyItem & {
-        allLeafs: ReadonlyArray<Reference>,
+        allLeafs: readonly Reference[],
         getChildren(): IterableIterator<TMemberNodeItem | TLeafItem>
     },
     TLeafItem extends RefreshableHierarchyItem
 > extends LabeledHierarchyNodeItem<Reference, TFileNodeItem, TMemberNodeItem | TLeafItem> {
-    constructor(path: ReadonlyArray<string>) {
+    constructor(path: readonly string[]) {
         super(path, {
             showCountInDescription: true
         })
@@ -192,7 +192,7 @@ export abstract class ReferenceFileNodeItem<
     }
 
     protected abstract createMemberNodeChild(): TMemberNodeItem
-    protected abstract createFileNodeChild(path: ReadonlyArray<string>): TFileNodeItem
+    protected abstract createFileNodeChild(path: readonly string[]): TFileNodeItem
 
     refresh() {
         super.refresh()

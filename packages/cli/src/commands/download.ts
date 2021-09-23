@@ -13,6 +13,11 @@ export default class Download extends DowdepCommand {
         limit: flags.integer({
             description: "maximum number of packages to download (-1 for unlimited)",
             default: 20
+        }),
+        strategies: flags.enum({
+            description: "list strategies to use",
+            options: ['npm', 'sourcegraph', 'all'],
+            default: 'all'
         })
     }
 
@@ -24,11 +29,15 @@ export default class Download extends DowdepCommand {
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
+        const strategies = ['npm', 'sourcegraph'].includes(flags.strategies)
+            ? [<'npm' | 'sourcegraph'>flags.strategies]
+            : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
 
         const dependencies = await asyncIteratorToArray(
             tqdm2(
                 this.updateDependencies(
                     packageName,
+                    strategies,
                     limit,
                     async (dependency, dowdep) => await dependency.isSourceCodeReady(dowdep),
                     { downloadSource: true }

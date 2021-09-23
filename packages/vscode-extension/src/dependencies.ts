@@ -92,7 +92,7 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
     ReferenceItem
 > {
     constructor(
-        public path: ReadonlyArray<string>
+        public path: readonly string[]
     ) {
         super(path)
 
@@ -118,7 +118,7 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
         return new DependencyMemberNodeItem([])
     }
 
-    createFileNodeChild(path: ReadonlyArray<string>) {
+    createFileNodeChild(path: readonly string[]) {
         return new DependencyFileNodeItem(path)
     }
 
@@ -140,7 +140,7 @@ class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
     DependencyMemberNodeItem,
     ReferenceItem
 > {
-    constructor(path: ReadonlyArray<string>) {
+    constructor(path: readonly string[]) {
         super(path, {
             showCountInDescription: true
         })

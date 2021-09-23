@@ -1,21 +1,22 @@
 import filterAsync from 'node-filter-async'
 import { Command } from '@oclif/command'
 
-import { Dependency, Dowdep, getCacheDirectory, Package } from 'dowdep'
-import { DependencyUpdateOptions } from '../../core/out/dependencies'
-
+import { Dependency, DependencyUpdateOptions, Dowdep, getCacheDirectory, Package } from 'dowdep'
 
 export default abstract class DowdepCommand extends Command {
     async *updateDependencies(
         packageName: string,
+        searchStrategies: Dowdep['dependencySearchStrategies'],
         limit: number | undefined,
-        readinessPredicate: (dependency: Dependency, dowdep: Dowdep) => boolean | Promise<boolean>,
+        readinessPredicate:  (dependency: Dependency, dowdep: Dowdep) => boolean | Promise<boolean>,
         updateOptions: Partial<DependencyUpdateOptions>
     ) {
         const dowdep = new Dowdep({
+            dependencySearchStrategies: searchStrategies,
             dependencyLimit: limit,
-            sourceCacheDirectory: getCacheDirectory(),
-            githubAccessToken: process.env.GITHUB_OAUTH_TOKEN
+            githubAccessToken: process.env.GITHUB_OAUTH_TOKEN,
+            sourcegraphToken: process.env.SOURCEGRAPH_TOKEN,
+            sourceCacheDirectory: getCacheDirectory()
         })
         const $package = new Package(packageName)
 

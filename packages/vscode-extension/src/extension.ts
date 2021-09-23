@@ -66,9 +66,12 @@ export class Extension {
     }
 
     private async configurationChanged() {
-        this.dowdep.dependencyLimit = vscode.workspace.getConfiguration().get<number>('dowdep.dependencyLimit')
-        this.dowdep.githubAccessToken = vscode.workspace.getConfiguration().get('dowdep.githubOAuthToken')
-        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get<ReferenceSearchStrategy>('dowdep.referenceSearchStrategy', 'types')
+        const configuration = vscode.workspace.getConfiguration()
+        this.dowdep.dependencyLimit = configuration.get<number>('dowdep.dependencyLimit')
+        this.dowdep.githubAccessToken = configuration.get('dowdep.githubOAuthToken')
+        this.dowdep.sourcegraphToken = configuration.get('dowdep.sourcegraphToken')
+        this.dowdep.dependencySearchStrategies = configuration.get<Dowdep['dependencySearchStrategies'] | null>('dowdep.dependencySearchStrategies', null) ?? this.dowdep.sourcegraphToken ? '*' : ['npm']
+        this.dowdep.referenceSearchStrategy = configuration.get<ReferenceSearchStrategy>('dowdep.referenceSearchStrategy', 'types')
         if (this.dowdep.referenceSearchStrategy === 'heuristic') {
             await vscode.window.showWarningMessage("The heuristic search strategy is currently not supported because of extremely complicated import errors, sigh ...\n\nFurther information: https://github.com/TomerAberbach/parse-imports/issues/3")
         }

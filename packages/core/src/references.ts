@@ -172,11 +172,11 @@ export class ReferenceSearcher {
         }
     }
 
-    async* searchReferences(limit?: number, includeKinds: ReadonlyArray<ReferenceKind> | '*' = ['usage']): AsyncIterable<Reference> {
+    async* searchReferences(limit?: number, includeKinds: readonly ReferenceKind[] | '*' = ['usage']): AsyncIterable<Reference> {
         yield* this.basicSearchReferences(this.rootDirectory, limit, includeKinds == '*' ? ALL_REFERENCE_KINDS : includeKinds, 0)
     }
 
-    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind> | '*', depth: number): AsyncIterable<Reference> {
+    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: readonly ReferenceKind[] | '*', depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
             const depDirectories: Iterable<Dirent> = (
@@ -209,7 +209,7 @@ export class ReferenceSearcher {
 type ConcretePackageReferenceSearcher = (new (
     $package: Package,
     dependency: Dependency,
-    includeKinds?: ReadonlyArray<ReferenceKind> | '*'
+    includeKinds?: readonly ReferenceKind[] | '*'
 ) => PackageReferenceSearcher)
 
 const ALL_REFERENCE_SEARCH_STRATEGIES = [
@@ -226,7 +226,7 @@ export abstract class PackageReferenceSearcher {
     constructor(
         public $package: Package,
         public dependency: Dependency,
-        public includeKinds: ReadonlyArray<ReferenceKind> | '*' = ['usage']
+        public includeKinds: readonly ReferenceKind[] | '*' = ['usage']
     ) { }
 
     static named(name: string): ConcretePackageReferenceSearcher {
@@ -283,7 +283,7 @@ export abstract class PackageReferenceSearcher {
 
 class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
     static readonly maximumFileSize = 100_000  // 100 MB
-    protected commonJsPatterns!: ReadonlyArray<RegExp>
+    protected commonJsPatterns!: readonly RegExp[]
 
     async initialize() {
         await super.initialize()

@@ -2,11 +2,11 @@ import { graphql } from '@octokit/graphql'
 import { gql } from 'graphql-request'
 import _ from 'lodash'
 
-import { NpmDependencySearcher } from './dependencies/npm'
-import { Dowdep } from './dowdep'
-import { Package } from './packages'
-import { Reference } from './references'
-import isDefined from './utils/isDefined'
+import { Dowdep } from '../dowdep'
+import { Package } from '../packages'
+import { Reference } from '../references'
+import isDefined from '../utils/isDefined'
+import { OnlyData } from '../utils/OnlyData'
 
 
 export class Dependency {
@@ -17,9 +17,13 @@ export class Dependency {
 
     description?: string
     githubRepository?: GithubRepository | null
-    repositoryUrl?: string
     sourceDirectory?: string
+    rootDir = '/'
+    pluggableUrls = new Map<string | null, string>()
     _references: Reference[] = []
+    get githubUrl() {
+        return [...this.urls.entries()].find(([key, ]) => key.toLowerCase() === 'github')?.[1]
+    }
     get isGitHubRepositoryReady() {
         if (_.isUndefined(this.githubRepository)) {
             return false
@@ -31,12 +35,31 @@ export class Dependency {
     }
 
     get references() { return this._references }
-    get urls() { return new Map() }
+    get urls() {
+        const map = new Map<string, string>([...this.pluggableUrls.entries()].map(
+            ([key, value]) => [key && ({"github": "GitHub"}[key] ?? key) || '?', value]
+        ))
+        if (this.githubRepository?.url) {
+            map.set("GitHub", this.githubRepository.url)
+        }
+        return map
+    }
 
     async update(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
         const jobs = [...this.collectUpdateJobs(dowdep, options)]
-        await Promise.allSettled(jobs.map(async (job, index) =>
-            (await job()) && (await updateCallback?.(this, `job ${index}`))))
+        await Promise.allSettled(jobs.map(async (job, index) => {
+            let success
+            try {
+                await job()
+                success = true
+            } catch (error) {
+                console.warn(error)
+                success = false
+            }
+            if (success) {
+                await updateCallback?.(this, `job ${index}`)
+            }
+        }))
     }
 
     isSourceCodeReady(dowdep: Dowdep): Promise<boolean> {
@@ -75,7 +98,7 @@ export class Dependency {
     }
 
     async updateFromGithub(dowdep: Dowdep) {
-        const match = this.repositoryUrl?.match(/github\.com[/:](?<owner>[^/]+)\/(?<name>[\w-_.]+?)(?:.git)?$/)
+        const match = this.githubUrl?.match(/github\.com[/:](?<owner>[^/]+)\/(?<name>[\w-_.]+?)(?:.git)?$/)
         if (!match?.groups) {
             this.githubRepository = null
             return true
@@ -89,14 +112,15 @@ export class Dependency {
 
 export abstract class DependencySearcher {
     constructor(
-        public $package: Package
-    ) { }
-
-    abstract search(): AsyncGenerator<Dependency>
-
-    protected createDependency(name: string) {
-        return new Dependency(name, this.$package)
+        public $package: Package,
+        init?: Partial<OnlyData<DependencySearcher>>
+    ) {
+        Object.assign(this, init)
     }
+
+    limit?: number = undefined
+
+    abstract search(dowdep: Dowdep): AsyncGenerator<Dependency>
 }
 
 export type DependencyUpdateCallback = (dependency: Dependency, data: any) => void | Promise<void>
@@ -112,6 +136,7 @@ export class GithubRepository {
         public name: string
     ) { }
 
+    public url?: string
     public stargazerCount?: number
     public forkCount?: number
 
@@ -120,9 +145,11 @@ export class GithubRepository {
 
         const metadata = await githubClient.fetchMetadata(this.owner, this.name)
         if (!metadata) {
+            console.warn("Could not fetch GitHub metadata", { owner: this.owner, name: this.name })
             return
         }
-        [this.forkCount, this.stargazerCount] = [metadata.forkCount, metadata.stargazerCount]
+        this.url = metadata.url
+        ;[this.forkCount, this.stargazerCount] = [metadata.forkCount, metadata.stargazerCount]
     }
 
     githubClient(dowdep: Dowdep) {
@@ -142,6 +169,7 @@ class GithubClient {
     protected graphql?: typeof graphql
 
     async fetchMetadata(owner: string, name: string): Promise<{
+        url: string,
         forkCount: number,
         stargazerCount: number
     } | undefined> {
@@ -172,8 +200,4 @@ class GithubClient {
             }
         })
     }
-}
-
-export {
-    NpmDependencySearcher
 }

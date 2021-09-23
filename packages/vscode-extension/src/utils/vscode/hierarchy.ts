@@ -36,6 +36,7 @@ export abstract class HierarchyDataProvider<
     }
 
     protected getRoots = this._synchronizer.spy(() => {
+        // BUG: Will not be triggered if view is collapsed!
         return this.basicGetRoots()
     })
 
@@ -146,8 +147,8 @@ export abstract class HierarchyNodeItem<
     TLeafItem extends RefreshableHierarchyItem
 > extends SynchronizableHierarchyItem<TPathSegment | TLeafKey, TComplexItem | TLeafItem> {
     constructor(
-        public path: ReadonlyArray<TPathSegment>,
-        private options?: Partial<HierarchyNodeItemOptions>
+        public path: readonly TPathSegment[],
+        options?: Partial<HierarchyNodeItemOptions>
     ) {
         super(vscode.TreeItemCollapsibleState.Collapsed)
 
@@ -158,7 +159,7 @@ export abstract class HierarchyNodeItem<
         this.complexBuckets = new Map<TPathSegment, TLeafKey[]>()
     }
 
-    public allLeafs: ReadonlyArray<TLeafKey> = []
+    public allLeafs: readonly TLeafKey[] = []
     /** If set, will be used to sort all complex item keys. */
     protected pathSegmentSorters?: ReadonlyArray<_.Many<_.ListIteratee<TPathSegment>>>
     protected leafSorters?: ReadonlyArray<_.Many<_.ListIteratee<TLeafKey>>>

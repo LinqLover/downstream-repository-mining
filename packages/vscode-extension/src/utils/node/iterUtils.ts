@@ -1,6 +1,6 @@
 export function *flatMap<T, U, This = undefined>(
     iterator: IterableIterator<T>,
-    callback: (this: This | undefined, value: T, index: number) => U | ReadonlyArray<U> | IterableIterator<U>,
+    callback: (this: This | undefined, value: T, index: number) => U | readonly U[] | IterableIterator<U>,
     thisArg?: This
 ): IterableIterator<U> {
     let index = 0
