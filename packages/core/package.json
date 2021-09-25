@@ -33,6 +33,7 @@
         "@octokit/graphql": "^4.8.0",
         "callsites": "^3.1.0",
         "dotenv": "^10.0.0",
+        "download-git-repo": "https://gitlab.com/LinqLover/download-git-repo.git#fix/github-default-branch",
         "download-package-tarball": "^1.0.7",
         "escape-string-regexp": "^5.0.0",
         "glob": "^7.1.6",
@@ -46,6 +47,7 @@
         "npm-dependants": "^2.1.2",
         "oclif": "^1.18.0",
         "package-metadata": "^1.1.2",
+        "parse-github-repo-url": "^1.4.1",
         "parse-imports": "^1.1.0",
         "path": "^0.12.7",
         "path-is-inside": "^1.0.2",
@@ -58,6 +60,7 @@
         "typescript": "^4.4.3"
     },
     "devDependencies": {
+        "@types/download": "^8.0.1",
         "@types/got": "^9.6.12",
         "@types/jest": "^27.0.2",
         "@types/lodash": "^4.14.173",

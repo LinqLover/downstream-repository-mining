@@ -1,6 +1,9 @@
+import downloadGitRepo from 'download-git-repo'
 import { graphql } from '@octokit/graphql'
 import { gql } from 'graphql-request'
 import _ from 'lodash'
+import parseGitHubRepoUrl from 'parse-github-repo-url'
+import { promisify } from 'util'
 
 import { Dowdep } from '../dowdep'
 import { Package } from '../packages'
@@ -62,12 +65,38 @@ export class Dependency {
         }))
     }
 
-    isSourceCodeReady(dowdep: Dowdep): Promise<boolean> {
-        throw new Error("Not implemented")
+    async isSourceCodeReady(dowdep: Dowdep): Promise<boolean> {
+        return isDefined(this.sourceDirectory) && await dowdep.fileSystem.exists(this.sourceDirectory)
     }
 
-    updateSource(dowdep: Dowdep): Promise<boolean> {
-        throw new Error("Not implemented") // Could use GitHub data for this
+    async updateSource(dowdep: Dowdep): Promise<boolean> {
+        if (!this.urls.size) {
+            return false
+        }
+        if (await this.isSourceCodeReady(dowdep)) {
+            return true // TODO: What to return here?
+        }
+
+        const cacheDirectory = dowdep.sourceCacheDirectory
+        const basicSourceDirectory = dowdep.fileSystem.join(cacheDirectory, this.name)
+        this.sourceDirectory = basicSourceDirectory
+        if (this.rootDir) {
+            this.sourceDirectory += `/${this.rootDir}`
+        }
+
+        let repo: string
+        if (this.githubUrl) {
+            const url = parseGitHubRepoUrl(this.githubUrl)
+            if (!url) {
+                return false // TODO: Raise?
+            }
+            repo = `${url[0]}/${url[1]}`
+        } else {
+            repo = this.urls.values().next().value
+        }
+        // TODO: Use dowdep.fileSystem!
+        await promisify(downloadGitRepo)(repo, basicSourceDirectory)
+        return true
     }
 
     private *collectUpdateJobs(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}) {

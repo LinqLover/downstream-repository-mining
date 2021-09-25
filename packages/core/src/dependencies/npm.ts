@@ -32,10 +32,6 @@ export class NpmDependency extends Dependency {
         await super.update(dowdep, options, updateCallback)
     }
 
-    async isSourceCodeReady(dowdep: Dowdep) {
-        return isDefined(this.sourceDirectory) && await dowdep.fileSystem.exists(this.sourceDirectory)
-    }
-
     async updateSource(dowdep: Dowdep) {
         if (!this.tarballUrl) {
             return false
