@@ -71,11 +71,15 @@ export class NpmDependency extends Dependency {
         }
 
         if (latestVersion.repository?.url) {
-            const url = new URL(latestVersion.repository.url)
-            const domain = psl.parse(url.hostname)
-            if (!domain.error) {
-                console.log("set url", url.href)
-                this.pluggableUrls.set(domain.sld, url.href)
+            try {
+                const url = new URL(latestVersion.repository.url)
+                const domain = psl.parse(url.hostname)
+                if (!domain.error) {
+                    console.log("set url", url.href)
+                    this.pluggableUrls.set(domain.sld, url.href)
+                }
+            } catch (error) {
+                console.warn("Invalid URL", latestVersion.repository.url)
             }
         }
 
