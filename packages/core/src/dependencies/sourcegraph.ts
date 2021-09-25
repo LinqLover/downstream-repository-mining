@@ -46,7 +46,7 @@ class SourcegraphClient {
     ) { }
 
     protected url = 'https://sourcegraph.com/.api/graphql'
-    
+
     protected get documentSpecifier() {
         return {
             document: gql`query search($query: String!) {
@@ -101,12 +101,15 @@ class SourcegraphClient {
             yield this.createDependency(result, $package)
         }
     }
-    
+
     protected createDependency(result: SourcegraphResult, $package: Package) {
         const [repository, file] = [result.repository, result.file]
         assert(repository && file)
-        
-        const name = this.readPackageData(file.content).name || repository.name
+
+        const name = this.readPackageName(file.content) || (() => {
+            console.warn("Falling back to repository name", repository.name)
+            return repository.name
+        })()
         const rootDir = _.initial(file.path.split('/')).join('/')
         const dependency = new Dependency(name, $package)
         dependency.rootDir = rootDir
@@ -118,17 +121,18 @@ class SourcegraphClient {
 
         return dependency
     }
-    
+
     protected async* fetchResults(packageName: string, limit?: number) {
         const graphql = new GraphQLClient(this.url, {
             headers: {
                 authorization: `token ${this.token}`
             },
         })
-        
+
         const queryArgs: Record<string, string> = {
             'select': 'file',
-            'file': 'package.json'
+            'file': 'package.json',
+            '-file': 'node_modules/'
         }
         if (limit) {
             queryArgs.count = limit.toString()
@@ -139,19 +143,23 @@ class SourcegraphClient {
         }))
 
         const results = response.search.results
-        if (results.limitHit) {
-            console.warn("Sourcegraph limit hit!")
-        }
         if (results.timedout.length) {
             console.warn("Sourcegraph timeouts", results.timedout.map(repo => repo.name).join(', '))
         }
         // TODO: Pagination?
         yield* results.results
     }
-    
-    private readPackageData(json: string) {
-        const data = <normalizePackageData.Package>JSON.parse(json)
-        normalizePackageData(data)
-        return data
+
+    private readPackageName(json: string) {
+        try {
+            let data = JSON.parse(json)
+            data = { name: data.name }
+            normalizePackageData(data)
+            console.log("succeeded", data.name)
+            return (<normalizePackageData.Package>data).name
+        } catch (error) {
+            console.warn("Error while parsing package data", error, json)
+            return
+        }
     }
 }
