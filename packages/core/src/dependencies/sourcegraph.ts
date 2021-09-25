@@ -45,7 +45,9 @@ class SourcegraphClient {
         protected token?: string
     ) { }
 
+
     protected url = 'https://sourcegraph.com/.api/graphql'
+    protected maximumLimit = 1000000000
 
     protected get documentSpecifier() {
         return {
@@ -132,12 +134,11 @@ class SourcegraphClient {
         const queryArgs: Record<string, string> = {
             'select': 'file',
             'file': 'package.json',
-            '-file': 'node_modules/'
-        }
-        if (limit) {
-            queryArgs.count = limit.toString()
+            '-file': 'node_modules/',
+            'count': `${limit || this.maximumLimit}`
         }
         const response = this.documentSpecifier.protoResponse
+        console.log("query", `"${packageName}": ` + Object.entries(queryArgs).map(([key, value]) => `${key}:${value}`).join(' '))
         Object.assign(response, await graphql.request(this.documentSpecifier.document, {
             query: `"${packageName}": ` + Object.entries(queryArgs).map(([key, value]) => `${key}:${value}`).join(' ')
         }))
