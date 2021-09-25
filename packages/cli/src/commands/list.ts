@@ -1,6 +1,7 @@
 import { flags } from '@oclif/command'
 
 import DowdepCommand from '../DowdepCommand'
+import tqdm2 from '../utils/tqdm2'
 
 
 export default class List extends DowdepCommand {
@@ -38,14 +39,19 @@ export default class List extends DowdepCommand {
             : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
         const downloadGitHubData = flags.downloadGitHubData
 
-        for await (const dependency of this.updateDependencies(
-            packageName,
-            strategies,
+        for await (const dependency of tqdm2(
+            this.updateDependencies(
+                packageName,
+                strategies,
+                limit,
+                dependency => !downloadGitHubData || dependency.isGitHubRepositoryReady,
+                {
+                    downloadMetadata: downloadGitHubData,
+                    downloadSource: false
+                }),
             limit,
-            dependency => !downloadGitHubData || dependency.isGitHubRepositoryReady,
             {
-                downloadMetadata: downloadGitHubData,
-                downloadSource: false
+                description: "Listing dependencies"
             }
         )) {
             console.dir(dependency, {
