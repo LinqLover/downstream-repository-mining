@@ -1,48 +1,4 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-Rename into discussion?
-
 Foo!
-
-research questions:
-
--(RQ0) (how useful are these data?)
--(RQ1) what is the quality of collected dependencies?
--(RQ2) what is the quality of mined usage samples?
--(RQ3) how well is the tool applicable?
-
-\# actual evaluation
-
-\#\# rq1
-
-- numbers of dependencies found for example packages (table for small, medium, large packages) for all approaches
-
-<choose subset from excel>
-
-NEXT: beispiele für fehler sammeln. slides damit ergänzen, fazit ziehen.
-
-- resources: fetch metadata/download speed (zusammen 25 Pakete/min); disk space per dependency (ca. 703 KB/package); API restrictions (free, no limitations known)
-- correctness: superfluous dependency specifications (TODO: count false positives by comparing with references, manually check)
-limitations:
-- false positives:
-	* type defs
-- missing dependencies: repositories without proper package manifest file
-- ranking: small repositories will be underrepresented
-
-\#\# rq2
-
-- numbers of dependencies and references found for example packages (table for small, medium, large packages)
-- resources: speed per package (20 pkgs/min), RAM/ROM
-- precision/correctness: proof that there are no false positives (given correctness of tsc)
-- false negatives/recall - (real) examples:
-	* limited matches due to lack of type information for other frameworks used (but we could solve this); extreme metaprogramming (eval, Function.call(), .../limitations of typescript)
-	* additional build steps (code generation, transpilers, ...)
-
-\#\# rq3
-
-- expert interviews?
-- experience report (short case study looking at a certain package)
-- comparison to hora2015apiwave or de2013multi? (or does this rather belong to relwork?)
-
-\# discussion
