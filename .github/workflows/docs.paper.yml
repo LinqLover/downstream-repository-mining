@@ -16,6 +16,7 @@ jobs:
         with:
           root_file: paper.tex
           working_directory: docs/paper
+          pre_compile: tlmgr update --self && tlmgr update acmart
       - uses: actions/upload-artifact@master
         with:
           name: paper.pdf
