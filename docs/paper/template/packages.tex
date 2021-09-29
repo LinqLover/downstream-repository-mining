@@ -17,7 +17,19 @@
 % Lay out multiple figures
 \usepackage{subcaption}
 
+% Algorithms
+\usepackage[noend,noline,boxed]{algorithm2e}
+\SetAlCapSkip{1em}
+% Python style
+\DontPrintSemicolon
+\SetStartEndCondition{ }{}{}%
+\SetKwIF{If}{ElseIf}{Else}{if}{:}{else if}{else}{end if}%
+\SetKwFor{For}{for}{:}{next}%
+\SetKw{kwYield}{yield}
 % Underlined text with linebreaks
 \usepackage[normalem]{ulem}
 
 \usepackage{xcolor}
+
+% Convenient references (needs to be loaded after algorithms)
+\usepackage[nameinlink]{cleveref}
