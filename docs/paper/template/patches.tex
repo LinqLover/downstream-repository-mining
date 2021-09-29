@@ -1,0 +1,8 @@
+% Fix footnote numbering subcaptions
+% CREDITS: https://tex.stackexchange.com/a/414191/221054 (edited)
+\AddToHook{env/figure*/begin}{%
+	\DeclareRobustCommand\footnote[1]{%
+		\footnotemark
+		\expanded{\AddToHookNext{env/figure*/after}%
+			{\noexpand\setcounter{footnote}{\thefootnote}%
+			 \noexpand\footnotetext\unexpanded{{#1}}}}}}
