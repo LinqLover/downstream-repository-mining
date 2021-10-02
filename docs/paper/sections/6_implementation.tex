@@ -1,15 +1,15 @@
 \section{Implementation}
 \label{sec:implementation}
 
-In our implementation, we are restraining ourselves to analyzing node.js projects written in JavaScript.
+In our implementation, we confine ourselves to analyzing node.js projects written in JavaScript.
 This decision is based on the large prevalence of JavaScript\footnote{GitHut 2.0: A small place to discover languages in GitHub. \url{https://madnight.github.io/githut/\#/pushes}} as well as the first-rate extent of the npm ecosystem\footnote{Modulecounts: \url{http://www.modulecounts.com/}} which has been unsurpassed since 2015.
-In the following, we are describing how we apply the single steps of the approach presented above to this particular domain.
+In the following, we describe how we apply the single steps of the approach presented above to this particular domain.
 
 \subsection{Downstream dependency collection}
 \label{sec:implementation/dependency_collection}
 
-The de facto standard package repository for node.js packages is npm.\footnote{\url{https://www.npmjs.com/}}
-To fetch downstream dependency packages from the npm registry, we utilize the npm package npm-dependants\footnote{\url{https://www.npmjs.com/package/npm-dependants}} which scrapes the dependents list from npmjs.com as there does not exist a publicly available API for these data.
+The de facto standard package repository for node.js is npm.\footnote{\url{https://www.npmjs.com/}}
+To fetch downstream dependency packages from the npm registry, we use the npm package npm-dependants\footnote{\url{https://www.npmjs.com/package/npm-dependants}} which scrapes the dependents list from npmjs.com as there does not exist a publicly available API for these data.
 To keep the footprint of our implementation small, we only scrape a part of the dependents list.
 We then request basic metadata for each found package from the npm registry, in particular including a URL to the source code archive of the latest package version (commonly referred to as \emph{tarball}), by using the package-metadata package.\footnote{\url{https://www.npmjs.com/package/package-metadata}}
 Finally, we download and extract each source code archive from the npm registry with the help of the download-package-tarball package.\footnote{\url{https://www.npmjs.com/package/download-package-tarball}}
@@ -24,7 +24,7 @@ Finally, we download and extract each source code archive from the npm registry 
 {
 	"name": "ripple-lib",
 	"version": "1.10.0",
-	"description": "A TypeScript/JavaScript API for interacting with the XRP Ledger",
+	"description": "An API for the XRP Ledger",
 	"dependencies": {
 		"bignumber.js": "^9.0.0",
 		"https-proxy-agent": "^5.0.0",
@@ -35,7 +35,7 @@ Finally, we download and extract each source code archive from the npm registry 
 
 For the second approach, using a code search engine, we have identified Sourcegraph\footnote{\url{https://sourcegraph.com/}} as a promising platform.
 npm packages specify their dependencies in a package.json metadata file (see \cref{sec:implementation/package.json}).
-To find all packages depending on a package \code{<pkg>}, we can search all available package.json files for the substring \code{"<pkg>":}.
+To find all packages depending on a package with the name \code{<pkg>}, we can search all available package.json files for the substring \code{"<pkg>":}.
 Refined with some additional constraints to filter out package copies from \code{node\_modules} folders that downstream developers have pushed accidentally, and to limit the number of results retrieved, our final Sourcegraph query has the following form:
 
 {
@@ -54,10 +54,9 @@ Refined with some additional constraints to filter out package copies from \code
 	\end{lstlisting}
 }
 
-We submit this search query by sending it to the publicly available Sourcegraph GraphQL API.\footnote{\url{https://docs.sourcegraph.com/api/graphql}}
+We submit this search query by sending it to the publicly available Sourcegraph GraphQL API\footnote{\url{https://docs.sourcegraph.com/api/graphql}} by using the npm package graphql-request\footnote{\url{https://www.npmjs.com/package/graphql-request}}.
 For each hit, we request additional information from the API about the matched repository, including the name of the depending package and the URL to the original repository.
-We use the npm package graphql-request\footnote{\url{https://www.npmjs.com/package/graphql-request}} for accessing the GraphQL API.
-After retrieving a search result, we download a snapshot of the full repository by using the download-git-repo package\footnote{\url{https://www.npmjs.com/package/download-git-repo}} which combines access to the APIs of different code host providers such as GitHub or BitBucket.
+After retrieving a search result, we download a snapshot of the full repository by using the download-git-repo package\footnote{\url{https://www.npmjs.com/package/download-git-repo}} which unifies access to the APIs of different code host providers such as GitHub or BitBucket.
 
 Additionally, we enrich the metadata of each package with a few metrics indicating its popularity from the associated GitHub repository if specified.
 The GitHub API is accessed via the official octokit library.\footnote{\url{https://octokit.github.io/}}
@@ -65,19 +64,40 @@ The GitHub API is accessed via the official octokit library.\footnote{\url{https
 \subsection{Usage sample mining}
 \label{sec:implementation/usage_mining}
 
-In our solution, we are focusing on mining usage samples from downstream dependencies that are written in JavaScript or TypeScript.
-\TODO{Is this the right place to introduce TypeScript?}
-TypeScript is an extension of JavaScript that adds strong typing to the former which is based on a combination of implicit type inference and explicit type declarations.
-As the type-checking capabilities of the TypeScript compiler are optional and can be turned off via configuration, we consider the JavaScript syntax a subset of TypeScript syntax.
-
 For parsing the dependencies, we utilize the public TypeScript Compiler API.\footnote{\url{https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API}}
+TypeScript is an extension of JavaScript that adds strong typing to the former; typing is based on a combination of implicit type inference and explicit type declarations.
+As the type-checking capabilities of the TypeScript compiler are optional and can be turned off via configuration, we consider the JavaScript syntax a subset of TypeScript syntax.
+As a side benefit, our implementation is also able to analyze packages implemented in true TypeScript.
+
 The TypeScript compiler's \emph{binder} component annotates every node of the parsed program with a type symbol if it can resolve one.
 After performing a type analysis of the dependency by instrumenting the binder, we collect all nodes from the type-annotated ASF that refer to the target package by traversing it with a visitor function.
-This visitor function matches each node against a list of defined patterns (similar to \cref{fig:usage_mining/patterns}) based on the \code{syntaxKind}s of the node and its ancestors and descendants and then looks up the declaration of the node's type symbol to compare it with the source directory of the target package.
+This visitor function matches each node against a list of defined patterns (similar to \cref{fig:usage_mining/patterns}) based on the syntax kinds of the node, its ancestors, and its descendants, and then looks up the declaration of the node's type symbol to compare it with the source directory of the target package.
 
 Normally, foreign types can only be resolved if they are declared in a dependency module that has been installed into the \code{node\_modules} folder of the repository.
 Because downloading and installing all dependency modules for every downstream repository of the target package would increase the computational resources of the usage mining drastically and eventually violate \cref{req1}, we skip this step but instead modify the module resolution strategy of the TypeScript compiler host.
 To do so, we extend the \code{paths} parameter from the default compiler options\footnote{\url{https://www.typescriptlang.org/tsconfig\#paths}} and insert a new entry that remaps accesses to the target package name to the separate source code directory of the target package.
+
+\begin{figure*}[b]
+	\centering
+	\begin{subfigure}{.32\linewidth}
+		\includegraphics[width=\linewidth]{sections/6_implementation/extension/dependencies.png}
+		\caption[LoF entry]{The dependency browser.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{.32\linewidth}
+		\includegraphics[width=\linewidth]{sections/6_implementation/extension/references.png}
+		\caption[LoF entry]{The usage browser.}
+		\label{fig:implementation/presentation/screenshot/usage_browser}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{.32\linewidth}
+		\includegraphics[width=\linewidth]{sections/6_implementation/extension/codelens.png}
+		\caption[LoF entry]{The CodeLens integration for the class \code{GraphQLError}.}
+	\end{subfigure}
+
+	\caption{Screenshots of our Visual Studio Code extension used to explore downstream dependencies of the npm package graphql.}
+	\label{fig:implementation/presentation/screenshots}
+\end{figure*}
 
 \subsection{Presentation of results}
 \label{sec:implementation/presentation}
@@ -85,28 +105,7 @@ To do so, we extend the \code{paths} parameter from the default compiler options
 After all references have been collected, a proper UI is still required to provide users easy access to these data that fulfills the requirements mentioned above.
 To satisfy \cref{req2} and make our tool available in the usual working environment of users, we implement it as an extension to a popular IDE.
 One of the most popular IDEs that support JavaScript, and the one with the highest annual growth, is Visual Studio Code.\footnote{\url{https://code.visualstudio.com/}}\footnote{Top IDE Index by Pierre Carbonnelle (2021): \url{https://pypl.github.io/IDE.html}}
-As it also provides a comprehensive set of APIs for extension developers, we have decided to roll our tool out as a VS Code extension.
-
-\begin{figure*}[b]
-	\centering
-	\begin{subfigure}{.32\linewidth}
-		\includegraphics[width=\textwidth]{sections/6_implementation/extension/dependencies.png}
-		\caption[LoF entry]{The dependency browser.}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}{.32\linewidth}
-		\includegraphics[width=\textwidth]{sections/6_implementation/extension/references.png}
-		\caption[LoF entry]{The usage browser.}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}{.32\linewidth}
-		\includegraphics[width=\textwidth]{sections/6_implementation/extension/codelens.png}
-		\caption[LoF entry]{The CodeLens integration for the class \code{GraphQLError}.}
-	\end{subfigure}
-
-	\caption{Screenshots of our Visual Studio Code extension used to explore downstream dependencies of the npm package graphql.}
-	\label{fig:implementation/presentation/screenshots}
-\end{figure*}
+As it also provides a comprehensive set of APIs for extension developers, we have decided to roll our tool out as a VS Code extension.\footnote{To support other researchers in reusing our solution, we also provide a CLI for our implementation.}
 
 To support developers in answering the questions raised in \cref{sec:framework}, we have designed three key views for our extension (see \cref{fig:implementation/presentation/screenshots}):
 
@@ -117,9 +116,9 @@ To support developers in answering the questions raised in \cref{sec:framework},
 \end{enumerate}
 
 Both references and members are organized in a tree view reflecting the hierarchical structure of the original software repository.
-In addition, we recognize the effort of browsing large lists of dependency data and encounter it by providing an ``I'm feeling lucky'' button for every view that redirects the user to a random dependency resp. reference to gain a faster, unbiased impression of usage samples.
+In addition, we recognize the effort of browsing large lists of dependency data and encounter it by providing an ``I'm feeling lucky'' button for every view that redirects the user to a random dependency or reference, resp., to gain a faster, unbiased impression of usage samples.
 
 We implement each of these views in the VS Code Extension API (VSCE)\footnote{\url{https://code.visualstudio.com/api}}, we use the Tree View API and the CodeLens API.
-One challenge was to deliver fast results and not to block the user interface because even though the lightweight mining approaches we chose to satisfy \cref{req1} above, querying, downloading, and analyzing each dependency takes a few seconds (see \cref{sec:evaluation/TODO}).
-To overcome this issue, we use pagination wherever possible and applied the observer pattern to push incremental UI updates.
-As the VSCE API per se does not provide for multithreading or multiprocessing operations but suggests a Promise/A+-driven dataflow, we adopt this style for our data model using the JavaScript concepts asynchronous functions, \code{AsyncIterator}s, and \code{Promise.all} to avoid busy waiting inside the data collection process.
+One challenge has been to deliver fast results and not to block the user interface because even inspite of the lightweight mining approaches we chose to satisfy \cref{req1} above, querying, downloading, and analyzing each dependency takes a few seconds (see \cref{sec:evaluation}).
+To overcome this issue, we use pagination wherever possible and apply the observer pattern to push incremental UI updates.
+As the VSCE API per se does not provide for multithreading or multiprocessing operations but suggests a Promise/A+-driven dataflow, we adopt this style for our object model by using the JavaScript concepts asynchronous functions, \code{AsyncIterator}s, and \code{Promise.all} to avoid busy waiting inside the data collection process.

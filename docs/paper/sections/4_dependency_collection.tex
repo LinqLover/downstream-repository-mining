@@ -2,17 +2,17 @@
 \label{sec:dependency_collection}
 
 In the first step, a list of repositories that depend on the target package has to be assembled.
-As mentioned in \cref{sec:related_work/usage_samples}, many approaches start with a large downloaded corpus of unspecific repositories from the ecosystem which they then iterate over to filter the relevant repositories.
+As mentioned in \cref{sec:related_work/usage_samples}, many approaches start with a large downloaded corpus of unspecific repositories from the ecosystem, which they then iterate over to filter the relevant repositories.
 However, a major drawback of this approach is the high resource demand for both creating and traversing this corpus.
-This approach is suited for analyzing repositories in large scale but is not conform to \cref{req1} because of its large footprint in terms of computational power and time.
+This approach is suited for analyzing repositories on a large scale but is not conform to \cref{req1} because of its large footprint in terms of computational power and time.
 
 As an alternative, we have decided to apply significant pre-filtering to the set of repositories before downloading it to the local machine.
 For that, we have identified two types of data sources that are available in public clouds:
 
 \begin{enumerate}[label=(\roman*)]
-	\item Package repositories that maintain a doubly-connected edge list of all packages in an ecosystem depending on each other.
+	\item Package repositories that maintain a doubly-connected edge list of all interdependent packages in an ecosystem.
 	\item Code search engines that index the source code of many repositories from OSS platforms.
-		Using these search engines, we can query all repositories that declare a dependency on the target package in their package metadata file.
+		Using these search engines, we can query all repositories that declare a dependency on the target package in their package manifest file.
 \end{enumerate}
 
 Finally, we can download the source code for a small number of relevant repositories only.

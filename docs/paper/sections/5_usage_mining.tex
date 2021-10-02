@@ -27,22 +27,9 @@
 \end{figure*}
 
 Having downloaded the selected downstream dependency repositories, we can proceed to extract usage samples for the target package from each dependency repository.
-Our goal is to identify these usage samples on a fine-granular level so that we can trace them down to the single identifiers that were exposed by the target package.
+Our goal is to collect fine-grained source code excerpts that reference single identifiers exposed by the target package.
 
-To do so, we start by parsing the source code of every dependency repository as well as the source code of the target package each into a separate abstract syntax forest (ASF, i.e., a set of ASTs).
-
-In a second step, a static type analysis is performed against each dependency ASF together with the target package's ASF.
-The results of the type analysis are attached to the ASF so that every identifier is annotated with a type symbol that links to the declaration of the type for the identifier.
-For instance, after this step, every variable node will contain a link to the assignment node of this variable, and every function call expression will contain a link to the definition of this function. \TODO{Give example?}
-The operating principle of this type analysis depends on the kind of programming language; i.e., in statically typed languages, type symbols can usually be retrieved from the declaration of an identifier, whereas in dynamically typed languages, a control flow analysis will be required to identify the origin of every identifier's type.
-
-In the final step, from each ASF all nodes are collected whose type is declared in the target package.
-To identify these links, we define a set of language-specific patterns for AST subtrees that constitute a usage expression.
-In particular, each of these patterns expects a node containing a link to an identifier declaration (see \cref{fig:usage_mining/patterns}).
-
-The complete procedure is displayed in \cref{alg:usage_mining}.
-
-\begin{algorithm}
+\begin{algorithm}[b]
 	\caption{Extraction of usage samples.}\label{alg:usage_mining}
 
 	\KwIn{\\\Indp
@@ -64,3 +51,16 @@ The complete procedure is displayed in \cref{alg:usage_mining}.
 		}
 	}
 \end{algorithm}
+
+To do so, we start by parsing the source code of every dependency repository as well as the source code of the target package each into a separate abstract syntax forest (ASF, i.e., a set of ASTs).
+
+In a second step, we perform a static type analysis against each dependency ASF together with the target package's ASF.
+The results of the type analysis are attached to the ASF so that every identifier is annotated with a type symbol that links to the declaration of the type for the identifier.
+For instance, after this step, every variable node will contain a link to the assignment node of this variable, and every function call expression will contain a link to the definition of this function.
+The operating principle of this type analysis depends on the kind of programming language; i.e., in statically typed languages, type symbols can usually be retrieved from the declaration of an identifier, whereas in dynamically typed languages, a control flow analysis will be required to identify the origin of every identifier's type.
+
+In the final step, from each ASF, we collect all nodes whose type is declared in the target package.
+To identify these links, we define a set of language-specific patterns for AST subtrees that constitute a usage expression.
+In particular, each of these patterns expects a node containing a link to an identifier declaration (see \cref{fig:usage_mining/patterns}).
+
+The complete procedure is displayed in \cref{alg:usage_mining}.
