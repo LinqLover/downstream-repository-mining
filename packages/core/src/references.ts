@@ -555,8 +555,14 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 await this.findAllSourceFiles(this.dependencyDirectory)
             ).map(file => path.join(this.dependencyDirectory, file))
             if (!options.fileNames.length) {
-                console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
-                options.fileNames = allFileNames
+                if (!allFileNames.length) {
+                    console.warn("No files names passed or found, skipping repository", { dependencyName: this.dependency.name })
+                } else if (allFileNames.length > 1000) {
+                    console.warn("No files names passed and too many hypothetical source files, skipping repository", { dependencyName: this.dependency.name })
+                } else {
+                    console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
+                    options.fileNames = allFileNames
+                }
             }
 
             const host = this.createCompilerHost(options.options)

@@ -24,6 +24,8 @@ export class Dependency {
     rootDir = '/'
     pluggableUrls = new Map<string | null, string>()
     _references: Reference[] = []
+    /** In kilobyte (kB). */
+    static maximumRepositorySize = 500_000
     get githubUrl() {
         return [...this.urls.entries()].find(([key, ]) => key.toLowerCase() === 'github')?.[1]
     }
@@ -94,17 +96,23 @@ export class Dependency {
         } else {
             repo = this.urls.values().next().value
         }
+
+        if (this.githubRepository?.diskUsage ?? 0 > Dependency.maximumRepositorySize) {
+            console.warn("Repository is too large, skipping download", this.githubUrl)
+            return false
+        }
+
         // TODO: Use dowdep.fileSystem!
         await promisify(downloadGitRepo)(repo, basicSourceDirectory)
         return true
     }
 
     private *collectUpdateJobs(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}) {
-        if (options.downloadMetadata ?? true) {
-            yield () => this.updateFromGithub(dowdep)
-        }
-        if (options.downloadSource ?? false) {
-            yield () => this.updateSource(dowdep)
+        yield async () => {
+            await this.updateFromGithub(dowdep, options.downloadMetadata ?? true)
+            if (options.downloadSource ?? false) {
+                await this.updateSource(dowdep)
+            }
         }
     }
 
@@ -126,7 +134,7 @@ export class Dependency {
         }
     }
 
-    async updateFromGithub(dowdep: Dowdep) {
+    async updateFromGithub(dowdep: Dowdep, richMetadata: boolean) {
         const match = this.githubUrl?.match(/github\.com[/:](?<owner>[^/]+)\/(?<name>[\w-_.]+?)(?:.git)?$/)
         if (!match?.groups) {
             this.githubRepository = null
@@ -134,7 +142,7 @@ export class Dependency {
         }
 
         this.githubRepository = new GithubRepository(match.groups.owner, match.groups.name)
-        await this.githubRepository.updateMetadata(dowdep)
+        await this.githubRepository.updateMetadata(dowdep, richMetadata)
         return true
     }
 }
@@ -166,18 +174,20 @@ export class GithubRepository {
     ) { }
 
     public url?: string
+    public diskUsage?: number
     public stargazerCount?: number
     public forkCount?: number
 
-    async updateMetadata(dowdep: Dowdep) {
+    async updateMetadata(dowdep: Dowdep, richMetadata: boolean) {
         const githubClient = this.githubClient(dowdep)
 
-        const metadata = await githubClient.fetchMetadata(this.owner, this.name)
+        const metadata = await githubClient.fetchMetadata(this.owner, this.name, richMetadata)
         if (!metadata) {
             console.warn("Could not fetch GitHub metadata", { owner: this.owner, name: this.name })
             return
         }
         this.url = metadata.url
+        this.diskUsage = metadata.diskUsage
         ;[this.forkCount, this.stargazerCount] = [metadata.forkCount, metadata.stargazerCount]
     }
 
@@ -197,10 +207,11 @@ class GithubClient {
 
     protected graphql?: typeof graphql
 
-    async fetchMetadata(owner: string, name: string): Promise<{
+    async fetchMetadata(owner: string, name: string, richMetadata: boolean): Promise<{
         url: string,
-        forkCount: number,
-        stargazerCount: number
+        diskUsage: number,
+        stargazerCount?: number,
+        forkCount?: number
     } | undefined> {
         if (!this.graphql) {
             return
@@ -210,7 +221,9 @@ class GithubClient {
             query = gql`
                 query githubDeps($owner: String!, $name: String!) {
                     repository(owner: $owner, name: $name) {
-                        url, stargazerCount, forkCount
+                        url,
+                        diskUsage
+                        ${richMetadata ? ', stargazerCount, forkCount' : ''}
                     }
                 }
             `,
