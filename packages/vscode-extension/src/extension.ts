@@ -85,51 +85,51 @@ export class Extension {
 
     private createGlobalCommands(context: vscode.ExtensionContext) {
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshPackages', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshPackages', this.catchErrors(
                 () => this.refreshPackages()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependencies', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshAllDependencies', this.catchErrors(
                 () => this.refreshAllDependencies()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllReferences', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshAllReferences', this.catchErrors(
                 () => this.refreshAllReferences()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.catchErrors(
                 () => this.refreshAllDependenciesAndReferences()
             )))
     }
 
     private createOpenCommands(context: vscode.ExtensionContext) {
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openPackage', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openPackage', this.catchErrors(
                 ($package: Package) => this.openPackage($package)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openDependency', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openDependency', this.catchErrors(
                 (dependency: Dependency) => this.openDependency(dependency)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openDependencyFolder', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openDependencyFolder', this.catchErrors(
                 (dependency: Dependency, relativePath: string) => this.openDependencyFolder(dependency, relativePath)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openReference', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openReference', this.catchErrors(
                 (reference: Reference) => this.openReference(reference)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openPackageFileOrFolder', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openPackageFileOrFolder', this.catchErrors(
                 ($package: Package, relativePath: string) => this.openPackageFileOrFolder($package, relativePath)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openPackageMember', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openPackageMember', this.catchErrors(
                 ($package: Package, location: DeclarationLocation) => this.openPackageMember($package, location)
             )))
 
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.browseMemberDependencies', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.browseMemberDependencies', this.catchErrors(
                 ($package: Package, location: DeclarationLocation) => this.browseMemberDependencies($package, location)
             )))
     }
@@ -138,7 +138,7 @@ export class Extension {
         for (const commandProvider of [HierarchyProvider, DependenciesProvider, ReferencesProvider]) {
             commandProvider.createCommands((name, callback) =>
                 context.subscriptions.push(
-                    vscode.commands.registerCommand(name, this.wrapWithLogger(callback))))
+                    vscode.commands.registerCommand(name, this.catchErrors(callback))))
         }
     }
 
@@ -387,13 +387,13 @@ export class Extension {
         }
     }
 
-    private wrapWithLogger<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
+    private catchErrors<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
         return async (...args: TIn) => {
             try {
                 return await fun(...args)
             } catch (error) {
                 console.error(error)
-                throw error
+                vscode.window.showErrorMessage(error instanceof Error ? error.toString() : `Error: ${error}`)
             }
         }
     }
