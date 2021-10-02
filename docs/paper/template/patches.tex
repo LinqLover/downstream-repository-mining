@@ -1,8 +1,25 @@
+% Left-align footnotes in minipages - this reverts a part of the acm style
+% CREDITS: https://github.com/borisveytsman/acmart/issues/449#issuecomment-932653376
+\makeatletter
+\long\def\@mpfootnotetext#1{%
+\global\setbox\@mpfootins\vbox{%
+  \unvbox\@mpfootins
+  \reset@font\footnotesize
+  \hsize\columnwidth
+  \@parboxrestore
+  \protected@edef\@currentlabel
+	   {\csname p@mpfootnote\endcsname\@thefnmark}%
+  \color@begingroup%\centering - commented out centering footnotes
+	\@makefntext{%
+	  \rule\z@\footnotesep\ignorespaces#1\@finalstrut\strutbox}%
+  \color@endgroup}}
+\makeatother
+
 % Fix footnote numbering subcaptions
 % CREDITS: https://tex.stackexchange.com/a/414191/221054 (edited)
-\AddToHook{env/figure*/begin}{%
+\AddToHook{env/subfigure/begin}{%
 	\DeclareRobustCommand\footnote[1]{%
-		\footnotemark
-		\expanded{\AddToHookNext{env/figure*/after}%
-			{\noexpand\setcounter{footnote}{\thefootnote}%
+		\mpfootnotemark
+		\expanded{\AddToHookNext{env/subfigure/after}%
+			{\noexpand\setcounter{mpfootnote}{\arabic{mpfootnote}}%
 			 \noexpand\footnotetext\unexpanded{{#1}}}}}}

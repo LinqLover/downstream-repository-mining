@@ -2,25 +2,28 @@
 \label{sec:usage_mining}
 
 \begin{figure*}
-	\newcommand\lowlight[1]{\textcolor{gray}{#1}}
-	\newcommand\highlight[1]{\textcolor{red}{#1}}
-	\centering
-	\begin{subfigure}[t]{.32\linewidth}
-		\input{sections/5_usage_mining/patterns/CallExpression}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}[t]{.32\linewidth}
-		\input{sections/5_usage_mining/patterns/PropertyAccessExpression}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}[t]{.32\linewidth}
-		\input{sections/5_usage_mining/patterns/JsxOpeningElement}
-	\end{subfigure}
+	\begin{minipage}{\linewidth}
+		\newcommand\textlowlight[1]{\textcolor{gray}{#1}}
+		\newcommand\texthighlight[1]{\textcolor{accent1}{#1}}
+		\begin{center}
+			\begin{subfigure}[t]{.32\linewidth}
+				\input{sections/5_usage_mining/patterns/CallExpression}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[t]{.32\linewidth}
+				\input{sections/5_usage_mining/patterns/PropertyAccessExpression}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[t]{.32\linewidth}
+				\input{sections/5_usage_mining/patterns/JsxOpeningElement}
+			\end{subfigure}
 
-	\caption{AST patterns for example JavaScript/TypeScript expressions.
-		The \highlight{highlighted} node contains the link to the declaration of the referenced identifier.
-	}
-	\label{fig:usage_mining/patterns}
+			\caption{AST patterns for example JavaScript/TypeScript expressions.
+				The \texthighlight{highlighted} node contains the link to the declaration of the referenced identifier.
+			}
+			\label{fig:usage_mining/patterns}
+		\end{center}
+	\end{minipage}
 \end{figure*}
 
 Having downloaded the selected downstream dependency repositories, we can proceed to extract usage samples for the target package from each dependency repository.
