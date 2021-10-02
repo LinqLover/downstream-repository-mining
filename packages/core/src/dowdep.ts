@@ -37,9 +37,9 @@ export class Dowdep {
 
     createDependencySearchers($package: Package): readonly DependencySearcher[] {
         const strategies = this.dependencySearchStrategies == '*'
-            ? <['sourcegraph']>['sourcegraph']
+            ? <['npm', 'sourcegraph']>['npm', 'sourcegraph']
             : this.dependencySearchStrategies
-        
+
         return strategies.map(strategy => createDependencySearcher(strategy, $package, {
             limit: this.dependencyLimit ? this.dependencyLimit / strategies.length : this.dependencyLimit
         }))
