@@ -11,7 +11,7 @@ These dependency relations form a large directed graph that connects major parts
 
 Despite this connectedness by design, however, the development process of many packages is still characterized by an isolated approach:
 While OSS developers commonly submit tickets to or contribute patches against \emph{upstream repositories} that they depend on to solve subproblems, the reverse direction of these edges -- called \emph{downstream dependencies} -- is often neglected by package developers when they extend, restructure, or refactor their solutions.
-This knowledge deficit can cause a wide range of alignment issues, including poorly suited interfaces, unidentified defects, and compatibility problems \citep[see][]{bogart2015breaks}. \TODO{do we need to prove each of this?}
+This knowledge deficit can cause a wide range of alignment issues, including poorly suited interfaces \citep{piccioni2013empirical}, unidentified defects \citep{wong2017more}, and compatibility problems \citep{bogart2015breaks}.
 Eventually, all these issues impair the capabilities of the global OSS community to build and support high-quality products.
 In the following, downstream dependencies will also be referred to shortly as \emph{dependencies}.
 
