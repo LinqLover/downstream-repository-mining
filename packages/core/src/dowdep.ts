@@ -41,7 +41,7 @@ export class Dowdep {
             : this.dependencySearchStrategies
 
         return strategies.map(strategy => createDependencySearcher(strategy, $package, {
-            limit: this.dependencyLimit ? this.dependencyLimit / strategies.length : this.dependencyLimit
+            limit: this.dependencyLimit ? Math.ceil(this.dependencyLimit / strategies.length) : this.dependencyLimit
         }))
     }
 
