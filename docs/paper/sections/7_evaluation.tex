@@ -1,4 +1,195 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-Foo!
+To evaluate the efficacy of our approach, we formulate three research questions:
+
+\begin{enumerate}[label=RQ\arabic*]
+	\item \label[requirement]{resqu1} What is the quality and quantity of the proposed approaches for dependency collection?
+	\item \label[requirement]{resqu2} What is the quality and quantity of the proposed approach for mining usage samples?
+	\item \label[requirement]{resqu3} How well is the proposed tool applicable?
+\end{enumerate}
+
+In the following, we are going to investigate each of these questions.
+
+\subsection{\ref{resqu1}: Dependency collection}
+\label{sec:evaluation/resqu1}
+
+To assess the quality of dependency collection, we analyze it with respect to extent, precision, recall, and performance.
+\Cref{tab:evaluation/resqu1/quantities} shows the number of dependencies that were collected from each data source following the proposed approaches for a set of arbitrarily selected npm packages.
+For each package, we have annotated a subset of the collected dependencies (max. 20 dependencies per package) manually to identify and classify false positive hits.
+
+\begin{table}
+	\centering
+	\small
+	\input{sections/7_evaluation/resqu1/quantities}
+	\caption{Quantity and false-positive rates (FPR) of downstream dependencies found by both approaches for selected packages.}
+	\label{tab:evaluation/resqu1/quantities}
+\end{table}
+
+\subsubsection{Extent}
+\label{sec:evaluation/resqu1/extent}
+
+Regarding the total number of dependencies collected by each approach, no clear trend in favor of any approach can be ascertained for small or medium packages (having less than 10,000 stars on GitHub).
+For larger packages (having at least 10,000 stars), however, the number of dependencies collected from the npm registry stagnates near to 400 hits; beyond this limit, the npm registry will return internal server errors only.
+For Sourcegraph, on the other hand, we have not hit any limitations so far; currently, they do not provide any official documentation for the exact rate limits.
+
+As the disjunct proportion of results from both approaches is very small (on average about \SI{6}{\percent}), we consider a combination of both data sources useful for maximizing the extent and diversity of the gained dataset.
+
+\subsubsection{Precision}
+\label{sec:evaluation/resqu1/precision}
+
+The precision of collected dependencies is drastically lower for dependencies found on Sourcegraph than for such found on npm.
+\Cref{fig:evaluation/resqu1/fp_causes} collates the causes we have identified for these false positives; most frequently, repositories specify a dependency on the target package in their package manifest file but do not actually import this package at any place.
+
+\begin{figure}
+	\centering
+	\small
+	\input{sections/7_evaluation/resqu1/fp_causes}
+	\caption{Causes for false-positive dependency matches and their frequencies.}
+	\label{fig:evaluation/resqu1/fp_causes}
+\end{figure}
+
+In some situations, this may happen if the package is a plugin for another package or if it is invoked as a CLI from a build script (\TODO{C'mon, we could improve data classification for this}), but in the majority of repositories, developers trivially appear to have specified the upstream dependency by accident (e.g., while copying a \code{package.json} file over from another package), or to have forgotten to remove the upstream dependency after switching away from using the package.
+Rarer causes include repositories that only add type definitions for TypeScript to a package but do not actually import it, as well as, especially for repositories found on Sourcegraph, other packages required by a repository declaring a peer dependency on the target package which needs to be fulfilled by the depending repository.
+
+We explain the increased false-positive rate for Sourcegraph dependencies by our observation that packages found on npm typically stand out by their higher cohesion and professional maintenance, whereas GitHub projects are more likely run as imperfect hobby projects.
+
+We stress that a reduced precision does not impair the quality of results displayed to package developers as all dependencies not containing at least one
+usage sample can be easily filtered out, but downloading and analyzing any irrelevant packages lowers the performance of the approach.
+
+\subsubsection{Recall}
+\label{sec:evaluation/resqu1/recall}
+
+Besides the precision of collected dependencies, their recall is also of interest.
+As the dependencies are collected from two giant datasets in extracts only, a quantitative analysis of false-negative hits based on manual annotation of these datasets would be too expensive for this paper.
+Nevertheless, there are some causes that will prevent a dependency from being found by our approaches:
+
+\begin{itemize}
+	\item Packages without a proper dependency manifest cannot be detected by our approaches which are based on exactly these metadata.
+	\item On npm, naturally packages only will be found, creating a bias towards rather generic and professional software.
+	\item On both platforms, results will be sorted based on intransparent criteria (which, as we however speculate, include the number of direct dependents on npm and the recent update frequency on Sourcegraph, resp.).
+		As we only fetch the first dependencies from both data sources, this sorting is a likely source of further biases.
+		These biases could be fought by always fetching all dependencies, but this would drastically reduce the overall performance.
+\end{itemize}
+
+\subsubsection{Performance}
+\label{sec:evaluation/resqu1/performance}
+
+\begin{table}
+	\centering
+	\small
+	\begin{threeparttable}
+		\input{sections/7_evaluation/resqu1/performance}
+		\begin{tablenotes}
+			\footnotesize
+			\item[\alphtnotetext{1}] Hardware specifications of the test machine: 7 vCPUs Intel Xeon Cascade Lake @ \si{2.80}{GHz}, internet downspeed ~1.8 \si{Gbit}/\si{s}.
+			\item[\alphtnotetext{2}] Effective speed while downloading multiple packages in parallel.
+		\end{tablenotes}
+	\end{threeparttable}
+
+	\caption{Key performance metrics for both dependency collection methods.}
+	\label{tab:evaluation/resqu1/performance}
+\end{table}
+
+\Cref{tab:evaluation/resqu1/performance} gives some basic metrics comparing the performance of both data sources.
+While searching downstream dependencies is slower by average on npm as we use a web scraper instead of an API for this source, npm packages are usually smaller as opposed to many monorepos on OSS platforms that contain multiple node.js packages, and they are faster to download since the download-git-repo package that we use for repositories found on Sourcegraph, as of today, only uses zipballs instead of tarballs while the latter would offer a higher compression rate.
+
+\subsection{\ref{resqu2}: Usage mining}
+\label{sec:evaluation/resqu2}
+
+To assess the quality of usage mining, we examine the precision, recall, and performance of this processing step.
+Due to the complexity of a detailed annotation process, we only consider the existence of found usage samples on the dependency level.
+The absolute quantity of found usage samples varies largely for different packages and dependencies based on the semantic extent of the package and the coupling between package and dependency.
+
+\subsubsection{Precision}
+\label{sec:evaluation/resqu2/precision}
+
+Under laboratory conditions, false-positive usage samples cannot be emitted by our approach if we assume the correctness of the TypeScript compiler.
+There are only two exceptions to this invariant:
+\begin{enumerate*}[label=(\roman*)]
+	\item If there is a name collision between two packages, invalid or false positives usage samples may be emitted.
+		However, the npm infrastructure attempts to rule out these collisions by using the package name as a unique ID for every published package.
+	\item If dependency developers deliberately interfere with the TypeScript compiler (for instance, by suppressing type errors using a \verb|@ts-ignore| comment\footnote{\url{https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-6.html\#suppress-errors-in-ts-files-using--ts-ignore-comments}}), both false positive and false negative matches are possible.
+\end{enumerate*}
+
+\subsubsection{Recall}
+\label{sec:evaluation/resqu2/recall}
+
+To evaluate the recall of our approach, we have refined the experimental dataset collected in \cref{sec:evaluation/resqu1} and removed all false-positive dependencies.
+Within this cleansed dataset, the overall rate of dependencies for that our approach is unable to find at least one usage sample accounts for \SI{47.9}{\percent}.
+As a cause for these false negatives, we have identified a number of systematic causes:
+
+\begin{itemize}
+	\item Many projects on OSS platforms have complex build configurations that include additional transpilation or code generation steps before a final version of the source code is reached that is valid to the node.js interpreter or the TypeScript compiler.
+		Unless we add explicit support for such build configurations, type analysis and thus usage mining for these projects will fail.
+	\item In some situations, additional type definitions are required to perform a complete type inference of a dependency.
+		This is the case for every parametrized callback from a package for that type definitions are not available.
+		This limitation could be resolved by downloading or generating the type definitions for all upstream dependencies of every downstream dependency; this, on the other hand, would reduce the performance of the approach.
+	\item In general, the static type analyzer of TypeScript has its limitations.
+		For instance, the type analysis will have a limited recall for certain control flow patterns or metaprogramming constructs such as meta-circular evaluation using the the \code{eval()} function or dynamic function binding using \code{Function.bind()} and friends.
+\end{itemize}
+
+\subsubsection{Performance}
+\label{sec:evaluation/resqu2/performance}
+
+The total time spent for performing type analysis for a repository from the experimental dataset and mining usage samples averages ca. \num{3} seconds.
+The complete ASF of an average parsed repository consumes between \SI{10}{MB} and \SI{500}{MB} of RAM, depending on the size of the analyzed repository.
+
+\subsection{\ref{resqu3}: Tool}
+\label{sec:evaluation/resqu3}
+
+To assess the applicability of our proposed tool, we investigate the different options of users who would like to answer the questions raised in \cref{sec:framework}.
+We further analyze how far our tool meets the requirements posed above.
+
+\subsubsection{Answering user questions}
+
+In order to answer \cref{q1} without our tool, it would be possible to access the aforementioned data sources manually.
+Both npm and Sourcegraph provide suitable web interfaces for surveying dependent packages or search results, resp.
+To understand the intent of a dependency, users can read its documentation online, if any, or browse its implementation.
+The source code of repositories can be browsed on Sourcegraph, but on npm, this is not possible, and users need to either manually download and extract the package or follow the link to an open-source code repository if the package provides one.
+
+With our tool, the data collection process is condensed into a single button that displays all references from both data sources incrementally.
+Users can hover or click any dependency to view its documentation or implementation.
+
+In order to answer \cref{q2,q3} without our tool, users need to scan each dependency found in the previous step separately to count or read all usage samples, resp.
+If they are intending to analyze the usage of a member with an unambiguous name, they can perform an expeditious string search.
+For repositories found on Sourcegraph, this is either possible by starting a new search on the platform or by searching the source code in the original code host.
+If the source code is not available online, it needs to be downloaded first and searched locally.
+If the member of interest has a confusable name, a string search could not lead to the desired result.
+In this case, users need to download and install the project and view it in an IDE that supports reference search (for instance, there is a built-in feature for this in VS Code).
+Alternatively, they can try to use the precise code intelligence mode on Sourcegraph (see \cref{sec:related_work/usage_samples}).
+However, as of today, precise code intelligence is only available for a small number of repositories as both the dependent repository and the dependency repository are required to provide a special index file.
+
+Within our tool, all usage samples can be collected automatically and be merged into a single list.
+Once the collected dependencies have been processed, users can select a member of interest and view all its usage samples with a single click.
+For the usage analysis of Java APIs, there is also the tool \caps{Exapus}\citep{de2013multi} which differentiates between different kinds of member usages such as instantiation of vs. inheritance of a class.
+Such a classification mechanism could also improve the usability of our tool
+
+\subsubsection{Meeting requirements}
+
+We break down \cref{req1} into three acceptance criteria: application liveness, small resource footprint, and easy setup.
+
+As a result of the numbers mentioned in the evaluation of the previous research questions, our tool is able to process 5 up to 12 dependencies per minute while requiring about \SI{500}{MB} RAM in total and less than \SI{30}{MB} ROM per package.
+I.e., from the moment the tool is activated, the first results usually take less than 10 seconds to appear on the UI.
+This is an acceptable delay with regard to Shneiderman's definition of acceptable application response times, so the liveness criterion is fulfilled.\footnote{Ben Shneiderman and Catherine Plaisant. 2010. Designing the user interface: Strategies for effective human-computer interaction. Pearson Education India.}
+Even if the tool is run for 10 minutes, it will occupy less than \SI{4}{GB} of ROM that can be released at any time, which we consider a small resource footprint at a time where modern operating systems require at least \SI{64}{GB} ROM; thus, also the second acceptance criterion is fulfilled.
+As our extension can be installed with two clicks from the Visual Studio Code Extension Marketplace, it is also easy to set up and thus fulfills the first requirement.
+
+\Cref{req2} effectively calls for a minimum number of context switches that are required to use the tool, i.e., for minimizing the temporal, spatial, and semantic distance\footnote{David Ungar, Henry Lieberman, and Christopher Fry. 1997. Debugging and the experience of immediacy. Commun. ACM 40, 4 (1997), 38–43.} between the downstream dependency UI and the IDE used by package developers.
+
+Once the data are available in the UI, interaction with them is possible with the same speed as with local source files in the package.
+This is compatible with Shneiderman's requirement to frequent tasks and indicates a low temporal distance.
+
+The spatial distance varies for the different views of the tool:
+For the dependency browser and the usage browser, a separate toolbar has to be opened, which indicates a higher spatial distance; still, the artifacts are available in the same IDE.
+On the other hand, the dependency artifacts were not displayed in the IDE without our tool and have no strong relationship to the already existing artifacts, so any closer integration into an existing view would increase unintended coupling between independent domains.
+The code annotations are very close to the original source code and thus have a small spatial distance.
+
+The semantic distance can be described as the perceived similarity of artifacts displayed both in the tool's UI and in the existing IDE.
+Such artifacts are the package and dependency members displayed in the usage browser of our tool.
+Most items in the usage browser bear the same label as the corresponding identifier in the source code, which reduces the semantic distance.
+However, some nodes in the path of dependency members correspond to anonymous expressions in the source code that do not bear a label themselves and thus are labeled using a generic fallback token in our tool (see \cref{fig:implementation/presentation/screenshot/dependency_browser}).
+This does not match the labeling convention in VS Code (as displayed in the outline view of the explorer activity bar), where a target identifier is determined from the context of the expression.
+For such nodes, the current semantic distance of our tool is still higher than necessary.
+
+With a low temporal distance, a low-to-medium spatial distance, and a mainly low semantic distance, our tool also fulfills \cref{req2}.

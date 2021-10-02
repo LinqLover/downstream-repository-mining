@@ -14,3 +14,57 @@
 \newcommand\TODO[1]{%
 	\textcolor{red}{\textbf{#1}}%
 }
+
+% bchart legends
+% CREDITS: https://tex.stackexchange.com/a/379816/221054
+\usetikzlibrary{fit}
+
+\makeatletter
+\newdimen\legendxshift
+\newdimen\legendyshift
+\newcount\legendlines
+% distance of frame to legend lines
+\newcommand{\bclldist}{1mm}
+\newcommand{\bclegend}[3][10mm]{%
+    % initialize
+    \legendxshift=0pt\relax
+    \legendyshift=0pt\relax
+    \xdef\legendnodes{}%
+    % get width of longest text and number of lines
+    \foreach \lcolor/\ltext [count=\ll from 1] in {#3}%
+        {\global\legendlines\ll\pgftext{\setbox0\hbox{\bcfontstyle\ltext}\ifdim\wd0>\legendxshift\global\legendxshift\wd0\fi}}%
+    % calculate xshift for legend; \bcwidth: from bchart package; \bclldist: from node frame, inner sep=\bclldist (see below)
+    % \@tempdima: half width of bar; 0.72em: inner sep from text nodes with some manual adjustment
+    \@tempdima#1\@tempdima0.5\@tempdima
+    \pgftext{\bcfontstyle\global\legendxshift\dimexpr\bcwidth-\legendxshift-\bclldist-\@tempdima-0.72em}
+    % calculate yshift; 5mm: heigt of bar
+    \legendyshift\dimexpr5mm+#2\relax
+    \legendyshift\legendlines\legendyshift
+    % \bcpos-2.5mm: from bchart package; \bclldist: from node frame, inner sep=\bclldist (see below)
+    \global\legendyshift\dimexpr\bcpos-2.5mm+\bclldist+\legendyshift
+    % draw the legend
+    \begin{scope}[shift={(\legendxshift,\legendyshift)}]
+    \coordinate (lp) at (0,0);
+    \foreach \lcolor/\ltext [count=\ll from 1] in {#3}%
+    {
+        \node[anchor=north, minimum width=#1, minimum height=5mm,fill=\lcolor] (lb\ll) at (lp) {};
+        \node[anchor=west] (l\ll) at (lb\ll.east) {\bcfontstyle\ltext};
+        \coordinate (lp) at ($(lp)-(0,5mm+#2)$);
+        \xdef\legendnodes{\legendnodes (lb\ll)(l\ll)}
+    }
+    % draw the frame
+    \node[draw, inner sep=\bclldist,fit=\legendnodes] (frame) {};
+    \end{scope}
+}
+\makeatother
+
+% Properly spaces tnotes for threeparttable
+% CREDITS: https://tex.stackexchange.com/a/108640/221054
+% This is like `\tnote`, but uses the space of the argument
+\newcommand\stnote[1]{\textsuperscript{\TPTtagStyle{#1}}}
+
+% Alpha numbers for threeparttable tnotes
+\makeatletter
+\newcommand{\alphtnotetext}[1]{\itshape \@alph{#1}}
+\makeatother
+\newcommand{\alphtnote}[1]{\stnote{\alphtnotetext{#1}}}
