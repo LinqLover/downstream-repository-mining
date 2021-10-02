@@ -17,6 +17,7 @@
 
 % Fix footnote numbering subcaptions
 % CREDITS: https://tex.stackexchange.com/a/414191/221054 (edited)
+\usepackage{footmisc}
 \AddToHook{env/subfigure/begin}{%
 	\DeclareRobustCommand\footnote[1]{%
 		\mpfootnotemark
