@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: rebase
-        uses: LinqLover/gha-auto-dependabot-rebase@feat/one-at-a-time
+        uses: bbeesley/gha-auto-dependabot-rebase@main
         with:
           one-at-a-time: true
         env:
