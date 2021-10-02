@@ -54,6 +54,10 @@ class SourcegraphClient {
             document: gql`query search($query: String!) {
                 search(query: $query) {
                     results {
+                        alert {
+                            title
+                            description
+                        }
                         limitHit
                         matchCount
                         timedout {
@@ -86,6 +90,10 @@ class SourcegraphClient {
             protoResponse: <{
                 search: {
                     results: {
+                        alert: {
+                            title: string,
+                            description: string
+                        } | null,
                         limitHit: boolean
                         matchCount: number
                         timedout: readonly {
@@ -145,6 +153,9 @@ class SourcegraphClient {
         Object.assign(response, await graphql.request(this.documentSpecifier.document, { query }))
 
         const results = response.search.results
+        if (results.alert) {
+            throw new Error(`Sourcegraph alert: ${results.alert.title}\n${results.alert.description}`)
+        }
         if (results.timedout.length) {
             console.warn("Sourcegraph timeouts", results.timedout.map(repo => repo.name).join(', '))
         }
