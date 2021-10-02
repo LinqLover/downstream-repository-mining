@@ -28,10 +28,13 @@ A simple approach to this problem is to perform a string search for package name
 \citet{qiu2016understanding} propose a more elaborated approach that operates on the \emph{abstract syntax tree} (AST) of each parsed dependency to avoid false positive matches that can be caused by ambivalent identifier names.
 A very similar approach is also chosen by \citet{sawant2017fine} who evaluate the collected usage data in order to analyze the historical importance of certain features supported by an API.
 
-However, the precision of ASTs is limited for dynamically typed languages such as JavaScript.
-For this reason, a common data structure that can be used to improve type information are \emph{call graphs} that are either \emph{static} (i.e., the result of a theoretical analysis of the source code) or \emph{dynamic} (i.e., empirically recorded during program execution).
-While the latter type has a higher potential for including a maximum of contextual information, the former has the advantage of being applicable to a larger probe of source code for that no concrete entry points are available.
-There are many solutions that analyze the structure of programs and extract the relevant information to build call graphs:
+However, the precision of ASTs is limited for \emph{dynamically typed} languages such as JavaScript or Python.
+As opposed to static typing, the value type of an expression in a dynamically typed language may be unknown at the compile time of the program.
+For this reason, a \emph{type analysis} can be performed to predict the runtime types of all expressions in the AST \citep{jensen2009type}.
+Usually, this is accomplished by analyzing the control flow of a program and inferring the possible types of every variable or function.
+Another useful data structure for enhancing type information are \emph{call graphs} that are either gained \emph{statically} (i.e., the result of a theoretical analysis of the source code) or \emph{dynamically} (i.e., empirically recorded during program execution).
+While the latter method has a higher potential for including a maximum of contextual information, the former has the advantage of being applicable to a larger probe of source code for that no concrete entry points are available.
+Many solutions exist that analyze the structure of programs and extract relevant information to build call graphs:
 
 \citet{collard2013srcml} propose an infrastructure called \caps{srcML} that is aimed to create a unified representation of multilingual source code snippets for arbitrary analysis purposes, including the construction of call graphs.
 Another solution is proposed by \citet{bogar2018lightweight} who focus on analyzing multilingual codebases and who utilize an island parser to build call graphs.

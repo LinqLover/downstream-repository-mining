@@ -35,7 +35,6 @@ In a second step, a static type analysis is performed against each dependency AS
 The results of the type analysis are attached to the ASF so that every identifier is annotated with a type symbol that links to the declaration of the type for the identifier.
 For instance, after this step, every variable node will contain a link to the assignment node of this variable, and every function call expression will contain a link to the definition of this function. \TODO{Give example?}
 The operating principle of this type analysis depends on the kind of programming language; i.e., in statically typed languages, type symbols can usually be retrieved from the declaration of an identifier, whereas in dynamically typed languages, a control flow analysis will be required to identify the origin of every identifier's type.
-\TODO{Elaborate on the topics type analysis and static/dynamic typing in related work/introduction.}
 
 In the final step, from each ASF all nodes are collected whose type is declared in the target package.
 To identify these links, we define a set of language-specific patterns for AST subtrees that constitute a usage expression.
