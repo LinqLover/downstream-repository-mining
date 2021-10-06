@@ -760,10 +760,14 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     }
 
     protected findDeclarationForSymbol(symbol: ts.Symbol) {
-        if (!symbol?.declarations) {
+        if (!symbol.declarations) {
             return
         }
-        return (symbol.declarations ?? []).find(declaration => pathIsInside(
+        if ((symbol.declarations?.length ?? 0) > 10000) {
+            // Too many declarations (TypeScript mismatch), skipping
+            return
+        }
+        return symbol.declarations.find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
             path.resolve(this.packageDirectory))
         )
