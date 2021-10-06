@@ -18,6 +18,9 @@ jobs:
       - run: npm install  # yarn does not support file dependencies correctly ...
       - run: git diff --exit-code package-lock.json || (echo "package-lock.json was changed" && exit 1)
       - run: npm run test
+        env:
+          GITHUB_OAUTH_TOKEN: ${{ github.token }}
+          SOURCEGRAPH_TOKEN: ${{ secrets.SOURCEGRAPH_TOKEN }}
   lint:
     runs-on: ubuntu-latest
     defaults:

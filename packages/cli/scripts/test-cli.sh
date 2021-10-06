@@ -29,18 +29,26 @@ packageName="cheerio"
 export NPM_CACHE="cache-test"
 
 echo "$ list"
-output=$($bin list --limit 10 --no-downloadGitHubData $packageName 2>&1)
+output=$($bin list --limit 10 $packageName 2>&1)
 echo "$output"
 [[ $output =~ Dependency[[:space:]]\{[[:space:]]+name: ]] || fail "list does not output valid hits"
 echo
 
-echo "$ download"
-output=$($bin download --limit 10 $packageName 2>&1)
+echo "$ download (npm)"
+output=$($bin download --limit 7 --strategies npm $packageName 2>&1)
 echo "$output"
-[[ $output == *'Download completed, 10 successful'* ]] ||fail "download was not successful"
+[[ $output == *'Download completed, 7 successful'* ]] || fail "download was not successful"
 echo
 
-echo "$ search heuristic"
+echo "$ download (sourcegraph)"
+output=$($bin download --limit 6 --strategies sourcegraph $packageName 2>&1)
+echo "$output"
+[[ $output =~ Download\ completed,\ ([[:digit:]]+)\ successful ]] || fail "download was not successful"
+# Some dependencies will be skipped legitimately because they are too large
+(( BASH_REMATCH[1] > 0 )) || fail "not any download was successful"
+echo
+
+echo "$ search (heuristic)"
 output=$($bin search --limit 10 --strategy heuristic $packageName 2>&1)
 echo "$output"
 [[ $output =~ Dependency[[:space:]]\{[[:space:]]+name: ]] || fail "search heuristic does not output valid hits"
@@ -51,7 +59,7 @@ export NPM_CACHE_SRC="$NPM_CACHE-src"
 mkdir $NPM_CACHE_SRC
 echo "$ download-package.sh"
 NPM_CACHE="$NPM_CACHE-src" "$(dirname "$0")/download-package.sh" $packageName
-echo "$ search types"
+echo "$ search (types)"
 output=$($bin search --limit 10 --strategy types --source "$NPM_CACHE_SRC/$packageName" $packageName 2>&1)
 echo "$output"
 [[ $output == *'matchString:'* ]] || fail "search types does not output valid hits"
