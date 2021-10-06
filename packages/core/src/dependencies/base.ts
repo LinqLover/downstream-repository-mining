@@ -25,7 +25,7 @@ export class Dependency {
     pluggableUrls = new Map<string | null, string>()
     _references: Reference[] = []
     /** In kilobyte (kB). */
-    static maximumRepositorySize = 500_000
+    static maximumRepositorySize = 100_000
     get githubUrl() {
         return [...this.urls.entries()].find(([key, ]) => key.toLowerCase() === 'github')?.[1]
     }
