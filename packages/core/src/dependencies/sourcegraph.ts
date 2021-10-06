@@ -138,7 +138,6 @@ class SourcegraphClient {
             'count': `${limit || this.maximumLimit}`
         }
         const response = this.documentSpecifier.protoResponse
-        console.log("query", `"${packageName}": ` + Object.entries(queryArgs).map(([key, value]) => `${key}:${value}`).join(' '))
         Object.assign(response, await graphql.request(this.documentSpecifier.document, {
             query: `"${packageName}": ` + Object.entries(queryArgs).map(([key, value]) => `${key}:${value}`).join(' ')
         }))
@@ -156,7 +155,6 @@ class SourcegraphClient {
             let data = JSON.parse(json)
             data = { name: data.name }
             normalizePackageData(data)
-            console.log("succeeded", data.name)
             return (<normalizePackageData.Package>data).name
         } catch (error) {
             console.warn("Error while parsing package data", error, json)
