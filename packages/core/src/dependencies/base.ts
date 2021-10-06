@@ -97,7 +97,7 @@ export class Dependency {
             repo = this.urls.values().next().value
         }
 
-        if (this.githubRepository?.diskUsage ?? 0 > Dependency.maximumRepositorySize) {
+        if ((this.githubRepository?.diskUsage ?? 0) > Dependency.maximumRepositorySize) {
             console.warn("Repository is too large, skipping download", this.githubUrl)
             return false
         }
