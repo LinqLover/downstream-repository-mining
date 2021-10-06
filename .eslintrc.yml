@@ -3,6 +3,7 @@ extends:
 - plugin:@typescript-eslint/eslint-recommended
 - plugin:@typescript-eslint/recommended
 ignorePatterns:
+- cache*/
 - out/
 globals:
   Atomics: readonly
