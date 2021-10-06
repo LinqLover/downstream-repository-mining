@@ -8,7 +8,7 @@ import _ from 'lodash'
 import type { Import, Options } from 'parse-imports'
 import path from 'path'
 import pathIsInside from 'path-is-inside'
-import pkgDir from 'pkg-dir'
+import { packageDirectory } from 'pkg-dir'
 import tryCatch from 'try-catch'
 import ts from 'typescript'
 
@@ -425,7 +425,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                 //   See #65.
                 //
                 // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
-                const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
+                const parseImportsIndexPath = `${await packageDirectory()}/node_modules/parse-imports/src/index.js`
                 const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                 let parseImports: (
                     code: string,
@@ -441,7 +441,7 @@ class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
                     // This will occur if this package is imported as a local dependency from another package via a symlink.
                     // For now, let's handle this by assuming the depending package is a sibling of ourselves ...
                     // Hardcoded! So many hacks! 😭
-                    const parseImportsIndexPath = `${await pkgDir()}/../core/node_modules/parse-imports/src/index.js`
+                    const parseImportsIndexPath = `${await packageDirectory()}/../core/node_modules/parse-imports/src/index.js`
                     const dynamicImport = new Function('moduleName', 'return import(moduleName)')
                     parseImports = (await dynamicImport(parseImportsIndexPath)).default
                 }

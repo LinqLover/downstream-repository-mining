@@ -60,6 +60,7 @@
         "@types/lodash": "^4.14.175",
         "@types/node": "^16.10.2",
         "@types/npm-dependants": "^2.1.0",
+        "@types/path-exists": "^4.0.2",
         "@types/path-is-inside": "^1.0.0",
         "@types/rimraf": "^3.0.2",
         "cross-env": "^7.0.3",
