@@ -9,6 +9,7 @@ import { DeclarationCodeLensProvider } from './codeLens'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
 import isDefined from './utils/node/isDefined'
+import * as iterUtils from './utils/node/iterUtils'
 import { HierarchyProvider } from './views'
 
 
@@ -285,14 +286,26 @@ export class Extension {
     }
 
     async openDependency(dependency: Dependency) {
-        if (!dependency.sourceDirectory) {
-            await vscode.window.showErrorMessage("Source code is not downloaded")
+        let uri: vscode.Uri | null = null
+
+        if (dependency.sourceDirectory) {
+            const directoryUri = vscode.Uri.file(dependency.sourceDirectory)
+            uri = await this.findRepresentativeFile(directoryUri)
+            if (uri && uri.path.endsWith('.md')) {
+                await vscode.commands.executeCommand('markdown.showPreview', <vscode.Uri>uri)
+                return
+            }
+        }
+
+        if (!uri && dependency.urls.size) {
+            uri = vscode.Uri.parse(iterUtils.first(dependency.urls.values()))
+        }
+        if (uri) {
+            await vscode.commands.executeCommand('vscode.open', uri)
             return
         }
-        const directoryUri = vscode.Uri.file(dependency.sourceDirectory)
-        const fileUri = vscode.Uri.joinPath(directoryUri, 'README.md')
-        // TODO: If does not exist, try with 'readme' from package.json, 'src'/'main' from package.json, package.json itself, or else fall back to URL
-        await vscode.commands.executeCommand('markdown.showPreview', fileUri)
+
+        await vscode.window.showErrorMessage("Cannot open this dependency")
     }
 
     async openDependencyFolder(dependency: Dependency, relativePath: string) {
@@ -438,6 +451,37 @@ export class Extension {
         const data = <normalizePackageData.Package>JSON.parse(buffer.toString('utf-8'))
         normalizePackageData(data)
         return data
+    }
+
+    private async findRepresentativeFile(directoryUri: vscode.Uri) {
+        try {
+            if ((await vscode.workspace.fs.stat(directoryUri)).type === vscode.FileType.File) {
+                return directoryUri
+            }
+        } catch {
+            // Directory does not exist
+            return null
+        }
+
+        const allFiles = (await vscode.workspace.fs.readDirectory(directoryUri)).filter(
+            ([_, type]) => type !== vscode.FileType.Directory
+        )
+        if (!allFiles.length) {
+            return null
+        }
+
+        // Find representative files or fall back to any file
+        let file: string | undefined = undefined
+        for (const pattern of [
+            'README.md',
+            /^readme(\..+)?$/,
+            'package.json',
+            /^(src\/)?index\..+$/
+        ]) {
+            file ??= allFiles.find(([name,]) => pattern instanceof RegExp ? name.match(pattern) : name === pattern)?.[0]
+        }
+        file ??= allFiles[0][0]
+        return file ? vscode.Uri.joinPath(directoryUri, file) : null
     }
 }
 

@@ -1,3 +1,11 @@
+export function first<T>(iterator: IterableIterator<T>) {
+    const first = iterator.next()
+    if (first.done) {
+        throw new Error("iterator is empty")
+    }
+    return first.value
+}
+
 export function *flatMap<T, U, This = undefined>(
     iterator: IterableIterator<T>,
     callback: (this: This | undefined, value: T, index: number) => U | readonly U[] | IterableIterator<U>,
