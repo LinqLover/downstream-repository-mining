@@ -100,7 +100,7 @@ export class Dependency {
     }
 
     private *collectUpdateJobs(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}) {
-        if (options.downloadMetadata ?? true) {
+        if (options.downloadMetadata ?? false) {
             yield () => this.updateFromGithub(dowdep)
         }
         if (options.downloadSource ?? false) {
