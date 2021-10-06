@@ -168,7 +168,6 @@ class SourcegraphClient {
             let data = JSON.parse(json)
             data = { name: data.name }
             normalizePackageData(data)
-            console.log("succeeded", data.name)
             return (<normalizePackageData.Package>data).name
         } catch (error) {
             console.warn("Error while parsing package data", error, json)

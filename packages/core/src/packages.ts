@@ -1,10 +1,10 @@
 import itAll from 'it-all'
-import mapAsync from '@async-generators/map'
 import mapManyAsync from '@async-generators/map-many'
 
 import { Dowdep } from './dowdep'
 import { Dependency, DependencyUpdateCallback, DependencyUpdateOptions } from './dependencies'
 import { Reference } from '.'
+import mapUnorderedAsync from './utils/mapUnorderedAsync'
 
 
 export class Package {
@@ -28,7 +28,7 @@ export class Package {
     async updateDependencies(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
         const searchers = dowdep.createDependencySearchers(this)
 
-        await itAll(mapAsync<Dependency, void>(mapManyAsync(searchers, searcher => searcher.search(dowdep)), async dependency => {
+        await itAll(mapUnorderedAsync<Dependency, void>(mapManyAsync(searchers, searcher => searcher.search(dowdep)), async dependency => {
             const existingDependency = this._dependencies.find(existingDependency =>
                 existingDependency.name == dependency.name)
             if (!existingDependency) {
@@ -39,5 +39,6 @@ export class Package {
             }
             await dependency.update(dowdep, options, updateCallback)
         }))
+        // TODO: Dependency needs a "state" variable for proper asynchronous state checking
     }
 }

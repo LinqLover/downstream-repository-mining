@@ -7,11 +7,6 @@
   resolved "https://registry.yarnpkg.com/@async-generators/map-many/-/map-many-0.1.0.tgz#90023aeb17e58b04fc05eea88d90d364c74d759b"
   integrity sha512-p49iOPHhdFfM+JF0vEBl+O9ETwPdas+EMp0khtEhvDLgY2rZiF/K8OUYeI+cZx7O4j4Hiullr/Qhx3QVE5OPdQ==
 
-"@async-generators/map@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@async-generators/map/-/map-0.1.0.tgz#07d6e9299010937986ddcf3aa8904ed69cccbccc"
-  integrity sha512-BMcuLtZHIefL5yuqOT9hACkIbduOH17IgjjlpiIM8HcSmkyhYZavbHYcmQKnR10ATNGtVtTU9Yc81EDrthAFIw==
-
 "@babel/code-frame@7.12.11":
   version "7.12.11"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.11.tgz#f4ad435aa263db935b8f10f2c552d23fb716a63f"
@@ -5328,6 +5323,11 @@ map-cache@^0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
   integrity sha1-wyq9C9ZSXZsFFkW7TyasXcmKDb8=
+
+map-iterator@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/map-iterator/-/map-iterator-1.1.0.tgz#84acf265364e3555012f823014f5792eeb62f94f"
+  integrity sha1-hKzyZTZONVUBL4IwFPV5Luti+U8=
 
 map-obj@^1.0.0, map-obj@^1.0.1:
   version "1.0.1"

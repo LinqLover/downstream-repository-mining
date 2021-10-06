@@ -109,7 +109,7 @@ export class Dependency {
 
     private *collectUpdateJobs(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}) {
         yield async () => {
-            await this.updateFromGithub(dowdep, options.downloadMetadata ?? true)
+            await this.updateFromGithub(dowdep, options.downloadMetadata ?? false)
             if (options.downloadSource ?? false) {
                 await this.updateSource(dowdep)
             }
