@@ -109,9 +109,17 @@ export class Dependency {
 
     private *collectUpdateJobs(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}) {
         yield async () => {
+            console.log("Downloading GitHub metadata", this.name)
             await this.updateFromGithub(dowdep, options.downloadMetadata ?? false)
+            console.log("Downloaded GitHub metadata", this.name)
+            
             if (options.downloadSource ?? false) {
-                await this.updateSource(dowdep)
+                console.log("Downloading source", this.name)
+                if (await this.updateSource(dowdep)) {
+                    console.log("Downloaded source", this.name)
+                } else {
+                    console.log("Not downloaded source", this.name)
+                }
             }
         }
     }
