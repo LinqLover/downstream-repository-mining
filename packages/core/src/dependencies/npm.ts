@@ -71,7 +71,6 @@ export class NpmDependency extends Dependency {
                 const url = new URL(latestVersion.repository.url)
                 const domain = psl.parse(url.hostname)
                 if (!domain.error) {
-                    console.log("set url", url.href)
                     this.pluggableUrls.set(domain.sld, url.href)
                 }
             } catch (error) {
