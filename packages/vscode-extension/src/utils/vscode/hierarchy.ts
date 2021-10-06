@@ -14,7 +14,7 @@ export abstract class HierarchyDataProvider<
         private rootItem: TRootItem
     ) { }
 
-    private _synchronizer = new Synchronizer()
+    private _synchronizer = new Synchronizer(() => this.treeView?.visible ?? false)
     private _onDidChangeTreeData: vscode.EventEmitter<HierarchyItem | undefined | null | void>
         = new vscode.EventEmitter<HierarchyItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<HierarchyItem | undefined | null | void>
@@ -35,10 +35,9 @@ export abstract class HierarchyDataProvider<
         return this.findItem(item => iterUtils.includes(item.getChildren(), childItem))
     }
 
-    protected getRoots = this._synchronizer.spy(() => {
-        // BUG: Will not be triggered if view is collapsed!
-        return this.basicGetRoots()
-    })
+    protected getRoots = this._synchronizer.spy(
+        () => this.basicGetRoots()
+    )
 
     protected basicGetRoots() {
         return this.rootItem.getChildren()
