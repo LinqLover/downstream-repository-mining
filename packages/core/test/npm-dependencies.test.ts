@@ -5,7 +5,7 @@ import readPackageJsonCallback from 'read-package-json'
 import rimRaf from 'rimraf'
 import { promisify } from 'util'
 import { Package } from '../src'
-import { NpmDependency } from '../src/npm-dependencies'
+import { NpmDependency } from '../src/dependencies/npm'
 
 import { Dowdep, getCacheDirectory } from '../src'
 
