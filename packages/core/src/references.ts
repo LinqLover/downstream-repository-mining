@@ -753,13 +753,16 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected findDeclarationForNode(node: ts.Node) {
         const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node)
         const symbol = type?.symbol ?? type?.aliasSymbol
-        if (!symbol?.declarations) {
+        if (!symbol) {
             return
         }
         return this.findDeclarationForSymbol(symbol)
     }
 
     protected findDeclarationForSymbol(symbol: ts.Symbol) {
+        if (!symbol?.declarations) {
+            return
+        }
         return (symbol.declarations ?? []).find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
             path.resolve(this.packageDirectory))
