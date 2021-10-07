@@ -8,7 +8,7 @@ export default abstract class DowdepCommand extends Command {
         packageName: string,
         searchStrategies: Dowdep['dependencySearchStrategies'],
         limit: number | undefined,
-        readinessPredicate:  (dependency: Dependency, dowdep: Dowdep) => boolean | Promise<boolean>,
+        readinessPredicate: (dependency: Dependency, dowdep: Dowdep) => boolean | Promise<boolean>,
         updateOptions: Partial<DependencyUpdateOptions>
     ) {
         const dowdep = new Dowdep({
