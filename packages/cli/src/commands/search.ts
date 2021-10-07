@@ -45,6 +45,7 @@ export default class Search extends Command {
     async run() {
         const { args, flags } = this.parse(Search)
 
+        // Input
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const packageDirectory = flags.source || undefined
@@ -66,11 +67,12 @@ export default class Search extends Command {
         if (includeOccurences) {
             includeKinds.push('occurence')
         }
+
+        // Processing
         let references = searcher.searchReferences(limit, includeKinds)
         if (aggregate) {
             references = tqdm2(references)
         }
-
         const allReferences = aggregate && new Array<Reference>()
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
@@ -78,6 +80,8 @@ export default class Search extends Command {
                 allReferences.push(reference)
             }
         }
+
+        // Output
         if (allReferences) {
             const aggregatedReferences = _.chain(allReferences)
                 .groupBy(reference => reference.declaration.memberPath)

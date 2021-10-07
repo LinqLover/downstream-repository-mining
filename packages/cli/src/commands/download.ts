@@ -26,6 +26,7 @@ export default class Download extends DowdepCommand {
     async run(): Promise<void> {
         const { args, flags } = this.parse(Download)
 
+        // Input
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
@@ -33,6 +34,7 @@ export default class Download extends DowdepCommand {
             ? [<'npm' | 'sourcegraph'>flags.strategies]
             : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
 
+        // Processing
         const dependencies = await asyncIteratorToArray(
             tqdm2(
                 this.updateDependencies(
@@ -48,6 +50,7 @@ export default class Download extends DowdepCommand {
             )
         )
 
+        // Output
         console.log(`Download completed, ${dependencies.length} successful`)
     }
 }

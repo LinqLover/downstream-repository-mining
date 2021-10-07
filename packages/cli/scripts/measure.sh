@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-
-# measure and compare the time for both data sources to fetch dependencies
-# usage:
-#   $1 - package
-# expected vars:
+# Measure and compare the time for both data sources to fetch dependencies.
+# Usage:
+#   ./measure.sh package
+# Expected vars:
 #   SOURCEGRAPH_TOKEN
 
 # measure time

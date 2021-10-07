@@ -22,8 +22,9 @@ export default abstract class DowdepCommand extends Command {
 
         const knownDependencies: Dependency[] = []
 
+        // Schedule dependency updates asynchronousl and, stream every dependency back to the caller once it has been updated.
         let yieldResolve: ($new: boolean) => void
-        let yieldPromise: Promise<boolean> = new Promise(resolve => yieldResolve = resolve)
+        let yieldPromise: Promise<boolean> = new Promise(resolve => yieldResolve = resolve)  // For synchronization between depedency updates and generator
         $package.updateDependencies(dowdep, updateOptions, async () => {
             (await filterAsync(
                 [...$package.dependencies],
