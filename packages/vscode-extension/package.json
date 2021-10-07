@@ -11,9 +11,9 @@
     ],
     "activationEvents": [
         "onCommand:dowdep.refreshPackages",
-        "onCommand:dowdep.refreshAllDependencies",
-        "onCommand:dowdep.refreshAllReferences",
-        "onCommand:dowdep.refreshAllDependenciesAndReferences",
+        "onCommand:dowdep.refreshDownstreamData",
+        "onCommand:dowdep.refreshDependencies",
+        "onCommand:dowdep.refreshReferences",
         "onView:dowdepDependencies",
         "onView:dowdepReferences",
         "workspaceContains:./package.json"
@@ -33,22 +33,24 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "dowdep.refreshAllDependencies",
+                "command": "dowdep.refreshDownstreamData",
                 "category": "Downstream Dependencies",
-                "title": "Refresh all dependencies",
+                "title": "Refresh downstream data",
                 "icon": "$(refresh)"
             },
             {
-                "command": "dowdep.refreshAllReferences",
+                "command": "dowdep.refreshDependencies",
                 "category": "Downstream Dependencies",
-                "title": "Refresh all references",
-                "icon": "$(refresh)"
+                "title": "Refresh dependencies",
+                "icon": "$(refresh)",
+                "enablement": "dowdep.activationState > 0"
             },
             {
-                "command": "dowdep.refreshAllDependenciesAndReferences",
+                "command": "dowdep.refreshReferences",
                 "category": "Downstream Dependencies",
-                "title": "Refresh all dependencies and references",
-                "icon": "$(refresh)"
+                "title": "Refresh references",
+                "icon": "$(refresh)",
+                "enablement": "dowdep.activationState > 1"
             }
         ],
         "configuration": {
@@ -118,10 +120,20 @@
             }
         },
         "menus": {
+            "view/item/context": [
+                {
+                  "command": "dowdep.refreshDependencies",
+                  "when": "view == dowdepDependencies && viewItem == package"
+                },
+                {
+                  "command": "dowdep.refreshReferences",
+                  "when": "view == dowdepReferences && viewItem == package || view == dowdepDependencies && viewItem == dependency"
+                }
+            ],
             "view/title": [
                 {
-                    "command": "dowdep.refreshPackages",
-                    "when": "view == dowdepDependencies",
+                    "command": "dowdep.refreshDownstreamData",
+                    "when": "view == dowdepDependencies || view == dowdepReferences",
                     "group": "navigation"
                 }
             ]

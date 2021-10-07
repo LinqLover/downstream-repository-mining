@@ -15,6 +15,10 @@ import { HierarchyProvider } from './views'
 
 let extension: Extension
 
+type DependencyLike = Dependency | { dependency: DependencyLike } | PackageLike | readonly DependencyLike[]
+type PackageLike = Package | { $package: PackageLike } | readonly PackageLike[]
+type Like<T, TKey> = T | { [K in keyof TKey]: Like<T, TKey> } | readonly Like<T, TKey>[]
+
 /**
  * This method is called on the first activation event.
  */
@@ -90,16 +94,16 @@ export class Extension {
                 () => this.refreshPackages()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependencies', this.catchErrors(
-                () => this.refreshAllDependencies()
+            vscode.commands.registerCommand('dowdep.refreshDependencies', this.catchErrors(
+                ($package?: PackageLike) => this.refreshDependencies($package)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllReferences', this.catchErrors(
-                () => this.refreshAllReferences()
+            vscode.commands.registerCommand('dowdep.refreshReferences', this.catchErrors(
+                ($package?: PackageLike) => this.refreshReferences($package)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.catchErrors(
-                () => this.refreshAllDependenciesAndReferences()
+            vscode.commands.registerCommand('dowdep.refreshDownstreamData', this.catchErrors(
+                ($package?: PackageLike) => this.refreshDownstreamData($package)
             )))
     }
 
@@ -152,7 +156,7 @@ export class Extension {
     }
 
     async refreshPackages() {
-        this.packages = await this.getPackages()
+        this.packages = await this.getWorkspacePackages()
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
             // TODO: Only show warning if no error was shown earlier during getPackages()
@@ -161,11 +165,8 @@ export class Extension {
         await this.notifyModelObservers()
     }
 
-    async refreshAllDependencies() {
-        if (!this.packages.length) {
-            await vscode.window.showWarningMessage("No packages were found in this workspace.")
-            // TODO: Do we need to await this?
-        }
+    async refreshDependencies($package?: PackageLike): Promise<void> {
+        const packages = await this.getPackages($package)
 
         await this.doCancellable(async () => {
             await vscode.window.withProgress({
@@ -180,15 +181,18 @@ export class Extension {
                 let progressValue = 0
 
                 await Promise.all(
-                    this.packages.map(async $package => {
+                    packages.map(async $package => {
                         if (canceling) { return }
-                        await this.refreshDependencies($package, cancellationToken, async () => {
+                        await this.basicRefreshDependencies($package, cancellationToken, async () => {
                             if (this.dowdep.dependencyLimit) {
-                                const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep))))
+                                const readyPackageDependencies = await Promise.all(packages.map($package => filterAsync(
+                                    [...$package.dependencies],
+                                    async dependency => await dependency.isSourceCodeReady(this.dowdep)))
+                                )
                                 const newProgressValue = _.sumBy(
                                     readyPackageDependencies,
                                     dependencies => dependencies.length
-                                ) / (this.packages.length * this.dowdep.dependencyLimit) * 100
+                                ) / (packages.length * this.dowdep.dependencyLimit) * 100
                                 const increment = newProgressValue - progressValue
                                 progressValue = newProgressValue
                                 progress.report({ increment })
@@ -200,14 +204,8 @@ export class Extension {
         })
     }
 
-    async refreshAllReferences() {
-        const allDependencies = this.packages
-            .flatMap($package => $package.dependencies)
-            .filter(dependency => dependency.sourceDirectory)
-        if (!allDependencies.length) {
-            await vscode.window.showWarningMessage("No dependencies were found in this workspace.")
-            // TODO: Do we need to await this?
-        }
+    async refreshReferences(dependency?: DependencyLike): Promise<void> {
+        const dependencies = await this.getDependencies(dependency)
 
         this.doCancellable(async () => {
             await vscode.window.withProgress({
@@ -221,52 +219,58 @@ export class Extension {
                 })
 
                 await Promise.all(
-                    allDependencies.map(async dependency => {
+                    dependencies.map(async dependency => {
                         if (canceling) { return }
-                        await this.refreshReferences(dependency, cancellationToken)
-                        progress.report({ increment: 100 / allDependencies.length })
+                        await this.basicRefreshReferences(dependency, cancellationToken)
+                        progress.report({ increment: 100 / dependencies.length })
                     })
                 )
             })
         })
     }
 
-    async refreshAllDependenciesAndReferences() {
+    async refreshDownstreamData($package?: PackageLike): Promise<void> {
+        const packages = await this.getPackages($package)
+
         // TODO: Deduplicate
-        if (!this.packages.length) {
+        if (!packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
         }
 
         await this.doCancellable(async () => {
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Window,
-                title: "Refreshing dependencies...",
+                title: "Refreshing downstream data...",
                 cancellable: true
             }, async (progress, cancellationToken) => {
                 let canceling = false
                 cancellationToken.onCancellationRequested(() => {
                     canceling = true
                 })
+                const halfIncrement = this.dowdep.dependencyLimit
+                    ? 100 / (packages.length * this.dowdep.dependencyLimit) / 2
+                    : undefined
                 const readyDependencies: Dependency[] = []
 
                 await Promise.all(
-                    this.packages.map(async $package => {
+                    packages.map(async $package => {
                         if (canceling) { return }
-                        await this.refreshDependencies($package, cancellationToken, async () => {
-                            const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep)))) // TODO: thread-safe?
-                            const newReadyDependencies = readyPackageDependencies.flat().filter(dependency => !readyDependencies.includes(dependency))
+                        await this.basicRefreshDependencies($package, cancellationToken, async () => {
+                            const readyPackageDependencies = await Promise.all(packages.map($package => filterAsync(
+                                [...$package.dependencies],
+                                async dependency => await dependency.isSourceCodeReady(this.dowdep)))
+                            ) // TODO: thread-safe?
+                            const newReadyDependencies = readyPackageDependencies.flat().filter(
+                                dependency => !readyDependencies.includes(dependency)
+                            )
                             readyDependencies.push(...newReadyDependencies)
 
                             if (canceling) { return }
 
                             await Promise.all(newReadyDependencies.map(async dependency => {
-                                if (this.dowdep.dependencyLimit) {
-                                    progress.report({ increment: 100 / (this.packages.length * this.dowdep.dependencyLimit) / 2 })
-                                }
-                                await this.refreshReferences(dependency, cancellationToken)
-                                if (this.dowdep.dependencyLimit) {
-                                    progress.report({ increment: 100 / (this.packages.length * this.dowdep.dependencyLimit) / 2 })
-                                }
+                                progress.report({ increment: halfIncrement })
+                                await this.basicRefreshReferences(dependency, cancellationToken)
+                                progress.report({ increment: halfIncrement })
                             }))
                         })
                     })
@@ -365,7 +369,7 @@ export class Extension {
         this.referencesProvider.revealPackageMemberItem($package, location)
     }
 
-    async refreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken, updateCallback?: () => Promise<void>) {
+    async basicRefreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken, updateCallback?: () => Promise<void>) {
         await $package.updateDependencies(
             this.dowdep, {
                 downloadMetadata: true,
@@ -379,13 +383,67 @@ export class Extension {
             })
     }
 
-    async refreshReferences(dependency: Dependency, cancellationToken?: vscode.CancellationToken) {
+    async basicRefreshReferences(dependency: Dependency, cancellationToken?: vscode.CancellationToken) {
         await dependency.updateReferences(this.dowdep, async () => {
             if (cancellationToken?.isCancellationRequested) {
                 throw new vscode.CancellationError()
             }
             await this.notifyModelObservers()
         })
+    }
+
+    protected async getAlikeItems<T, TLike extends Like<T, TKey>, TKey, U extends T = T>(alike: TLike | undefined, rootFactory: () => Promise<TLike>, key: string, ...transformers: ((alike: TLike) => TLike | null | Promise<TLike | null>)[]): Promise<readonly U[]> {
+        if (!alike) {
+            alike = <TLike>await rootFactory()
+            return await this.getAlikeItems(alike, rootFactory, key, ...transformers)
+        }
+
+        if (!_.isArrayLike(alike)) {
+            for (const transformer of transformers) {
+                const result = await transformer(alike)
+                if (result) {
+                    return await this.getAlikeItems(result, rootFactory, key, ...transformers)
+                }
+            }
+            return [<U><unknown>alike]
+        }
+
+        const items = await Promise.all((<readonly TLike[]><unknown>alike).map(
+            async _alike => await this.getAlikeItems<T, TLike, TKey, U>(_alike, rootFactory, key, ...transformers)
+        ))
+        return items.flat()
+    }
+
+    protected async getPackages($package: PackageLike | undefined) {
+        return this.getAlikeItems<Package, PackageLike, { $package: PackageLike }, Package>(
+            $package,
+            async () => this.getAllPackages(),
+            '$package',
+            (_package: PackageLike) => '$package' in _package
+                ? _package.$package
+                : null
+        )
+    }
+
+    protected async getDependencies(dependency?: DependencyLike) {
+        return this.getAlikeItems<Dependency | PackageLike, DependencyLike, { dependency: DependencyLike }, Dependency>(
+            dependency,
+            async () => this.getAllPackages(),
+            'dependency',
+            async (_dependency: DependencyLike) => (_dependency instanceof Package) || (!(_dependency instanceof Dependency) && '$package' in _dependency)
+                ? (await this.getPackages(_dependency)).flatMap($package => $package.dependencies)
+                : null,
+            (_dependency: DependencyLike) => 'dependency' in _dependency
+                ? _dependency.dependency
+                : null
+        )
+    }
+
+    private async getAllPackages() {
+        if (!this.packages.length) {
+            await vscode.window.showWarningMessage("No packages were found in this workspace.")
+        }
+        return this.packages
     }
 
     private doCancellable<TIn extends unknown[], TOut>(fun: (...args: TIn) => TOut, ...args: TIn) {
@@ -412,11 +470,22 @@ export class Extension {
     }
 
     private async notifyModelObservers() {
+        this.updateActivationState()
+
         await Promise.all(this.modelObservers.map(
             observer => observer.modelChanged()))
     }
 
-    private async getPackages() {
+    private updateActivationState() {
+        vscode.commands.executeCommand('setContext', 'dowdep.activationState',
+            !this.packages
+                ? 0
+                : !this.packages.some($package => $package.dependencies.length)
+                    ? 1
+                    : 2)
+    }
+
+    private async getWorkspacePackages() {
         const folders = vscode.workspace.workspaceFolders
         if (!folders) {
             return []
@@ -424,7 +493,7 @@ export class Extension {
 
         return (await Promise.all(
             folders.map(async folder => {
-                const [error, $package] = await tryToCatch(() => this.getPackage(folder))
+                const [error, $package] = await tryToCatch(() => this.getWorkspacePackage(folder))
                 if (error) {
                     if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
                         return
@@ -437,7 +506,7 @@ export class Extension {
         )).filter(isDefined)
     }
 
-    private async getPackage(folder: vscode.WorkspaceFolder) {
+    private async getWorkspacePackage(folder: vscode.WorkspaceFolder) {
         const packageJsonUri = vscode.Uri.joinPath(folder.uri, 'package.json')
         const packageData = await this.readPackageData(packageJsonUri)
 

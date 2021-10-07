@@ -37,6 +37,7 @@ export abstract class PackageItem<TItem extends RefreshableHierarchyItem> extend
     ) {
         super(vscode.TreeItemCollapsibleState.Expanded)
 
+        this.contextValue = 'package'
         this.command = {
             title: "Reveal in explorer",
             command: 'dowdep.dowdepDependencies.openPackage',
@@ -65,6 +66,7 @@ export abstract class DependencyItem<
             showCountInDescription: true
         })
 
+        this.contextValue = 'dependency'
         this.command = {
             title: "Browse dependency",
             command: 'dowdep.dowdepReferences.openDependency',
