@@ -20,6 +20,7 @@ export class ReferencesProvider extends HierarchyProvider<ReferencesPackagesItem
             commandCallback: (...args: any[]) => Promise<void>) => void
     ) {
         registerCallback('dowdep.dowdepReferences.openPackage', (item: ReferencesPackageItem) => item.open())
+        registerCallback('dowdep.dowdepReferences.refreshReferences', (item: ReferencesPackageItem) => item.refreshReferences())
         registerCallback('dowdep.dowdepReferences.openPackageFileNode', (item: PackageFileNodeItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openPackageMemberNode', (item: PackageMemberNodeItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openDependency', (item: ReferencesDependencyItem) => item.open())
@@ -74,6 +75,10 @@ class ReferencesPackageItem extends PackageItem<
         this.packageNodeItem.refresh()
 
         this.description = this.packageNodeItem.description
+    }
+
+    async refreshReferences() {
+        await vscode.commands.executeCommand('dowdep.refreshReferences', this.$package)
     }
 
     protected *getChildrenKeys(): Iterable<Dependency> {

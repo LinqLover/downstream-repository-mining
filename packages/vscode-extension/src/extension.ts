@@ -1,4 +1,3 @@
-import { strict as assert } from 'assert'
 import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
@@ -16,9 +15,8 @@ import { HierarchyProvider } from './views'
 
 let extension: Extension
 
-type DependencyLike = Dependency | { dependency: DependencyLike } | PackageLike | readonly DependencyLike[]
-type PackageLike = Package | { $package: PackageLike } | readonly PackageLike[]
-type Like<T, TKey> = T | { [K in keyof TKey]: Like<T, TKey> } | readonly Like<T, TKey>[]
+type DependencyLike = Dependency | readonly Dependency[] | PackageLike
+type PackageLike = Package | readonly Package[]
 
 /**
  * This method is called on the first activation event.
@@ -105,7 +103,7 @@ export class Extension {
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.refreshReferences', this.catchErrors(
-                ($package?: PackageLike) => this.refreshReferences($package)
+                (dependency?: DependencyLike) => this.refreshReferences(dependency)
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.refreshDownstreamData', this.catchErrors(
@@ -132,7 +130,7 @@ export class Extension {
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openDependencyExternally', this.catchErrors(
-                (dependency: DependencyLike) => this.openDependencyExternally(dependency)
+                (dependency: Dependency) => this.openDependencyExternally(dependency)
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openDependencyFolder', this.catchErrors(
@@ -341,11 +339,7 @@ export class Extension {
         await vscode.window.showErrorMessage("Cannot open this dependency")
     }
 
-    async openDependencyExternally(_dependency: DependencyLike) {
-        const dependencies = await this.getDependencies(_dependency)
-        assert(dependencies.length == 1)
-        const dependency = dependencies[0]
-
+    async openDependencyExternally(dependency: Dependency) {
         const urls = dependency.urls
         if (!urls.size) {
             throw new Error("Cannot open dependency online")
@@ -461,51 +455,33 @@ export class Extension {
         })
     }
 
-    protected async getAlikeItems<T, TLike extends Like<T, TKey>, TKey, U extends T = T>(alike: TLike | undefined, rootFactory: () => Promise<TLike>, key: string, ...transformers: ((alike: TLike) => TLike | null | Promise<TLike | null>)[]): Promise<readonly U[]> {
-        if (!alike) {
-            alike = <TLike>await rootFactory()
-            return await this.getAlikeItems(alike, rootFactory, key, ...transformers)
+    protected async getPackages($package?: PackageLike) {
+        if (!$package) {
+            return await this.getAllPackages()
         }
 
-        if (!_.isArrayLike(alike)) {
-            for (const transformer of transformers) {
-                const result = await transformer(alike)
-                if (result) {
-                    return await this.getAlikeItems(result, rootFactory, key, ...transformers)
-                }
-            }
-            return [<U><unknown>alike]
+        return _.isArrayLike($package)
+            ? $package
+            : [$package]
+    }
+
+    protected async getDependencies(dependency?: DependencyLike): Promise<readonly Dependency[]> {
+        if (!dependency) {
+            return this.getDependencies(await this.getPackages())
         }
 
-        const items = await Promise.all((<readonly TLike[]><unknown>alike).map(
-            async _alike => await this.getAlikeItems<T, TLike, TKey, U>(_alike, rootFactory, key, ...transformers)
-        ))
-        return items.flat()
-    }
+        if (_.isArrayLike(dependency)) {
+            const allDependencies = await Promise.all(dependency.map(
+                async _dependency => await this.getDependencies(_dependency)
+            ))
+            return allDependencies.flat()
+        }
 
-    protected async getPackages($package: PackageLike | undefined) {
-        return await this.getAlikeItems<Package, PackageLike, { $package: PackageLike }, Package>(
-            $package,
-            async () => this.getAllPackages(),
-            '$package',
-            (_package: PackageLike) => '$package' in _package
-                ? _package.$package
-                : null
-        )
-    }
+        if (dependency instanceof Package) {
+            return dependency.dependencies
+        }
 
-    protected async getDependencies(dependency?: DependencyLike) {
-        return this.getAlikeItems<Dependency | PackageLike, DependencyLike, { dependency: DependencyLike }, Dependency>(
-            dependency,
-            async () => this.getAllPackages(),
-            'dependency',
-            async (_dependency: DependencyLike) => (_dependency instanceof Package) || (!(_dependency instanceof Dependency) && '$package' in _dependency)
-                ? (await this.getPackages(_dependency)).flatMap($package => $package.dependencies)
-                : null,
-            (_dependency: DependencyLike) => 'dependency' in _dependency
-                ? _dependency.dependency
-                : null
-        )
+        return [dependency]
     }
 
     private async getAllPackages() {

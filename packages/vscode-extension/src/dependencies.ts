@@ -19,7 +19,9 @@ export class DependenciesProvider extends HierarchyProvider<DependenciesPackages
             commandCallback: (...args: any[]) => Promise<void>) => void
     ) {
         registerCallback('dowdep.dowdepDependencies.openPackage', (item: DependenciesPackageItem) => item.open())
+        registerCallback('dowdep.dowdepDependencies.refreshDependencies', (item: DependenciesPackageItem) => item.refreshDependencies())
         registerCallback('dowdep.dowdepDependencies.openDependency', (item: DependenciesDependencyItem) => item.open())
+        registerCallback('dowdep.dowdepDependencies.refreshReferences', (item: DependenciesDependencyItem) => item.refreshReferences())
         registerCallback('dowdep.dowdepDependencies.openDependencyFileNode', (item: DependencyFileNodeItem) => item.open())
     }
 
@@ -49,6 +51,10 @@ class DependenciesPackageItem extends PackageItem<DependenciesDependencyItem> {
 
         this.description = HierarchyNodeItem.makeDescriptionForCount(this.$package.allReferences)
     }
+
+    async refreshDependencies() {
+        await vscode.commands.executeCommand('dowdep.refreshDependencies', this.$package)
+    }
 }
 
 /** Forwards generation of children to a {@link DependencyFileNodeItem} instance. */
@@ -75,6 +81,10 @@ class DependenciesDependencyItem extends DependencyItem<
         this.dependencyNodeItem.allLeafs = this.dependency.references
         this.dependencyNodeItem.refresh()
         this.description = this.dependencyNodeItem.description
+    }
+
+    async refreshReferences() {
+        await vscode.commands.executeCommand('dowdep.refreshReferences', this.dependency)
     }
 
     protected *getChildrenKeys(): Iterable<undefined | Reference> {

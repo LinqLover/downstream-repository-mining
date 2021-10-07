@@ -66,9 +66,24 @@
                 "icon": "$(settings-gear)"
             },
             {
-                "command": "dowdep.openDependencyExternally",
+                "command": "dowdep.dowdepDependencies.openDependencyExternally",
                 "title": "Open dependency online",
                 "icon": "$(globe)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.refreshDependencies",
+                "title": "Refresh dependencies",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.refreshReferences",
+                "title": "Refresh references",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.dowdepReferences.refreshReferences",
+                "title": "Refresh references",
+                "icon": "$(refresh)"
             }
         ],
         "configuration": {
@@ -145,21 +160,37 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "dowdep.openDependencyExternally",
+                    "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshDependencies",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshReferences",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepReferences.refreshReferences",
                     "when": "false"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "dowdep.refreshDependencies",
+                    "command": "dowdep.dowdepDependencies.refreshDependencies",
                     "when": "view == dowdepDependencies && viewItem == package"
                 },
                 {
-                    "command": "dowdep.refreshReferences",
-                    "when": "view == dowdepReferences && viewItem == package || view == dowdepDependencies && viewItem == dependency"
+                    "command": "dowdep.dowdepDependencies.refreshReferences",
+                    "when": "view == dowdepDependencies && viewItem == dependency"
                 },
                 {
-                    "command": "dowdep.openDependencyExternally",
+                    "command": "dowdep.dowdepReferences.refreshReferences",
+                    "when": "view == dowdepReferences && viewItem == package"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openDependencyExternally",
                     "group": "inline",
                     "when": "view == dowdepDependencies && viewItem == dependency || view == dowdepReferences && viewItem == dependency"
                 }

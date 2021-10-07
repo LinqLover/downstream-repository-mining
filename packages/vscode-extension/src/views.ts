@@ -15,6 +15,7 @@ export class HierarchyProvider<TRootItem extends RefreshableHierarchyItem> exten
         registerCallback: (commandName: string,
             commandCallback: (...args: any[]) => Promise<void>) => void
     ) {
+        registerCallback('dowdep.dowdepDependencies.openDependencyExternally', (item: DependencyItem<any, any>) => item.openExternally())
         registerCallback('dowdep.dowdepReferences.openReference', (item: ReferenceItem) => item.open())
     }
 }
@@ -104,6 +105,10 @@ export abstract class DependencyItem<
     async open() {
         // TODO: Do not suppress expansion of item on click - expand it manually
         await vscode.commands.executeCommand('dowdep.openDependency', this.dependency)
+    }
+
+    async openExternally() {
+        await vscode.commands.executeCommand('dowdep.openDependencyExternally', this.dependency)
     }
 
     protected buildTooltip() {
