@@ -251,7 +251,13 @@
                     "name": "Downstream References"
                 }
             ]
-        }
+        },
+        "viewsWelcome": [
+            {
+                "view": "dowdepDependencies",
+                "contents": "No downstream dependencies have been found yet.\n\n[Refresh downstream data](command:dowdep.refreshDownstreamData)\n\nFor more information about dowdep, check out our [GitHub repository](https://github.com/LinqLover/downstream-repository-mining)."
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "yarn run compile",
