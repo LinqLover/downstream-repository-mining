@@ -28,7 +28,8 @@ describe('updateDependencies', () => {
 
         const dowdep = new Dowdep({
             dependencyLimit: limit,
-            githubAccessToken: downloadGitHubData && process.env.GITHUB_OAUTH_TOKEN || undefined
+            githubAccessToken: downloadGitHubData && process.env.GITHUB_OAUTH_TOKEN || undefined,
+            dependencySearchStrategies: ['npm']
         })
         const $package = new Package(packageName, undefined)
         await $package.updateDependencies(dowdep)
