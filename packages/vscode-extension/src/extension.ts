@@ -54,7 +54,7 @@ export class Extension {
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
             // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
-            sourceCacheDirectory: vscode.Uri.joinPath(context.globalStorageUri!, 'dowdep-cache').fsPath
+            sourceCacheDirectory: vscode.Uri.joinPath(context.globalStorageUri, 'dowdep-cache').fsPath
         })
         context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => this.configurationChanged()))
         this.configurationChanged()
