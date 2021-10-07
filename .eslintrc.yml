@@ -27,6 +27,8 @@ rules:
   linebreak-style:
   - error
   - unix
+  no-return-await: 'off'  # optimization only and harder to read
+  no-unnecessary-initializer: 'off'  # readability
   quotes: 'off'
   require-yield: 'off'
   semi:

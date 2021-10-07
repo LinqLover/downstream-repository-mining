@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert'
 import downloadGitRepo from 'download-git-repo'
 import { graphql } from '@octokit/graphql'
 import { gql } from 'graphql-request'
@@ -125,10 +126,12 @@ export class Dependency {
     }
 
     async updateReferences(dowdep: Dowdep, updateCallback: () => Promise<void>) {
+        assert(this.sourceDirectory)
+
         const searcher = dowdep.createReferenceSearcher(this, this.$package)
 
         // TODO: Don't pass directory separately
-        for await (const reference of searcher.searchReferences(this.sourceDirectory!)) {
+        for await (const reference of searcher.searchReferences(this.sourceDirectory)) {
             const existingReference = this._references.find(existingReference =>
                 existingReference.location.keyEquals(reference.location))
             if (existingReference) {
@@ -168,7 +171,7 @@ export abstract class DependencySearcher {
     abstract search(dowdep: Dowdep): AsyncGenerator<Dependency>
 }
 
-export type DependencyUpdateCallback = (dependency: Dependency, data: any) => void | Promise<void>
+export type DependencyUpdateCallback = (dependency: Dependency, data: unknown) => void | Promise<void>
 
 export type DependencyUpdateOptions = {
     downloadMetadata: boolean

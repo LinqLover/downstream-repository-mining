@@ -4,13 +4,14 @@ import { strict as assert } from 'assert'
 export default function mapUnorderedAsync<TIn, TOut>(iterable: AsyncIterable<TIn>, fn: (item: TIn) => Promise<TOut>): AsyncIterable<TOut> {
     return {
         [Symbol.asyncIterator]: () => {
-            let resolve: () => void, reject: (reason: any) => void
+            let resolve: () => void, reject: (reason: unknown) => void
             let semaphore = new Promise<void>((res, rej) => [resolve, reject] = [res, rej])
             const results: IteratorResult<TOut>[] = []
 
             let maxTemp = 0
             let max: number | undefined = undefined
             let done = false
+            // eslint-disable-next-line no-async-promise-executor
             new Promise<void>(async (res, rej) => {
                 try {
                     const iterator = iterable[Symbol.asyncIterator]()
