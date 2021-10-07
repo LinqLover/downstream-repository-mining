@@ -64,6 +64,11 @@
                 "category": "Downstream Dependencies",
                 "title": "Open settings",
                 "icon": "$(settings-gear)"
+            },
+            {
+                "command": "dowdep.openDependencyExternally",
+                "title": "Open dependency online",
+                "icon": "$(globe)"
             }
         ],
         "configuration": {
@@ -138,14 +143,25 @@
             }
         },
         "menus": {
+            "commandPalette": [
+                {
+                    "command": "dowdep.openDependencyExternally",
+                    "when": "false"
+                }
+            ],
             "view/item/context": [
                 {
-                  "command": "dowdep.refreshDependencies",
-                  "when": "view == dowdepDependencies && viewItem == package"
+                    "command": "dowdep.refreshDependencies",
+                    "when": "view == dowdepDependencies && viewItem == package"
                 },
                 {
-                  "command": "dowdep.refreshReferences",
-                  "when": "view == dowdepReferences && viewItem == package || view == dowdepDependencies && viewItem == dependency"
+                    "command": "dowdep.refreshReferences",
+                    "when": "view == dowdepReferences && viewItem == package || view == dowdepDependencies && viewItem == dependency"
+                },
+                {
+                    "command": "dowdep.openDependencyExternally",
+                    "group": "inline",
+                    "when": "view == dowdepDependencies && viewItem == dependency || view == dowdepReferences && viewItem == dependency"
                 }
             ],
             "view/title": [

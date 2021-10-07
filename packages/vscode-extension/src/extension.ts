@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert'
 import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
@@ -128,6 +129,10 @@ export class Extension {
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openDependency', this.catchErrors(
                 (dependency: Dependency) => this.openDependency(dependency)
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.openDependencyExternally', this.catchErrors(
+                (dependency: DependencyLike) => this.openDependencyExternally(dependency)
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openDependencyFolder', this.catchErrors(
@@ -334,6 +339,46 @@ export class Extension {
         }
 
         await vscode.window.showErrorMessage("Cannot open this dependency")
+    }
+
+    async openDependencyExternally(_dependency: DependencyLike) {
+        const dependencies = await this.getDependencies(_dependency)
+        assert(dependencies.length == 1)
+        const dependency = dependencies[0]
+
+        const urls = dependency.urls
+        if (!urls.size) {
+            throw new Error("Cannot open dependency online")
+        }
+        let target: {
+            label: string,
+            url: string
+        }
+        if (urls.size == 1) {
+            const url = iterUtils.first(urls.entries())
+            target = {
+                label: url[0],
+                url: url[1]
+            }
+        } else {
+            const choice = await vscode.window.showQuickPick(
+                _.map([...urls.entries()], ([label, url]) => ({
+                    target: { label, url },
+                    label: `$(globe) ${label}`,
+                    description: url
+                })),
+                {
+                    title: "Choose platform"
+                }
+            )
+            if (!choice) {
+                return
+            }
+            target = choice.target
+        }
+
+        const uri = vscode.Uri.parse(target.url)
+        await vscode.commands.executeCommand('vscode.open', uri)
     }
 
     async openDependencyFolder(dependency: Dependency, relativePath: string) {
