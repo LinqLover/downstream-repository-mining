@@ -1,5 +1,6 @@
 {
     "name": "dowdep-vscode-extension",
+    "publisher": "LinqLover",
     "displayName": "Downstream Dependency Miner",
     "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
     "version": "0.0.1",
@@ -26,6 +27,12 @@
     },
     "contributes": {
         "commands": [
+            {
+                "command": "dowdep.openSettings",
+                "category": "Downstream Dependencies",
+                "title": "Open settings",
+                "icon": "$(settings-gear)"
+            },
             {
                 "command": "dowdep.refreshPackages",
                 "category": "Downstream Dependencies",
@@ -131,6 +138,10 @@
                 }
             ],
             "view/title": [
+                {
+                    "command": "dowdep.openSettings",
+                    "when": "view == dowdepDependencies || view == dowdepReferences"
+                },
                 {
                     "command": "dowdep.refreshDownstreamData",
                     "when": "view == dowdepDependencies || view == dowdepReferences",

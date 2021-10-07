@@ -39,6 +39,7 @@ export function deactivate() {
 
 export class Extension {
     packages: Package[] = []
+    protected extension: vscode.Extension<unknown> // TODO: Name clash!
     protected dowdep: Dowdep
     protected dependenciesProvider: DependenciesProvider
     protected referencesProvider: ReferencesProvider
@@ -55,6 +56,8 @@ export class Extension {
     constructor(
         context: vscode.ExtensionContext
     ) {
+        this.extension = context.extension
+
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
             // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
@@ -104,6 +107,10 @@ export class Extension {
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.refreshDownstreamData', this.catchErrors(
                 ($package?: PackageLike) => this.refreshDownstreamData($package)
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.openSettings', this.catchErrors(
+                () => this.openSettings()
             )))
     }
 
@@ -279,6 +286,10 @@ export class Extension {
         })
     }
 
+    async openSettings() {
+        await vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${this.extension.id}`)
+    }
+
     async openPackage($package: Package) {
         if (!$package.directory) {
             return
@@ -415,7 +426,7 @@ export class Extension {
     }
 
     protected async getPackages($package: PackageLike | undefined) {
-        return this.getAlikeItems<Package, PackageLike, { $package: PackageLike }, Package>(
+        return await this.getAlikeItems<Package, PackageLike, { $package: PackageLike }, Package>(
             $package,
             async () => this.getAllPackages(),
             '$package',
