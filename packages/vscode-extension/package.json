@@ -43,7 +43,8 @@
                 "command": "dowdep.fetchMoreDownstreamData",
                 "category": "Downstream Dependencies",
                 "title": "Fetch more downstream data",
-                "icon": "$(settings-add)"
+                "icon": "$(settings-add)",
+                "enablement": "dowdep.activationState > 1"
             },
             {
                 "command": "dowdep.refreshDependencies",
@@ -69,6 +70,15 @@
                 "command": "dowdep.dowdepDependencies.openDependencyExternally",
                 "title": "Open dependency online",
                 "icon": "$(globe)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.openRandomReference",
+                "title": "Open random reference",
+                "icon": {
+                    "dark": "assets/die-dark.svg",
+                    "light": "assets/die-light.svg"
+                },
+                "enablement": "dowdep.activationState > 1"
             },
             {
                 "command": "dowdep.dowdepDependencies.refreshDependencies",
@@ -164,6 +174,10 @@
                     "when": "false"
                 },
                 {
+                    "command": "dowdep.dowdepDependencies.openRandomReference",
+                    "when": "false"
+                },
+                {
                     "command": "dowdep.dowdepDependencies.refreshDependencies",
                     "when": "false"
                 },
@@ -178,21 +192,26 @@
             ],
             "view/item/context": [
                 {
+                    "command": "dowdep.dowdepDependencies.openRandomReference",
+                    "group": "inline",
+                    "when": "view == dowdepDependencies && viewItem =~ /leafTypes:(\\S*,)?reference/ || view == dowdepReferences && viewItem =~ /leafTypes:(\\S*,)?reference/"
+                },
+                {
                     "command": "dowdep.dowdepDependencies.refreshDependencies",
-                    "when": "view == dowdepDependencies && viewItem == package"
+                    "when": "view == dowdepDependencies && viewItem =~ /type:package/"
                 },
                 {
                     "command": "dowdep.dowdepDependencies.refreshReferences",
-                    "when": "view == dowdepDependencies && viewItem == dependency"
+                    "when": "view == dowdepDependencies && viewItem =~ /type:dependency/"
                 },
                 {
                     "command": "dowdep.dowdepReferences.refreshReferences",
-                    "when": "view == dowdepReferences && viewItem == package"
+                    "when": "view == dowdepReferences && viewItem =~ /type:package/"
                 },
                 {
                     "command": "dowdep.dowdepDependencies.openDependencyExternally",
                     "group": "inline",
-                    "when": "view == dowdepDependencies && viewItem == dependency || view == dowdepReferences && viewItem == dependency"
+                    "when": "view == dowdepDependencies && viewItem =~ /type:dependency/ || view == dowdepReferences && viewItem =~ /type:dependency/"
                 }
             ],
             "view/title": [
@@ -207,7 +226,7 @@
                 },
                 {
                     "command": "dowdep.fetchMoreDownstreamData",
-                    "when": "view == dowdepDependencies || view == dowdepReferences",
+                    "when": "view == dowdepDependencies && dowdep.activationState > 1 || view == dowdepReferences && dowdep.activationState > 1",
                     "group": "navigation"
                 }
             ]

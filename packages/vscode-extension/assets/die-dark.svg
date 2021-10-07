@@ -1,0 +1,14 @@
+<svg width="720" height="720" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="hidden">
+	<defs>
+		<clipPath id="clip0">
+			<rect x="486" y="0" width="720" height="720"/>
+		</clipPath>
+	</defs>
+	<g clip-path="url(#clip0)" transform="translate(-486 0)">
+		<path d="M516 690 1176 690 1176 30 516 30Z" stroke="#ffffff" stroke-width="60" stroke-linejoin="round" fill="none" fill-rule="evenodd"/>
+		<path d="M756 180C756 213.15 729.15 240 696 240 662.85 240 636 213.15 636 180 636 146.85 662.85 120 696 120 729.15 120 756 146.85 756 180" fill="#ffffff" stroke="none" fill-rule="evenodd"/>
+		<path d="M906 360C906 393.15 879.15 420 846 420 812.85 420 786 393.15 786 360 786 326.85 812.85 300 846 300 879.15 300 906 326.85 906 360" fill="#ffffff" stroke="none" fill-rule="evenodd"/>
+		<path d="M1056 540C1056 573.15 1029.15 600 996 600 962.85 600 936 573.15 936 540 936 506.85 962.85 480 996 480 1029.15 480 1056 506.85 1056 540" fill="#ffffff" stroke="none" fill-rule="evenodd"/>
+		<text font-family="Arial,Arial_MSFontService,sans-serif" font-weight="700" font-size="5" transform="matrix(30 0 0 30 486 1170)">Created by Ben Davis<tspan font-size="5" x="0" y="5">from the Noun Project, edited.</tspan></text>
+	</g>
+</svg>

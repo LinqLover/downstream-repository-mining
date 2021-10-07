@@ -3,7 +3,7 @@ import { Dependency, Package, Reference } from 'dowdep'
 import * as vscode from 'vscode'
 
 import { Extension } from './extension'
-import { HierarchyNodeItem, LabeledHierarchyNodeItem } from './utils/vscode/hierarchy'
+import { HierarchyNodeItem, LabeledHierarchyNodeItem, RefreshableHierarchyItem } from './utils/vscode/hierarchy'
 import { DependencyItem, HierarchyProvider, PackageItem, PackagesItem, ReferenceFileNodeItem, ReferenceItem } from './views'
 
 
@@ -33,7 +33,7 @@ export class DependenciesProvider extends HierarchyProvider<DependenciesPackages
 
 class DependenciesPackagesItem extends PackagesItem<DependenciesPackageItem> {
     createItemChild($package: Package) {
-        return new DependenciesPackageItem($package)
+        return new DependenciesPackageItem($package, this)
     }
 }
 
@@ -43,7 +43,7 @@ class DependenciesPackageItem extends PackageItem<DependenciesDependencyItem> {
     }
 
     createItemChild(dependency: Dependency) {
-        return new DependenciesDependencyItem(dependency)
+        return new DependenciesDependencyItem(dependency, this)
     }
 
     refresh() {
@@ -63,12 +63,13 @@ class DependenciesDependencyItem extends DependencyItem<
     DependencyFileNodeItem | DependencyMemberNodeItem | ReferenceItem
 > {
     constructor(
-        protected dependency: Dependency
+        protected dependency: Dependency,
+        parent: RefreshableHierarchyItem
     ) {
-        super()
+        super(parent)
     }
 
-    private dependencyNodeItem = new DependencyFileNodeItem([])
+    private dependencyNodeItem = new DependencyFileNodeItem([], this)
 
     getChildren() {
         return this.dependencyNodeItem.getChildren()
@@ -102,9 +103,10 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
     ReferenceItem
 > {
     constructor(
-        public path: readonly string[]
+        public path: readonly string[],
+        parent: RefreshableHierarchyItem
     ) {
-        super(path)
+        super(path, parent)
 
         this.command = {
             title: "Browse dependency folder",
@@ -125,11 +127,11 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
     }
 
     createMemberNodeChild() {
-        return new DependencyMemberNodeItem([])
+        return new DependencyMemberNodeItem([], this)
     }
 
     createFileNodeChild(path: readonly string[]) {
-        return new DependencyFileNodeItem(path)
+        return new DependencyFileNodeItem(path, this)
     }
 
     isComplexItem(child: DependencyFileNodeItem | DependencyMemberNodeItem | ReferenceItem): child is DependencyFileNodeItem {
@@ -150,8 +152,8 @@ class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
     DependencyMemberNodeItem,
     ReferenceItem
 > {
-    constructor(path: readonly string[]) {
-        super(path, {
+    constructor(path: readonly string[], parent: RefreshableHierarchyItem) {
+        super(path, parent, {
             showCountInDescription: true
         })
     }
@@ -168,10 +170,10 @@ class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
 
     createItemChild(pathSegmentOrLeaf: string | Reference) {
         if (pathSegmentOrLeaf instanceof Reference) {
-            return new ReferenceItem(pathSegmentOrLeaf)
+            return new ReferenceItem(pathSegmentOrLeaf, this)
         }
 
-        return new DependencyMemberNodeItem([...this.path, pathSegmentOrLeaf])
+        return new DependencyMemberNodeItem([...this.path, pathSegmentOrLeaf], this)
     }
 
     isComplexItem(child: DependencyMemberNodeItem | ReferenceItem): child is DependencyMemberNodeItem {

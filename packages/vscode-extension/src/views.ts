@@ -1,10 +1,11 @@
 import { strict as assert } from 'assert'
 import { Dependency, Package, Reference } from 'dowdep'
+import _ from 'lodash'
 import truncate from 'truncate'
 import * as vscode from 'vscode'
 
 import { Extension } from './extension'
-import { HierarchyDataProvider, HierarchyNodeItem, LabeledHierarchyNodeItem, RefreshableHierarchyItem, SynchronizableHierarchyItem } from './utils/vscode/hierarchy'
+import { HierarchyDataProvider, HierarchyItem, HierarchyNodeItem, LabeledHierarchyNodeItem, RefreshableHierarchyItem, SynchronizableHierarchyItem } from './utils/vscode/hierarchy'
 import * as iterUtils from './utils/node/iterUtils'
 import md from './utils/vscode/markdown'
 import isDefined from './utils/node/isDefined'
@@ -15,8 +16,14 @@ export class HierarchyProvider<TRootItem extends RefreshableHierarchyItem> exten
         registerCallback: (commandName: string,
             commandCallback: (...args: any[]) => Promise<void>) => void
     ) {
+        registerCallback('dowdep.dowdepDependencies.openRandomReference', (item: HierarchyItem) => this.openRandomReference(item))
         registerCallback('dowdep.dowdepDependencies.openDependencyExternally', (item: DependencyItem<any, any>) => item.openExternally())
         registerCallback('dowdep.dowdepReferences.openReference', (item: ReferenceItem) => item.open())
+    }
+    
+    protected static async openRandomReference(root: HierarchyItem) {
+        const item = _.sample([...root.findAllLeafs(<(item: HierarchyItem) => item is ReferenceItem>(_item => _item instanceof ReferenceItem))])
+        return await item?.open()
     }
 }
 
@@ -24,8 +31,10 @@ export abstract class PackagesItem<TPackageItem extends RefreshableHierarchyItem
     constructor(
         protected extension: Extension
     ) {
-        super(vscode.TreeItemCollapsibleState.Expanded)
+        super(null, vscode.TreeItemCollapsibleState.Expanded)
     }
+
+    public parent = null
 
     getChildrenKeys() {
         return this.extension.packages
@@ -34,11 +43,12 @@ export abstract class PackagesItem<TPackageItem extends RefreshableHierarchyItem
 
 export abstract class PackageItem<TItem extends RefreshableHierarchyItem> extends SynchronizableHierarchyItem<Dependency, TItem> {
     constructor(
-        public $package: Package
+        public $package: Package,
+        parent: RefreshableHierarchyItem
     ) {
-        super(vscode.TreeItemCollapsibleState.Expanded)
+        super(parent, vscode.TreeItemCollapsibleState.Expanded)
 
-        this.contextValue = 'package'
+        this.typeContext = 'package'
         this.command = {
             title: "Reveal in explorer",
             command: 'dowdep.dowdepDependencies.openPackage',
@@ -62,12 +72,12 @@ export abstract class DependencyItem<
     TDependencyItem extends DependencyItem<TDependencyItem, TReferenceItem>,
     TReferenceItem extends RefreshableHierarchyItem
 > extends HierarchyNodeItem<undefined, Reference, TDependencyItem, TReferenceItem> {
-    constructor() {
-        super([], {
+    constructor(parent: RefreshableHierarchyItem) {
+        super([], parent, {
             showCountInDescription: true
         })
 
-        this.contextValue = 'dependency'
+        this.typeContext = 'dependency'
         this.command = {
             title: "Browse dependency",
             command: 'dowdep.dowdepReferences.openDependency',
@@ -160,8 +170,8 @@ export abstract class ReferenceFileNodeItem<
     },
     TLeafItem extends RefreshableHierarchyItem
 > extends LabeledHierarchyNodeItem<Reference, TFileNodeItem, TMemberNodeItem | TLeafItem> {
-    constructor(path: readonly string[]) {
-        super(path, {
+    constructor(path: readonly string[], parent: RefreshableHierarchyItem) {
+        super(path, parent, {
             showCountInDescription: true
         })
     }
@@ -231,15 +241,17 @@ export abstract class ReferenceFileNodeItem<
 
 export class ReferenceItem extends RefreshableHierarchyItem {
     constructor(
-        protected reference: Reference
+        protected reference: Reference,
+        parent: RefreshableHierarchyItem
     ) {
-        super()
+        super(parent)
 
         this.command = {
             title: "Jump to reference",
             command: 'dowdep.dowdepReferences.openReference',
             arguments: [this]
         }
+        this.typeContext = 'reference'
     }
 
     *getChildren() {

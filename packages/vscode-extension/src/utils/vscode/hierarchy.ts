@@ -67,41 +67,82 @@ export abstract class HierarchyDataProvider<
         for (const rootItem of this.basicGetRoots()) {
             const item = rootItem.findItem<T>(predicate)
             if (item) {
-                return item
-            }
-        }
-    }
-}
-
-export abstract class HierarchyItem extends vscode.TreeItem {
-    constructor(collapsibleState?: vscode.TreeItemCollapsibleState) {
-        super("", collapsibleState)
-    }
-    abstract getChildren(): IterableIterator<HierarchyItem>
-
-    public findItem<T extends HierarchyItem>(predicate: (item: HierarchyItem) => boolean): T | undefined {
-        if (predicate(this)) {
-            return <T><unknown>this
-        }
-        for (const childItem of this.getChildren()) {
-            const item = childItem.findItem(predicate)
-            if (item) {
                 return <T>item
             }
         }
     }
 }
 
+export abstract class HierarchyItem extends vscode.TreeItem {
+    constructor(
+        public parent: HierarchyItem | null,
+        collapsibleState?: vscode.TreeItemCollapsibleState
+    ) {
+        super("", collapsibleState)
+    }
+
+    abstract getChildren(): IterableIterator<HierarchyItem>
+
+    public *findAllItems(): Generator<HierarchyItem, void, unknown> {
+        yield this
+        for (const childItem of this.getChildren()) {
+            yield* childItem.findAllItems()
+        }
+    }
+
+    public findAllLeafs<T extends HierarchyItem>(predicate?: (item: HierarchyItem) => item is T)
+    {
+        return <Generator<T, void, unknown>>iterUtils.filter(this.findAllItems(), item =>
+            item.isLeaf() && (!predicate || predicate(item)))
+    }
+
+    public findItem<T extends HierarchyItem>(predicate: (item: HierarchyItem) => boolean): T | undefined {
+        return <T>iterUtils.find(this.findAllItems(), item => predicate(item))
+    }
+
+    public isLeaf() {
+        return iterUtils.isEmpty(this.getChildren())
+    }
+}
+
 export abstract class RefreshableHierarchyItem extends HierarchyItem {
-    abstract refresh(): void
+    constructor(
+        public parent: RefreshableHierarchyItem | null,
+        collapsibleState?: vscode.TreeItemCollapsibleState
+    ) {
+        super(parent, collapsibleState)
+    }
+
+    refresh() {
+        this.leavesChanged()
+    }
+
+    public typeContext?: string
+
+    protected leavesChanged() {
+        this.contextValue = this.serializeContext({
+            type: this.typeContext,
+            leafTypes: [...new Set(this.findAllLeafs(
+                <(leaf: HierarchyItem) => leaf is RefreshableHierarchyItem>(leaf => leaf instanceof RefreshableHierarchyItem))
+            )].map(leaf => leaf.typeContext).join(',')
+        })
+
+        this.parent?.leavesChanged()
+    }
+
+    private serializeContext(context: object) {
+        return Object.entries(context).map(
+            ([key, value]) => `${key}:${value}`
+        ).join(' ')
+    }
 }
 
 export abstract class SynchronizableHierarchyItem<
     TKey,
     TItem extends RefreshableHierarchyItem
 > extends RefreshableHierarchyItem {
-    constructor(collapsibleState?: vscode.TreeItemCollapsibleState) {
-        super(collapsibleState)
+    constructor(parent: RefreshableHierarchyItem | null, collapsibleState?: vscode.TreeItemCollapsibleState) {
+        super(parent, collapsibleState)
         this.children = new Map<TKey, TItem>()
     }
 
@@ -120,6 +161,8 @@ export abstract class SynchronizableHierarchyItem<
                 return [key, child]
             })
         )
+
+        super.refresh()
     }
 
     protected get basicChildren(): ReadonlyMap<TKey, TItem> {
@@ -147,9 +190,10 @@ export abstract class HierarchyNodeItem<
 > extends SynchronizableHierarchyItem<TPathSegment | TLeafKey, TComplexItem | TLeafItem> {
     constructor(
         public path: readonly TPathSegment[],
+        parent: RefreshableHierarchyItem,
         options?: Partial<HierarchyNodeItemOptions>
     ) {
-        super(vscode.TreeItemCollapsibleState.Collapsed)
+        super(parent, vscode.TreeItemCollapsibleState.Collapsed)
 
         if (options?.showCountInDescription) {
             this.showCountInDescription = options?.showCountInDescription
