@@ -28,12 +28,6 @@
     "contributes": {
         "commands": [
             {
-                "command": "dowdep.openSettings",
-                "category": "Downstream Dependencies",
-                "title": "Open settings",
-                "icon": "$(settings-gear)"
-            },
-            {
                 "command": "dowdep.refreshPackages",
                 "category": "Downstream Dependencies",
                 "title": "Refresh packages",
@@ -44,6 +38,12 @@
                 "category": "Downstream Dependencies",
                 "title": "Refresh downstream data",
                 "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.fetchMoreDownstreamData",
+                "category": "Downstream Dependencies",
+                "title": "Fetch more downstream data",
+                "icon": "$(settings-add)"
             },
             {
                 "command": "dowdep.refreshDependencies",
@@ -58,6 +58,12 @@
                 "title": "Refresh references",
                 "icon": "$(refresh)",
                 "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.openSettings",
+                "category": "Downstream Dependencies",
+                "title": "Open settings",
+                "icon": "$(settings-gear)"
             }
         ],
         "configuration": {
@@ -70,6 +76,11 @@
                     ],
                     "markdownDescription": "Indicates how many downstream dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
                     "default": 10
+                },
+                "dowdep.dependencyLimitIncrement": {
+                    "type": "number",
+                    "markdownDescription": "Indicates how many downstream dependencies will be added to `#dowdep.dependencyLimit#` when the command \"Fetch more downstream data\" is executed.",
+                    "default": 5
                 },
                 "dowdep.dependencySearchStrategies": {
                     "type": "array",
@@ -144,6 +155,11 @@
                 },
                 {
                     "command": "dowdep.refreshDownstreamData",
+                    "when": "view == dowdepDependencies || view == dowdepReferences",
+                    "group": "navigation"
+                },
+                {
+                    "command": "dowdep.fetchMoreDownstreamData",
                     "when": "view == dowdepDependencies || view == dowdepReferences",
                     "group": "navigation"
                 }

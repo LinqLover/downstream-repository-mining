@@ -45,6 +45,7 @@ export class Extension {
     protected referencesProvider: ReferencesProvider
     protected codeLensProvider: DeclarationCodeLensProvider
 
+    private dependencyLimitIncrement: number = 0
     private get modelObservers() {
         return [
             this.dependenciesProvider,
@@ -76,6 +77,7 @@ export class Extension {
     private async configurationChanged() {
         const configuration = vscode.workspace.getConfiguration()
         this.dowdep.dependencyLimit = configuration.get<number>('dowdep.dependencyLimit')
+        this.dependencyLimitIncrement = configuration.get<number>('dowdep.dependencyLimitIncrement', 0)
         this.dowdep.githubAccessToken = configuration.get('dowdep.githubOAuthToken')
         this.dowdep.sourcegraphToken = configuration.get('dowdep.sourcegraphToken')
         this.dowdep.dependencySearchStrategies = configuration.get<Dowdep['dependencySearchStrategies'] | null>('dowdep.dependencySearchStrategies', null) ?? (this.dowdep.sourcegraphToken ? '*' : ['npm'])
@@ -107,6 +109,10 @@ export class Extension {
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.refreshDownstreamData', this.catchErrors(
                 ($package?: PackageLike) => this.refreshDownstreamData($package)
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.fetchMoreDownstreamData', this.catchErrors(
+                () => this.fetchMoreDownstreamData()
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openSettings', this.catchErrors(
@@ -284,6 +290,13 @@ export class Extension {
                 )
             })
         })
+    }
+
+    async fetchMoreDownstreamData() {
+        const newLimit = (this.dowdep.dependencyLimit ?? 0) + this.dependencyLimitIncrement
+        await vscode.workspace.getConfiguration().update('dowdep.dependencyLimit', newLimit)
+
+        return await this.refreshDownstreamData()
     }
 
     async openSettings() {
