@@ -80,7 +80,7 @@ export default class Search extends Command {
         }
         if (allReferences) {
             const aggregatedReferences = _.chain(allReferences)
-                .groupBy(reference => reference.declarationMemberPath)
+                .groupBy(reference => reference.declaration.memberPath)
                 .mapValues(memberReferences => _.countBy(memberReferences, 'dependentName'))
                 .toPairs()
                 .orderBy(([, countedReferences]) => _.sum(Object.values(countedReferences)), 'desc')

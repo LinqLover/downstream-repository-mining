@@ -1,13 +1,15 @@
-import { Dependency } from './dependencies'
+import { Dependency, DependencySearchStrategy, DependencyUpdateOptions } from './dependencies'
 import { Dowdep, getCacheDirectory } from './dowdep'
 import { Package } from './packages'
-import { DeclarationLocation, FilePosition, FilePositionPrimitive, Location, Reference, ReferenceKind, ReferenceSearcher, ReferenceSearcherStrategy } from './references'
+import { DeclarationLocation, FilePosition, FilePositionPrimitive, Location, Reference, ReferenceKind, ReferenceSearcher, ReferenceSearchStrategy } from './references'
 
 
 export {
     Location,
     DeclarationLocation,
     Dependency,
+    DependencySearchStrategy,
+    DependencyUpdateOptions,
     Dowdep,
     FilePosition,
     FilePositionPrimitive,
@@ -16,5 +18,5 @@ export {
     Reference,
     ReferenceKind,
     ReferenceSearcher,
-    ReferenceSearcherStrategy
+    ReferenceSearchStrategy
 }

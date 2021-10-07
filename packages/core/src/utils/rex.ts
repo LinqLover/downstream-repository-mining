@@ -1,4 +1,4 @@
-import assert from 'assert'
+import { strict as assert } from 'assert'
 
 /**
  * regular expression utility using template literals
@@ -35,7 +35,9 @@ export default function (templates: TemplateStringsArray, ...args: (string | Reg
     }
     args = args.map(arg => arg instanceof RegExp ? arg.source : arg)
     const raw = raws.shift() + raws.map((template, i) => `${args[i]}${template}`).join('')
-    const [, source, newFlags] = raw.match(/^\/?(.*?)(?:\/(\w+))?$/)!  // extracts source and flags
+    const match = raw.match(/^\/?(.*?)(?:\/(\w+))?$/)  // extracts source and flags
+    assert(match)
+    const [, source, newFlags] = match
     flags += newFlags ?? ''
     return new RegExp(source, [...new Set(flags)].join(''))
 }

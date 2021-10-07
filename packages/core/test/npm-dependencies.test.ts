@@ -5,7 +5,7 @@ import readPackageJsonCallback from 'read-package-json'
 import rimRaf from 'rimraf'
 import { promisify } from 'util'
 import { Package } from '../src'
-import { NpmDependency } from '../src/npm-dependencies'
+import { NpmDependency } from '../src/dependencies/npm'
 
 import { Dowdep, getCacheDirectory } from '../src'
 
@@ -28,10 +28,11 @@ describe('updateDependencies', () => {
 
         const dowdep = new Dowdep({
             dependencyLimit: limit,
-            githubAccessToken: downloadGitHubData && process.env.GITHUB_OAUTH_TOKEN || undefined
+            githubAccessToken: process.env.GITHUB_OAUTH_TOKEN,
+            dependencySearchStrategies: ['npm']
         })
         const $package = new Package(packageName, undefined)
-        await $package.updateDependencies(dowdep)
+        await $package.updateDependencies(dowdep, { downloadMetadata: downloadGitHubData })
 
         expect($package.dependencies).toHaveLength(limit)
 

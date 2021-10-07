@@ -1,9 +1,10 @@
 import itAll from 'it-all'
-import mapAsync from '@async-generators/map'
+import mapManyAsync from '@async-generators/map-many'
 
 import { Dowdep } from './dowdep'
 import { Dependency, DependencyUpdateCallback, DependencyUpdateOptions } from './dependencies'
 import { Reference } from '.'
+import mapUnorderedAsync from './utils/mapUnorderedAsync'
 
 
 export class Package {
@@ -17,17 +18,17 @@ export class Package {
     }
 
     private _dependencies: Dependency[] = []
-    get dependencies(): ReadonlyArray<Dependency> {
+    get dependencies(): readonly Dependency[] {
         return this._dependencies
     }
-    get allReferences(): ReadonlyArray<Reference> {
+    get allReferences(): readonly Reference[] {
         return this.dependencies.flatMap(depedendency => depedendency.references)
     }
 
     async updateDependencies(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
-        const searcher = dowdep.createDependencySearcher(this)
+        const searchers = dowdep.createDependencySearchers(this)
 
-        await itAll(mapAsync<Dependency, void>(searcher.search(), async dependency => {
+        await itAll(mapUnorderedAsync<Dependency, void>(mapManyAsync(searchers, searcher => searcher.search(dowdep)), async dependency => {
             const existingDependency = this._dependencies.find(existingDependency =>
                 existingDependency.name == dependency.name)
             if (!existingDependency) {
@@ -38,5 +39,6 @@ export class Package {
             }
             await dependency.update(dowdep, options, updateCallback)
         }))
+        // TODO: Dependency needs a "state" variable for proper asynchronous state checking
     }
 }

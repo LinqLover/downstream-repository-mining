@@ -1,11 +1,10 @@
 import pathExists from 'path-exists'
 import path from 'path'
 
-import { NpmDependencySearcher } from './npm-dependencies'
-import { OnlyData } from './utils/OnlyData'
-import { PackageReferenceSearcher, ReferenceSearcherStrategy } from './references'
+import { createDependencySearcher, Dependency, DependencySearcher, DependencySearchStrategy } from './dependencies'
 import { Package } from './packages'
-import { Dependency, DependencySearcher } from './dependencies'
+import { PackageReferenceSearcher, ReferenceSearchStrategy } from './references'
+import { OnlyData } from './utils/OnlyData'
 
 
 export function getCacheDirectory() {
@@ -26,18 +25,24 @@ export class Dowdep {
         this._githubAccessToken = value
         this.githubClient?.tokenChanged(value)
     }
+    sourcegraphToken?: string
     githubClient?: {
         tokenChanged: (value: string | undefined) => void
     }
     sourceCacheDirectory!: string
-    referenceSearchStrategy: ReferenceSearcherStrategy = 'types'
+    dependencySearchStrategies: readonly DependencySearchStrategy[] | '*' = '*'
+    referenceSearchStrategy: ReferenceSearchStrategy = 'types'
 
     private _githubAccessToken?: string
 
-    createDependencySearcher($package: Package): DependencySearcher {
-        return new NpmDependencySearcher($package, {
-            limit: this.dependencyLimit
-        })
+    createDependencySearchers($package: Package): readonly DependencySearcher[] {
+        const strategies = this.dependencySearchStrategies == '*'
+            ? <['npm', 'sourcegraph']>['npm', 'sourcegraph']
+            : this.dependencySearchStrategies
+
+        return strategies.map(strategy => createDependencySearcher(strategy, $package, {
+            limit: this.dependencyLimit ? Math.ceil(this.dependencyLimit / strategies.length) : this.dependencyLimit
+        }))
     }
 
     createReferenceSearcher(dependency: Dependency, $package: Package) {

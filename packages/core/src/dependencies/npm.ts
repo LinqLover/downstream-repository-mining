@@ -1,12 +1,14 @@
 import downloadPackageTarball from 'download-package-tarball'
 import npmDependants from 'npm-dependants'
 import { RegistryClient } from 'package-metadata'
+import psl from 'psl'
 
-import { Dependency, DependencySearcher, DependencyUpdateCallback, DependencyUpdateOptions } from './dependencies'
-import { Dowdep } from './dowdep'
-import { Package } from './packages'
-import isDefined from './utils/isDefined'
-import { OnlyData } from './utils/OnlyData'
+import { Dependency, DependencySearcher, DependencyUpdateCallback, DependencyUpdateOptions } from './base'
+import { Dowdep } from '../dowdep'
+import { Package } from '../packages'
+import isDefined from '../utils/isDefined'
+import { OnlyData } from '../utils/OnlyData'
+import { URL } from 'url'
 
 
 export class NpmDependency extends Dependency {
@@ -28,10 +30,6 @@ export class NpmDependency extends Dependency {
         await updateCallback?.(this, 'registry')
 
         await super.update(dowdep, options, updateCallback)
-    }
-
-    async isSourceCodeReady(dowdep: Dowdep) {
-        return isDefined(this.sourceDirectory) && await dowdep.fileSystem.exists(this.sourceDirectory)
     }
 
     async updateSource(dowdep: Dowdep) {
@@ -68,7 +66,17 @@ export class NpmDependency extends Dependency {
             return
         }
 
-        this.repositoryUrl = latestVersion.repository?.url
+        if (latestVersion.repository?.url) {
+            try {
+                const url = new URL(latestVersion.repository.url)
+                const domain = psl.parse(url.hostname)
+                if (!domain.error) {
+                    this.pluggableUrls.set(domain.sld, url.href)
+                }
+            } catch (error) {
+                console.warn("Invalid URL", latestVersion.repository.url)
+            }
+        }
 
         this.description = latestVersion.description
     }
@@ -76,11 +84,10 @@ export class NpmDependency extends Dependency {
 
 export class NpmDependencySearcher extends DependencySearcher {
     constructor($package: Package, init: Partial<OnlyData<NpmDependencySearcher>>) {
-        super($package)
+        super($package, init)
         Object.assign(this, init)
     }
 
-    limit?: number = undefined
     countNestedDependents = true
     downloadGitHubData = true
 

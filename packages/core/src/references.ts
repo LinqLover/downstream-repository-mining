@@ -172,11 +172,11 @@ export class ReferenceSearcher {
         }
     }
 
-    async* searchReferences(limit?: number, includeKinds: ReadonlyArray<ReferenceKind> | '*' = ['usage']): AsyncIterable<Reference> {
+    async* searchReferences(limit?: number, includeKinds: readonly ReferenceKind[] | '*' = ['usage']): AsyncIterable<Reference> {
         yield* this.basicSearchReferences(this.rootDirectory, limit, includeKinds == '*' ? ALL_REFERENCE_KINDS : includeKinds, 0)
     }
 
-    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: ReadonlyArray<ReferenceKind> | '*', depth: number): AsyncIterable<Reference> {
+    protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: readonly ReferenceKind[] | '*', depth: number): AsyncIterable<Reference> {
         if (!fs.existsSync(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
             const depDirectories: Iterable<Dirent> = (
@@ -209,14 +209,14 @@ export class ReferenceSearcher {
 type ConcretePackageReferenceSearcher = (new (
     $package: Package,
     dependency: Dependency,
-    includeKinds?: ReadonlyArray<ReferenceKind> | '*'
+    includeKinds?: readonly ReferenceKind[] | '*'
 ) => PackageReferenceSearcher)
 
-const ALL_REFERENCE_SEARCHER_STRATEGIES = [
+const ALL_REFERENCE_SEARCH_STRATEGIES = [
     'heuristic',
     'types'
 ] as const
-export type ReferenceSearcherStrategy = (typeof ALL_REFERENCE_SEARCHER_STRATEGIES)[number]
+export type ReferenceSearchStrategy = (typeof ALL_REFERENCE_SEARCH_STRATEGIES)[number]
 
 export abstract class PackageReferenceSearcher {
     /** TODOS for later:
@@ -226,7 +226,7 @@ export abstract class PackageReferenceSearcher {
     constructor(
         public $package: Package,
         public dependency: Dependency,
-        public includeKinds: ReadonlyArray<ReferenceKind> | '*' = ['usage']
+        public includeKinds: readonly ReferenceKind[] | '*' = ['usage']
     ) { }
 
     static named(name: string): ConcretePackageReferenceSearcher {
@@ -240,11 +240,11 @@ export abstract class PackageReferenceSearcher {
         }
     }
 
-    static create($package: Package, dependency: Dependency, strategy: ReferenceSearcherStrategy) {
+    static create($package: Package, dependency: Dependency, strategy: ReferenceSearchStrategy) {
         return new (this.forStrategy(strategy))($package, dependency)
     }
 
-    static forStrategy(strategy: ReferenceSearcherStrategy): ConcretePackageReferenceSearcher {
+    static forStrategy(strategy: ReferenceSearchStrategy): ConcretePackageReferenceSearcher {
         switch (strategy) {
             case 'heuristic':
                 return HeuristicPackageReferenceSearcher
@@ -283,7 +283,7 @@ export abstract class PackageReferenceSearcher {
 
 class HeuristicPackageReferenceSearcher extends PackageReferenceSearcher {
     static readonly maximumFileSize = 100_000  // 100 MB
-    protected commonJsPatterns!: ReadonlyArray<RegExp>
+    protected commonJsPatterns!: readonly RegExp[]
 
     async initialize() {
         await super.initialize()
@@ -555,8 +555,14 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
                 await this.findAllSourceFiles(this.dependencyDirectory)
             ).map(file => path.join(this.dependencyDirectory, file))
             if (!options.fileNames.length) {
-                console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
-                options.fileNames = allFileNames
+                if (!allFileNames.length) {
+                    console.warn("No files names passed or found, skipping repository", { dependencyName: this.dependency.name })
+                } else if (allFileNames.length > 1000) {
+                    console.warn("No files names passed and too many hypothetical source files, skipping repository", { dependencyName: this.dependency.name })
+                } else {
+                    console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
+                    options.fileNames = allFileNames
+                }
             }
 
             const host = this.createCompilerHost(options.options)
@@ -747,14 +753,21 @@ class TypePackageReferenceSearcher extends PackageReferenceSearcher {
     protected findDeclarationForNode(node: ts.Node) {
         const [, type] = tryCatch(this.typeChecker.getTypeAtLocation, node)
         const symbol = type?.symbol ?? type?.aliasSymbol
-        if (!symbol?.declarations) {
+        if (!symbol) {
             return
         }
         return this.findDeclarationForSymbol(symbol)
     }
 
     protected findDeclarationForSymbol(symbol: ts.Symbol) {
-        return (symbol.declarations ?? []).find(declaration => pathIsInside(
+        if (!symbol.declarations) {
+            return
+        }
+        if ((symbol.declarations?.length ?? 0) > 10000) {
+            // Too many declarations (TypeScript mismatch), skipping
+            return
+        }
+        return symbol.declarations.find(declaration => pathIsInside(
             path.resolve(declaration.getSourceFile().fileName),
             path.resolve(this.packageDirectory))
         )

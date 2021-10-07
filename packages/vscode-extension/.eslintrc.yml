@@ -1,6 +1,6 @@
 ignorePatterns:
-  - out
   - dist
+  - out
   # - **/*.d.ts
 parserOptions:
   ecmaVersion: 2020

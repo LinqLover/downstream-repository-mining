@@ -79,7 +79,7 @@ export class DeclarationCodeLensProvider implements vscode.CodeLensProvider {
         }
     }
 
-    protected createCodeLens(references: ReadonlyArray<Reference>) {
+    protected createCodeLens(references: readonly Reference[]) {
         return DeclarationCodeLens.create(references)
     }
 
@@ -111,13 +111,13 @@ export class DeclarationCodeLensProvider implements vscode.CodeLensProvider {
 
 class DeclarationCodeLens extends vscode.CodeLens {
     private constructor(
-        public references: ReadonlyArray<Reference>,
+        public references: readonly Reference[],
         range: vscode.Range
     ) {
         super(range)
     }
 
-    static create(references: ReadonlyArray<Reference>) {
+    static create(references: readonly Reference[]) {
         const position = positionToVscode(references[0].declarationLocation().position)
         return new this(references, new vscode.Range(position, position))
     }

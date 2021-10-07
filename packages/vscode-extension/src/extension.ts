@@ -1,4 +1,4 @@
-import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearcherStrategy } from 'dowdep'
+import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
 import normalizePackageData from 'normalize-package-data'
@@ -9,6 +9,7 @@ import { DeclarationCodeLensProvider } from './codeLens'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
 import isDefined from './utils/node/isDefined'
+import * as iterUtils from './utils/node/iterUtils'
 import { HierarchyProvider } from './views'
 
 
@@ -53,7 +54,7 @@ export class Extension {
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
             // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
-            sourceCacheDirectory: vscode.Uri.joinPath(context.storageUri!, 'dowdep-cache').fsPath
+            sourceCacheDirectory: vscode.Uri.joinPath(context.globalStorageUri, 'dowdep-cache').fsPath
         })
         context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => this.configurationChanged()))
         this.configurationChanged()
@@ -66,9 +67,12 @@ export class Extension {
     }
 
     private async configurationChanged() {
-        this.dowdep.dependencyLimit = vscode.workspace.getConfiguration().get<number>('dowdep.dependencyLimit')
-        this.dowdep.githubAccessToken = vscode.workspace.getConfiguration().get('dowdep.githubOAuthToken')
-        this.dowdep.referenceSearchStrategy = vscode.workspace.getConfiguration().get<ReferenceSearcherStrategy>('dowdep.referenceSearchStrategy', 'types')
+        const configuration = vscode.workspace.getConfiguration()
+        this.dowdep.dependencyLimit = configuration.get<number>('dowdep.dependencyLimit')
+        this.dowdep.githubAccessToken = configuration.get('dowdep.githubOAuthToken')
+        this.dowdep.sourcegraphToken = configuration.get('dowdep.sourcegraphToken')
+        this.dowdep.dependencySearchStrategies = configuration.get<Dowdep['dependencySearchStrategies'] | null>('dowdep.dependencySearchStrategies', null) ?? (this.dowdep.sourcegraphToken ? '*' : ['npm'])
+        this.dowdep.referenceSearchStrategy = configuration.get<ReferenceSearchStrategy>('dowdep.referenceSearchStrategy', 'types')
         if (this.dowdep.referenceSearchStrategy === 'heuristic') {
             await vscode.window.showWarningMessage("The heuristic search strategy is currently not supported because of extremely complicated import errors, sigh ...\n\nFurther information: https://github.com/TomerAberbach/parse-imports/issues/3")
         }
@@ -82,51 +86,51 @@ export class Extension {
 
     private createGlobalCommands(context: vscode.ExtensionContext) {
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshPackages', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshPackages', this.catchErrors(
                 () => this.refreshPackages()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependencies', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshAllDependencies', this.catchErrors(
                 () => this.refreshAllDependencies()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllReferences', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshAllReferences', this.catchErrors(
                 () => this.refreshAllReferences()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.catchErrors(
                 () => this.refreshAllDependenciesAndReferences()
             )))
     }
 
     private createOpenCommands(context: vscode.ExtensionContext) {
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openPackage', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openPackage', this.catchErrors(
                 ($package: Package) => this.openPackage($package)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openDependency', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openDependency', this.catchErrors(
                 (dependency: Dependency) => this.openDependency(dependency)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openDependencyFolder', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openDependencyFolder', this.catchErrors(
                 (dependency: Dependency, relativePath: string) => this.openDependencyFolder(dependency, relativePath)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openReference', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openReference', this.catchErrors(
                 (reference: Reference) => this.openReference(reference)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openPackageFileOrFolder', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openPackageFileOrFolder', this.catchErrors(
                 ($package: Package, relativePath: string) => this.openPackageFileOrFolder($package, relativePath)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.openPackageMember', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.openPackageMember', this.catchErrors(
                 ($package: Package, location: DeclarationLocation) => this.openPackageMember($package, location)
             )))
 
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.browseMemberDependencies', this.wrapWithLogger(
+            vscode.commands.registerCommand('dowdep.browseMemberDependencies', this.catchErrors(
                 ($package: Package, location: DeclarationLocation) => this.browseMemberDependencies($package, location)
             )))
     }
@@ -135,7 +139,7 @@ export class Extension {
         for (const commandProvider of [HierarchyProvider, DependenciesProvider, ReferencesProvider]) {
             commandProvider.createCommands((name, callback) =>
                 context.subscriptions.push(
-                    vscode.commands.registerCommand(name, this.wrapWithLogger(callback))))
+                    vscode.commands.registerCommand(name, this.catchErrors(callback))))
         }
     }
 
@@ -282,14 +286,26 @@ export class Extension {
     }
 
     async openDependency(dependency: Dependency) {
-        if (!dependency.sourceDirectory) {
-            await vscode.window.showErrorMessage("Source code is not downloaded")
+        let uri: vscode.Uri | null = null
+
+        if (dependency.sourceDirectory) {
+            const directoryUri = vscode.Uri.file(dependency.sourceDirectory)
+            uri = await this.findRepresentativeFile(directoryUri)
+            if (uri && uri.path.endsWith('.md')) {
+                await vscode.commands.executeCommand('markdown.showPreview', <vscode.Uri>uri)
+                return
+            }
+        }
+
+        if (!uri && dependency.urls.size) {
+            uri = vscode.Uri.parse(iterUtils.first(dependency.urls.values()))
+        }
+        if (uri) {
+            await vscode.commands.executeCommand('vscode.open', uri)
             return
         }
-        const directoryUri = vscode.Uri.file(dependency.sourceDirectory)
-        const fileUri = vscode.Uri.joinPath(directoryUri, 'README.md')
-        // TODO: If does not exist, try with 'readme' from package.json, 'src'/'main' from package.json, package.json itself, or else fall back to URL
-        await vscode.commands.executeCommand('markdown.showPreview', fileUri)
+
+        await vscode.window.showErrorMessage("Cannot open this dependency")
     }
 
     async openDependencyFolder(dependency: Dependency, relativePath: string) {
@@ -384,13 +400,13 @@ export class Extension {
         }
     }
 
-    private wrapWithLogger<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
+    private catchErrors<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
         return async (...args: TIn) => {
             try {
                 return await fun(...args)
             } catch (error) {
                 console.error(error)
-                throw error
+                vscode.window.showErrorMessage(error instanceof Error ? error.toString() : `Error: ${error}`)
             }
         }
     }
@@ -435,6 +451,37 @@ export class Extension {
         const data = <normalizePackageData.Package>JSON.parse(buffer.toString('utf-8'))
         normalizePackageData(data)
         return data
+    }
+
+    private async findRepresentativeFile(directoryUri: vscode.Uri) {
+        try {
+            if ((await vscode.workspace.fs.stat(directoryUri)).type === vscode.FileType.File) {
+                return directoryUri
+            }
+        } catch {
+            // Directory does not exist
+            return null
+        }
+
+        const allFiles = (await vscode.workspace.fs.readDirectory(directoryUri)).filter(
+            ([_, type]) => type !== vscode.FileType.Directory
+        )
+        if (!allFiles.length) {
+            return null
+        }
+
+        // Find representative files or fall back to any file
+        let file: string | undefined = undefined
+        for (const pattern of [
+            'README.md',
+            /^readme(\..+)?$/,
+            'package.json',
+            /^(src\/)?index\..+$/
+        ]) {
+            file ??= allFiles.find(([name,]) => pattern instanceof RegExp ? name.match(pattern) : name === pattern)?.[0]
+        }
+        file ??= allFiles[0][0]
+        return file ? vscode.Uri.joinPath(directoryUri, file) : null
     }
 }
 
