@@ -28,11 +28,11 @@ describe('updateDependencies', () => {
 
         const dowdep = new Dowdep({
             dependencyLimit: limit,
-            githubAccessToken: downloadGitHubData && process.env.GITHUB_OAUTH_TOKEN || undefined,
+            githubAccessToken: process.env.GITHUB_OAUTH_TOKEN,
             dependencySearchStrategies: ['npm']
         })
         const $package = new Package(packageName, undefined)
-        await $package.updateDependencies(dowdep)
+        await $package.updateDependencies(dowdep, { downloadMetadata: downloadGitHubData })
 
         expect($package.dependencies).toHaveLength(limit)
 
