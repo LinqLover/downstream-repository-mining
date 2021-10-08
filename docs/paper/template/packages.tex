@@ -1,3 +1,6 @@
+% Define starred commands
+\usepackage{xparse}
+
 % Enumerations
 \usepackage[inline]{enumitem}
 
@@ -35,6 +38,10 @@
 
 % SI units
 \usepackage{siunitx}
+\sisetup{input-ignore={,},input-decimal-markers={.}}  % allow for manual thousands separators in numbers
+\sisetup{group-separator = {,}}
+\DeclareSIUnit\bit{bit}
+\DeclareSIUnit\byte{B}
 
 \usepackage{xcolor}
 
@@ -42,6 +49,7 @@
 \usepackage[nameinlink]{cleveref}
 
 % Tables
+\usepackage{booktabs}
 \usepackage{multirow}
 
 \usepackage{makecell}

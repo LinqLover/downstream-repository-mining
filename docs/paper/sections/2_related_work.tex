@@ -1,4 +1,4 @@
-\section{Related work}
+\section{Related Work}
 \label{sec:related_work}
 
 To our knowledge, the design of proper tooling for improving package developers' knowledge about interface usages in dependencies has not yet attracted significant attention in the scientific community.
@@ -7,7 +7,7 @@ Nevertheless, programmatic analysis of dependency graphs and API usage mining ar
 Besides source code repositories, they also describe various other data sources worthwhile to examine -- including version control systems, telemetry data from IDEs, issue trackers, and discussion platforms -- as well as different directions for evaluating the retrieved data -- such as classifying or ranking repositories, analyzing the evolution of projects, studying development communities, but also inspecting the relationships and dependencies between projects.
 In the following, we will consider the different problems that our research issue can be decomposed into.
 
-\subsection{Searching dependency graphs}
+\paragraph{Searching dependency graphs}
 \label{sec:related_work/dependencies}
 
 A common purpose for \emph{analyzing dependency graphs} is to discover transitive (indirect) upstream dependencies of a project and assess their impact on the stability and vulnerability of the project.
@@ -15,11 +15,11 @@ This is done by \citet{kikas2017structure} which apply their methodology to the 
 \citet{decan2018impact} pursue a similar approach to measure the spreading of security vulnerabilities along the chain of downstream dependencies.
 
 However, existing research about dependency graphs primarily takes a broad statistical perspective, and researchers often rely on a large corpus of downloaded software repositories \citep{abdalkareem2017developers,katz2020libraries,kikas2017structure}.
-As opposed to this approach, these capacities will not be appropriate for scenarios that are occasionally performed by developers of a single package only.
-In this case, developers will often use a public \emph{code search} service such as GitHub code search\footnote{\url{https://docs.github.com/en/github/searching-for-information-on-github}} or Sourcegraph\footnote{\url{https://sourcegraph.com/}} instead.
-\citet{liu2020opportunities} provide a (not yet published) survey of current methods and trends in code search tools that include, besides simple full-text search, newer approaches such as structural or semantic search queries, code similarity metrics, or Machine Learning methods.
+As opposed to this approach, these capacities will not be appropriate for scenarios occasionally performed by developers of a single package only.
+In this case, developers will often use a public \emph{code search} service such as \emph{GitHub} code search\footnote{\url{https://docs.github.com/en/github/searching-for-information-on-github}} or \emph{Sourcegraph}\footnote{\url{https://sourcegraph.com/}} instead.
+\citet{liu2020opportunities} provide a pre-printed survey of current methods and trends in code search tools that include, besides simple text search, newer approaches such as structural or semantic search queries, code similarity metrics, or Machine Learning methods.
 
-\subsection{Extracting usage samples}
+\paragraph{Extracting usage samples}
 \label{sec:related_work/usage_samples}
 
 Dependency graphs do not provide information about package usage on a finer granularity, so reference insights about single package members such as classes or methods remain unknown.
@@ -37,16 +37,12 @@ While the latter method has a higher potential for including a maximum of contex
 Many solutions exist that analyze the structure of programs and extract relevant information to build call graphs:
 
 \citet{collard2013srcml} propose an infrastructure called \caps{srcML} that aims to create a unified representation of multilingual source code snippets for arbitrary analysis purposes, including the construction of call graphs.
-Another solution is proposed by \citet{bogar2018lightweight} who focus on analyzing multilingual codebases and who utilize an island parser to build call graphs.
+Another solution is proposed by \citet{bogar2018lightweight} who utilize an island parser to build polyglot call graphs.
 Furthermore, \citet{antal2018static} compare several call graph generators for JavaScript.
 They also emphasize that for languages supporting dynamic typing or meta-programming mechanisms, static call graph generators have a limited precision by design.
 
 To bring together dependency graphs and call graphs, \emph{ecosystem call graphs} can be constructed by applying call graphs to entire ecosystems, crossing repository boundaries.
-\citet{hejderup2018software} propose an approach to do so for the JavaScript/npm ecosystem in which they also model the semantic version numbers of packages and conduct an impact analysis for vulnerabilities based on their graph; a very similar method is described by \citet{boldi2020fine} to formulate the vision of a new design for package management systems that provides options for finer-grained reuse of solutions.
-\citet{nielsen2021modular} elaborate on this work by developing a call graph generator tailored to this problem that comes with significant improvements in terms of recall and performance.
-\citet{wang2020empirical} describe a similar approach for the same ecosystem and apply it to the domain of locating security issues in a project's upstream dependencies.
-With \caps{Pr\"azi} (not yet peer-reviewed), \citet{hejderup2021praezi} also describe their implementation of a dependency-scale call graph for the Rust/Cratesio ecosystem in-depth.
-For Java/Maven, \citet{keshani2021scalable} proposes another solution.
+Many approaches apply this concept to different ecosystems, often aiming to conduct a fine-grained impact analysis for security vulnerabilities \citep{boldi2020fine,hejderup2018software,hejderup2021praezi,keshani2021scalable,nielsen2021modular,wang2020empirical}.
 Another approach is implemented in the \emph{precise code intelligence} feature of the Sourcegraph code search engine that makes code references explorable across repository boundaries for repositories that provide a metadata file in the \emph{Language Server Index Format}.\footnote{\url{https://docs.sourcegraph.com/code_intelligence/explanations/precise_code_intelligence}}
 
 After collecting these usage data, additional processing is possible to extract general usage information from the extensive raw data.
@@ -54,12 +50,12 @@ Next to trivial grouping and counting operations, such aggregations can be built
 \citet{zhong2009mapo} propose a framework to do so that, for instance, finds sequences of API members that are invoked frequently and even uses these patterns for guiding API users by giving them recommendations.
 \citet{hanam2019aiding} pursue a different goal in their tool that helps package developers assess the impact of breaking API changes on the functionality of downstream dependencies.
 
-\subsection{Presentation of results}
+\paragraph{Presentation of results}
 \label{sec:related_work/presentation}
 
 To establish an adequate developer experience, any collected usage data still need to be presented suitably.
 A common approach for this is a hierarchical and navigatable representation of the collected call tree.
-An early form of this representation has been invented as the interactive ``message set'' tool for browsing senders and implementors in an object-oriented system for the Smalltalk programming environment \citep[section~10.1f.]{goldberg1984smalltalk}.
-Modern alternatives include the \caps{Stacksplorer} \citep{karrer2011stacksplorer} or \caps{Blaze} \citep{kramer2012blaze} that list next to the currently focused method other methods which are adjacent to this method in the call graph.
+An early form of this representation has been invented as the interactive ``message set'' tool for browsing senders and implementors in an object-oriented system for the Smalltalk programming environment \citep{goldberg1984smalltalk}.
+Modern alternatives include the \emph{Stacksplorer} \citep{karrer2011stacksplorer} or \emph{Blaze} \citep{kramer2012blaze} that list next to the currently focused method other methods which are adjacent to this method in the call graph.
 With a focus on exploring references to API members, \citet{de2013multi} propose a set of additional views, including hierarchical lists and word clouds for highly referenced identifiers.
 Focusing on exploring APIs in a non-code-centric way, \citet{hora2015apiwave} propose a dashboard that allows developers to browse existing APIs and track possibly breaking changes in their interfaces.

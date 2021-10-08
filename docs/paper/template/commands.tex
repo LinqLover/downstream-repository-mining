@@ -2,8 +2,10 @@
 \newcommand\caps[1]{%
 	\textsc{#1}%
 }
-\newcommand\code[1]{%
-	\texttt{#1}%
+\NewDocumentCommand\code{sm}{%
+    \IfBooleanTF#1%
+        {{\small\texttt{#2}}}% If a star is seen
+        {{\small\texttt{\detokenize{#2}}}}%     If no star is seen
 }
 
 % Semantic mathmode markup
@@ -12,7 +14,7 @@
 
 % Todo comments
 \newcommand\TODO[1]{%
-	\textcolor{red}{\textbf{#1}}%
+    {\leavevmode\bfseries\color{red}#1}%
 }
 
 % bchart legends

@@ -4,13 +4,17 @@
 	Other than for upstream dependencies, solutions that provide individual package developers with this kind of information rarely exist to date.
 	This paper makes two major contributions:
 	\begin{enumerate*}[label=(\roman*)]
-		\item We propose an approach for gathering downstream dependencies of a single package and extracting usage samples from them by utilizing a static type analyzer.
-		\item We introduce a tool that allows npm package developers to survey usage samples of their APIs by incorporating the aggregated usage data into an integrated development environment.%
+		\item We propose an approach for gathering downstream dependencies of a single package efficiently and extracting usage samples from them by utilizing a static type analyzer.
+		\item We introduce a tool that allows npm package developers to survey usage samples of their APIs by incorporating the aggregated usage data into an IDE.%
 			\footnote{
 				All artifacts are available on GitHub under the following URL: \url{https://github.com/LinqLover/downstream-repository-mining}
 				\TODO{Insert name and use link to VSCE}
 			}
 	\end{enumerate*}
+
+	Our two methods yield over \num{8000} dependencies for popular packages at an average precision of \SI{98.7}{\percent} or \SI{68.4}{\percent}, resp., but tend to exclude unpopular dependencies.
+	The extracted usage samples have a high precision but are unavailable for repositories with complex build configurations or metaprogramming patterns.
+	Our tool is able to process up to 12 dependencies per minute while requiring about \SI{500}{\mega\byte} RAM in total and less than \SI{30}{\mega\byte} ROM per package.
 	We find that usage data from downstream dependency repositories are a promising source of information for mining software repositories and that our approach could support package developers in improving or extending their APIs.
 
 \end{abstract}
