@@ -37,7 +37,7 @@ export function lodashClassify<TItem, TGrouping extends Grouping<TItem>, TClassK
 export function lodashClassifyNested<TItem extends object, TGrouping extends { [key: string]: TItem }, TClassKey>(
     input: TGrouping,
     fn: (key: string) => TClassKey
-): { [P in keyof TGrouping]: Map<TClassKey, { [P in keyof TGrouping[keyof TGrouping]]: _.Dictionary<unknown> }> } {
+) {
     return _.mapValues(
         input,
         item => new Map(Array.from(
