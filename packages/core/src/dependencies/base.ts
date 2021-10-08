@@ -13,6 +13,7 @@ import isDefined from '../utils/isDefined'
 import { OnlyData } from '../utils/OnlyData'
 
 
+/** A downstream dependency of a {@link Package}. */
 export class Dependency {
     constructor(
         public name: string,
@@ -28,7 +29,9 @@ export class Dependency {
     /** In kilobyte (kB). */
     static maximumRepositorySize = 100_000
     get githubUrl() {
-        return [...this.urls.entries()].find(([key, ]) => key.toLowerCase() === 'github')?.[1]
+        return [...this.urls.entries()].find((
+            [key, ]) => key.toLowerCase() === 'github'
+        )?.[1]
     }
     get isGitHubRepositoryReady() {
         if (_.isUndefined(this.githubRepository)) {
@@ -42,15 +45,20 @@ export class Dependency {
 
     get references() { return this._references }
     get urls() {
+        // Pretty-print URL labels
         const map = new Map<string, string>([...this.pluggableUrls.entries()].map(
             ([key, value]) => [key && ({"github": "GitHub"}[key] ?? key) || '?', value]
         ))
+
+        // Prefer official GitHub URL if available
         if (this.githubRepository?.url) {
             map.set("GitHub", this.githubRepository.url)
         }
+
         return map
     }
 
+    /** Update this dependency from multiple data sources as specified in the `options`. After each step, evauate `updateCallback`. */
     async update(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
         const jobs = [...this.collectUpdateJobs(dowdep, options)]
         await Promise.allSettled(jobs.map(async (job, index) => {
@@ -72,12 +80,13 @@ export class Dependency {
         return isDefined(this.sourceDirectory) && await dowdep.fileSystem.exists(this.sourceDirectory)
     }
 
+    /** Download the source code for this dependency from GitHub unless already cached. */
     async updateSource(dowdep: Dowdep): Promise<boolean> {
         if (!this.urls.size) {
             return false
         }
         if (await this.isSourceCodeReady(dowdep)) {
-            return true // TODO: What to return here?
+            return true
         }
 
         const cacheDirectory = dowdep.sourceCacheDirectory
@@ -91,7 +100,8 @@ export class Dependency {
         if (this.githubUrl) {
             const url = parseGitHubRepoUrl(this.githubUrl)
             if (!url) {
-                return false // TODO: Raise?
+                console.warn("Invalid GitHub URL, skipping dependency", this.githubUrl)
+                return false
             }
             repo = `${url[0]}/${url[1]}`
         } else {
@@ -125,6 +135,7 @@ export class Dependency {
         }
     }
 
+    /** Update the references for this dependency asynchronously. Whenever a reference is found, evaluate `updateCallback`. */
     async updateReferences(dowdep: Dowdep, updateCallback: () => Promise<void>) {
         assert(this.sourceDirectory)
 
@@ -145,6 +156,11 @@ export class Dependency {
         }
     }
 
+    /**
+     * Fetch metadata for this dependency from GitHub if available.
+     *
+     * @argument richMetadata If `false`, fetch a bare minimum of data only for identifying the repository and retrieving the disk usage. If `true`, gain extended metadata indicating the popularity of the repository etc.
+     */
     async updateFromGithub(dowdep: Dowdep, richMetadata: boolean) {
         const match = this.githubUrl?.match(/github\.com[/:](?<owner>[^/]+)\/(?<name>[\w-_.]+?)(?:.git)?$/)
         if (!match?.groups) {
@@ -158,6 +174,7 @@ export class Dependency {
     }
 }
 
+/** Abstract base class for all downstream dependency searchers using different data sources. */
 export abstract class DependencySearcher {
     constructor(
         public $package: Package,

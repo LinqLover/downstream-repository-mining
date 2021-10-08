@@ -1,13 +1,14 @@
 import * as _ from 'lodash'
-import { Command, flags } from '@oclif/command'
+import { flags } from '@oclif/command'
 import * as path from 'path'
 import * as util from 'util'
 
-import { getCacheDirectory, Package, Reference, ReferenceSearcher, ReferenceKind } from 'dowdep'
+import DowdepCommand from '../DowdepCommand'
+import { Package, Reference, ReferenceCollector, ReferenceKind, ReferenceSearchStrategy } from 'dowdep'
 import tqdm2 from '../utils/tqdm2'
 
 
-export default class Search extends Command {
+export default class Search extends DowdepCommand {
     static description = 'search downstream dependencies for package references'
 
     static flags = {
@@ -49,7 +50,10 @@ export default class Search extends Command {
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const packageDirectory = flags.source || undefined
-        const strategy = flags.strategy
+        const strategy = <ReferenceSearchStrategy>flags.strategy
+        if (!['heuristic', 'types'].includes(strategy)) {
+            throw new Error("Invalid strategy")
+        }
         const includeImports = flags.includeImports
         const includeOccurences = flags.includeOccurences
         const aggregate = flags.aggregate
@@ -57,9 +61,9 @@ export default class Search extends Command {
 
         const $package = new Package(
             packageName,
-            packageDirectory ?? path.join(getCacheDirectory(), packageName)
+            packageDirectory ?? path.join(this.cacheDirectory, packageName)
         )
-        const searcher = new ReferenceSearcher($package, getCacheDirectory(), strategy)
+        const searcher = new ReferenceCollector($package, this.cacheDirectory, strategy)
         const includeKinds: ReferenceKind[] = ['usage']
         if (includeImports) {
             includeKinds.push('import')

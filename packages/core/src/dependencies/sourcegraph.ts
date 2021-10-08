@@ -9,6 +9,7 @@ import { Package } from '../packages'
 import { OnlyData } from '../utils/OnlyData'
 
 
+/** Finds downstream dependencies for a package on [Sourcegraph](sourcegraph.com). */
 export class SourcegraphDependencySearcher extends DependencySearcher {
     constructor($package: Package, init: Partial<OnlyData<SourcegraphDependencySearcher>>) {
         super($package, init)
@@ -145,9 +146,11 @@ class SourcegraphClient {
             '-file': 'node_modules/',
             'count': `${limit || this.maximumLimit}`
         }
+
         // Workaround for https://github.com/microsoft/vscode/issues/130367 and https://github.com/microsoft/TypeScript/issues/43329 🤯
         const dynamicImport = new Function('moduleName', 'return import(moduleName)')
         const escapeRegexp: (regex: string) => string = (await dynamicImport('escape-string-regexp')).default
+
         const query = `"${escapeRegexp(packageName)}": ` + Object.entries(queryArgs).map(([key, value]) => `${key}:${value}`).join(' ')
         const response = this.documentSpecifier.protoResponse
         Object.assign(response, await graphql.request(this.documentSpecifier.document, { query }))

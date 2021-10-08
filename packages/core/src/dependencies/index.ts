@@ -26,6 +26,10 @@ function dependencySearcher(strategy: DependencySearchStrategy) {
     }[strategy]
 }
 
-export function createDependencySearcher(strategy: DependencySearchStrategy, $package: Package, init: Partial<OnlyData<DependencySearcher>>) {
+export function createDependencySearcher(
+    $package: Package,
+    strategy: DependencySearchStrategy,
+    init: Partial<OnlyData<DependencySearcher>>
+) {
     return new (dependencySearcher(strategy))($package, init)
 }

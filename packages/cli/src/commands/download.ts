@@ -1,5 +1,5 @@
 import { flags } from '@oclif/command'
-import asyncIteratorToArray from 'it-all'
+import itAll from 'it-all'
 
 import DowdepCommand from '../DowdepCommand'
 import tqdm2 from '../utils/tqdm2'
@@ -35,7 +35,7 @@ export default class Download extends DowdepCommand {
             : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
 
         // Processing
-        const dependencies = await asyncIteratorToArray(
+        const dependencies = await itAll(
             tqdm2(
                 this.updateDependencies(
                     packageName,

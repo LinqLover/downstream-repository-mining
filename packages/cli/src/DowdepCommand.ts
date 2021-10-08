@@ -1,7 +1,7 @@
 import filterAsync from 'node-filter-async'
 import { Command } from '@oclif/command'
 
-import { Dependency, DependencyUpdateOptions, Dowdep, getCacheDirectory, Package } from 'dowdep'
+import { Dependency, DependencyUpdateOptions, Dowdep, Package } from 'dowdep'
 
 export default abstract class DowdepCommand extends Command {
     async *updateDependencies(
@@ -16,7 +16,7 @@ export default abstract class DowdepCommand extends Command {
             dependencyLimit: limit,
             githubAccessToken: process.env.GITHUB_OAUTH_TOKEN,
             sourcegraphToken: process.env.SOURCEGRAPH_TOKEN,
-            sourceCacheDirectory: getCacheDirectory()
+            sourceCacheDirectory: this.cacheDirectory
         })
         const $package = new Package(packageName)
 
@@ -52,5 +52,9 @@ export default abstract class DowdepCommand extends Command {
             }
             yieldPromise = new Promise(resolve => yieldResolve = resolve)
         }
+    }
+
+    get cacheDirectory() {
+        return process.env.NPM_CACHE || 'cache'
     }
 }

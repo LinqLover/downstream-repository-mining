@@ -2,6 +2,8 @@ import _ from 'lodash'
 
 type Grouping<TItem> = { [key: string]: TItem[] }
 
+
+/** Classify the grouped input values into a map of buckets indicated by the values' keys and the passed function. See tests. */
 export function lodashClassify<TItem, TGrouping extends Grouping<TItem>, TClassKey>(
     input: TGrouping,
     fn: (item: TItem, key: string) => TClassKey
@@ -35,8 +37,7 @@ export function lodashClassify<TItem, TGrouping extends Grouping<TItem>, TClassK
 export function lodashClassifyNested<TItem extends object, TGrouping extends { [key: string]: TItem }, TClassKey>(
     input: TGrouping,
     fn: (key: string) => TClassKey
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): { [P in keyof TGrouping]: Map<TClassKey, { [P in keyof TGrouping[keyof TGrouping]]: _.Dictionary<any> }> } {
+): { [P in keyof TGrouping]: Map<TClassKey, { [P in keyof TGrouping[keyof TGrouping]]: _.Dictionary<unknown> }> } {
     return _.mapValues(
         input,
         item => new Map(Array.from(

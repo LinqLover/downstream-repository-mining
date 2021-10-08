@@ -7,13 +7,12 @@ import { promisify } from 'util'
 import { Package } from '../src'
 import { NpmDependency } from '../src/dependencies/npm'
 
-import { Dowdep, getCacheDirectory } from '../src'
+import { Dowdep } from '../src'
 
 const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readPackageJsonCallback)
 
 
-// TODO: Extract all fixtures into separate files?
 describe('updateDependencies', () => {
     it.each`
         packageName     | limit  | downloadGitHubData  | timeoutSecs  | nonGitHubThreshold
@@ -75,7 +74,7 @@ describe('updateSource', () => {
         dep.tarballUrl = tarballUrl
 
         const dowdep = new Dowdep({
-            sourceCacheDirectory: getCacheDirectory()
+            sourceCacheDirectory: process.env.NPM_CACHE || 'cache'
         })
         await dep.updateSource(dowdep)
 

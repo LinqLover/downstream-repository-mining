@@ -1,22 +1,18 @@
-import { Dependency, DependencySearchStrategy, DependencyUpdateOptions } from './dependencies'
-import { Dowdep, getCacheDirectory } from './dowdep'
-import { Package } from './packages'
-import { DeclarationLocation, FilePosition, FilePositionPrimitive, Location, Reference, ReferenceKind, ReferenceSearcher, ReferenceSearchStrategy } from './references'
-
-
 export {
-    Location,
-    DeclarationLocation,
     Dependency,
     DependencySearchStrategy,
-    DependencyUpdateOptions,
-    Dowdep,
+    DependencyUpdateOptions
+} from './dependencies'
+export { Dowdep } from './dowdep'
+export { Package } from './packages'
+export {
+    DeclarationLocation,
     FilePosition,
     FilePositionPrimitive,
-    getCacheDirectory,
-    Package,
+    Location,
     Reference,
+    ReferenceCollector,
     ReferenceKind,
     ReferenceSearcher,
     ReferenceSearchStrategy
-}
+} from './references'
