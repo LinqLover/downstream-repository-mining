@@ -8,9 +8,10 @@ import vscode from 'vscode'
 import { DeclarationCodeLensProvider } from './codeLens'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
+import { HierarchyProvider } from './views'
 import isDefined from './utils/node/isDefined'
 import * as iterUtils from './utils/node/iterUtils'
-import { HierarchyProvider } from './views'
+import { escapeMarkdown } from './utils/vscode/markdown'
 
 
 let extension: Extension
@@ -358,8 +359,8 @@ export class Extension {
             const choice = await vscode.window.showQuickPick(
                 _.map([...urls.entries()], ([label, url]) => ({
                     target: { label, url },
-                    label: `$(globe) ${label}`,
-                    description: url
+                    label: escapeMarkdown(label),
+                    description: escapeMarkdown(url)
                 })),
                 {
                     title: "Choose platform"

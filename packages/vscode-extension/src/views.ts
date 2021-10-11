@@ -7,7 +7,7 @@ import * as vscode from 'vscode'
 import { Extension } from './extension'
 import { HierarchyDataProvider, HierarchyItem, HierarchyNodeItem, LabeledHierarchyNodeItem, RefreshableHierarchyItem, SynchronizableHierarchyItem } from './utils/vscode/hierarchy'
 import * as iterUtils from './utils/node/iterUtils'
-import md from './utils/vscode/markdown'
+import { md } from './utils/vscode/markdown'
 import isDefined from './utils/node/isDefined'
 
 
