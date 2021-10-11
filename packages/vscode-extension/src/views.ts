@@ -20,7 +20,7 @@ export class HierarchyProvider<TRootItem extends RefreshableHierarchyItem> exten
         registerCallback('dowdep.dowdepDependencies.openDependencyExternally', (item: DependencyItem<any, any>) => item.openExternally())
         registerCallback('dowdep.dowdepReferences.openReference', (item: ReferenceItem) => item.open())
     }
-    
+
     protected static async openRandomReference(root: HierarchyItem) {
         const item = _.sample([...root.findAllLeafs(<(item: HierarchyItem) => item is ReferenceItem>(_item => _item instanceof ReferenceItem))])
         return await item?.open()

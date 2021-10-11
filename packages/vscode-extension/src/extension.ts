@@ -44,7 +44,7 @@ export class Extension {
     protected referencesProvider: ReferencesProvider
     protected codeLensProvider: DeclarationCodeLensProvider
 
-    private dependencyLimitIncrement: number = 0
+    private dependencyLimitIncrement = 0
     private get modelObservers() {
         return [
             this.dependenciesProvider,
@@ -348,7 +348,7 @@ export class Extension {
             label: string,
             url: string
         }
-        if (urls.size == 1) {
+        if (urls.size === 1) {
             const url = iterUtils.first(urls.entries())
             target = {
                 label: url[0],
@@ -467,7 +467,7 @@ export class Extension {
 
     protected async getDependencies(dependency?: DependencyLike): Promise<readonly Dependency[]> {
         if (!dependency) {
-            return this.getDependencies(await this.getPackages())
+            return await this.getDependencies(await this.getPackages())
         }
 
         if (_.isArrayLike(dependency)) {

@@ -130,7 +130,7 @@ export abstract class RefreshableHierarchyItem extends HierarchyItem {
         this.parent?.leavesChanged()
     }
 
-    private serializeContext(context: object) {
+    private serializeContext(context: Record<string, unknown>) {
         return Object.entries(context).map(
             ([key, value]) => `${key}:${value}`
         ).join(' ')
