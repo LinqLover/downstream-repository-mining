@@ -21,9 +21,14 @@ Mine usage information about your JavaScript/TypeScript package from dependent r
 	</tbody>
 </table>
 
+## Configuration
+
+After installing the extension, you need to fill in some access tokens.
+To do so, navigate to the settings of the extension and enter each a valid token for the settings "githubOAuthToken" and "sourcegraphToken".
+
 ## Usage
 
-After installing the extension, open a folder in VS Code that contains a node module, i.e., a `package.json` file.
+After configuring the extension, open a folder in VS Code that contains a node module, i.e., a `package.json` file.
 Open the downstream dependencies view from the activity bar (<img alt="dowdep icon" src="./assets/dowdep.svg" height="16"></img>) and press "Refresh downstream data" (you can also invoke this command via the command palette).
 Dependencies are now searched, downloaded, analyzed, and displayed in the view.
 Hover, click, or right-click any item to see additional details.
