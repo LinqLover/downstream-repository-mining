@@ -32,7 +32,7 @@ However, the precision of ASTs is limited for \emph{dynamically typed} languages
 As opposed to static typing, the value type of an expression in a dynamically typed language may be unknown at the compile time of the program.
 For this reason, a \emph{type analysis} can be performed to predict the runtime types of all expressions in the AST \citep{jensen2009type}.
 Usually, this is accomplished by analyzing the control flow of a program and inferring the possible types of every variable or function.
-Another useful data structure for enhancing type information are \emph{call graphs} that are either gained \emph{statically} (i.e., the result of a theoretical analysis of the source code) or \emph{dynamically} (i.e., empirically recorded during program execution).
+Another useful data structure for enhancing type information is \emph{call graphs} that are either gained \emph{statically} (i.e., the result of a theoretical analysis of the source code) or \emph{dynamically} (i.e., empirically recorded during program execution).
 While the latter method has a higher potential for including a maximum of contextual information, the former has the advantage of being applicable to a larger probe of source code for that no concrete entry points are available.
 Many solutions exist that analyze the structure of programs and extract relevant information to build call graphs:
 

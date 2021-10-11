@@ -92,7 +92,7 @@ The complete procedure is displayed in \cref{alg:usage_mining}.
 	}
 \end{algorithm}
 
-To do so, we start by parsing the source code of every dependency repository as well as the source code of the target package each into a separate \emph{abstract syntax forest}F (ASF, i.e., a set of ASTs).
+To do so, we start by parsing the source code of every dependency repository as well as the source code of the target package each into a separate \emph{abstract syntax forest} (ASF, i.e., a set of ASTs).
 
 In a second step, we perform a static type analysis against each dependency ASF together with the target package's ASF.
 The results of the type analysis are attached to the ASF so that every identifier is annotated with a type symbol that links to the declaration of the type for the identifier.

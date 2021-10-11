@@ -66,7 +66,7 @@ usage sample can be easily filtered out, but downloading and analyzing any irrel
 
 Besides the precision of collected dependencies, their recall is also of interest.
 As the dependencies are collected in excerpts from two very large datasets, a quantitative analysis of false-negative hits based on manual annotation of these datasets would be too expensive for this paper.
-Nevertheless, there are some causes that will prevent a dependency from being found by our methods:
+Nevertheless, some causes will prevent a dependency from being found by our methods:
 
 \begin{itemize}
 	\item Packages without a proper dependency manifest cannot be detected by our methods which are based on exactly these metadata.
@@ -90,7 +90,7 @@ Nevertheless, there are some causes that will prevent a dependency from being fo
 		\input{sections/5_evaluation/resqu1/performance}
 		\begin{tablenotes}
 			\footnotesize
-			\item[\alphtnotetext{1}] Hardware specifications of the test machine: 7 vCPUs Intel Xeon Cascade Lake @ \SI{2.80}{\giga\hertz}, internet downspeed ~\SI{1.8}{\giga\bit/\second}.
+			\item[\alphtnotetext{1}] Hardware specifications of the test machine: 7 vCPUs Intel Xeon Cascade Lake @ \SI{2.80}{\giga\hertz}, internet down speed ~\SI{1.8}{\giga\bit/\second}.
 			\item[\alphtnotetext{2}] Effective speed while downloading multiple packages in parallel.
 		\end{tablenotes}
 	\end{threeparttable}
@@ -117,7 +117,7 @@ There are only two theoretical exceptions to this invariant:
 	\item If dependency developers deliberately interfere with the TypeScript compiler (for instance, by suppressing type errors using a \verb|@ts-ignore| comment\footnote{\url{https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-6.html\#suppress-errors-in-ts-files-using--ts-ignore-comments}}), both false positive and false negative matches are possible.
 \end{enumerate*}
 
-Additionally, some npm packages contain minified sources only that are still searchable valid code but can provide a significantly reduced readability.
+Additionally, some npm packages contain minified sources only that are still searchable valid code but can provide significantly reduced readability.
 
 \paragraph{Recall}
 \label{sec:evaluation/resqu2/recall}
@@ -184,7 +184,7 @@ This meets Shneiderman's requirement to frequent tasks and indicates a low tempo
 The spatial distance varies for the different views of the tool:
 For the dependency browser and the usage browser, a separate toolbar has to be opened, which indicates a higher spatial distance; still, the artifacts are available in the same IDE.
 Also, the dependency artifacts have no strong relationship to any existing IDE artifacts, so any closer integration into an existing view would increase coupling between independent domains.
-The code annotations are displayed close to the original source code with a small spatial distance.
+The code annotations are displayed close to the package source code with a small spatial distance.
 
 The semantic distance can be described as the perceived similarity of artifacts displayed both in the tool's UI and in the existing IDE, i.e., the package and dependency members.
 Most items in the usage browser bear the same label as the corresponding identifier in the source code, which reduces the semantic distance.

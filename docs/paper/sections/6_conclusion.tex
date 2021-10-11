@@ -7,7 +7,7 @@ We have identified two kinds of rich data sources for collecting downstream depe
 We accomplish the usage mining by scanning the ASTs of every dependency for certain usage patterns that refer to a type from the target package; if the dependency uses a dynamically typed language, we perform a type analysis beforehand.
 We have demonstrated the fundamental usability of our approach with a tool that embeds the downstream dependency data into the Visual Studio Code IDE.
 
-Our analysis suggests that the collected dependencies and the extracted usage samples have a viable quality in terms of precision and extent, and that the resource requirements of our implementation are sufficiently low for collecting all data on the local machine of a package developer.
+Our analysis suggests that the collected dependencies and the extracted usage samples have a viable quality in terms of precision and extent and that the resource requirements of our implementation are sufficiently low for collecting all data on the local machine of a package developer.
 Nevertheless, we have identified a number of causes for false negatives over the whole mining process that are predestined to biasing the output usage samples, including the popularity and recency of dependencies but also the proper declaration of packages and their renunciation of complex toolchains and metaprogramming patterns.
 Our analysis, however, is not yet fully supported by data and would require further quantitative evaluation to assess the exact precision and recall of our approach for mining usage samples as well as the efficacy of our tool.
 As for the first question, manual annotation of source code repositories with usage samples will be required to compare them to the outputs of our implementation.
