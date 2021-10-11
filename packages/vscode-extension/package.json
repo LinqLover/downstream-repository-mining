@@ -264,7 +264,7 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "pretest": "tsc -p ./tsconfig.test.json",
-        "lint": "eslint src test --ext ts",
+        "lint": "eslint src && eslint --ext=json,js",
         "test": "node ./out/runTest.js"
     },
     "dependencies": {
