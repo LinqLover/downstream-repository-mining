@@ -149,7 +149,7 @@ export class Reference {
 export abstract class ReferenceSearcher {
     constructor(
         public $package: Package,
-        public dependency: Dependency,
+        public dependency: Dependency & { sourceDirectory: string },
         public includeKinds: readonly ReferenceKind[] | '*' = ['usage']
     ) { }
 
@@ -158,8 +158,8 @@ export abstract class ReferenceSearcher {
     }
 
     /** Stream all references found in the directory. */
-    async* searchReferences(rootDirectory: string) {
-        const allReferences = this.basicSearchReferences(rootDirectory)
+    async* searchReferences() {
+        const allReferences = this.basicSearchReferences()
         if (this.includeKinds == '*') {
             return allReferences
         }
@@ -172,7 +172,7 @@ export abstract class ReferenceSearcher {
     }
 
     /** Internal streaming function to be implemented by subclasses. May spawn duplicate results. Must not honor `this.usageKinds`. */
-    protected abstract basicSearchReferences(rootDirectory: string): AsyncGenerator<Reference, void, undefined>
+    protected abstract basicSearchReferences(): AsyncGenerator<Reference, void, undefined>
 
     protected async findAllSourceFiles(rootDirectory: string) {
         // Exclude bundled and minified files

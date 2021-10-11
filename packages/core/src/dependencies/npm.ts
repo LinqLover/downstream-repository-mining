@@ -42,11 +42,11 @@ export class NpmDependency extends Dependency {
         const cacheDirectory = dowdep.sourceCacheDirectory
         this.sourceDirectory = dowdep.fileSystem.join(cacheDirectory, this.name)
         if (await this.isSourceCodeReady(dowdep)) {
-            return true // TODO: What to return here?
+            return true
         }
 
         // TODO: Check system-wide npm/yarn caches?
-        // TODO: Use dowdep.fileSystem! How???
+        // TODO: Use dowdep.fileSystem!
         await downloadPackageTarball({
             url: this.tarballUrl,
             dir: cacheDirectory

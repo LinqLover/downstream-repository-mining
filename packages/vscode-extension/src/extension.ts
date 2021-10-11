@@ -54,7 +54,7 @@ export class Extension {
     ) {
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
-            // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
+            // TODO: Use filesystem abstraction.
             sourceCacheDirectory: vscode.Uri.joinPath(context.globalStorageUri, 'dowdep-cache').fsPath
         })
         context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => this.configurationChanged()))
@@ -157,7 +157,6 @@ export class Extension {
         this.packages = await this.getPackages()
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
-            // TODO: Only show warning if no error was shown earlier during getPackages()
         }
         await this.notifyModelObservers()
     }
@@ -208,7 +207,6 @@ export class Extension {
             .filter(dependency => dependency.sourceDirectory)
         if (!allDependencies.length) {
             await vscode.window.showWarningMessage("No dependencies were found in this workspace.")
-            // TODO: Do we need to await this?
         }
 
         this.doCancellable(async () => {
@@ -256,7 +254,7 @@ export class Extension {
                     this.packages.map(async $package => {
                         if (canceling) { return }
                         await this.refreshDependencies($package, cancellationToken, async () => {
-                            const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep)))) // TODO: thread-safe?
+                            const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep))))
                             const newReadyDependencies = readyPackageDependencies.flat().filter(dependency => !readyDependencies.includes(dependency))
                             readyDependencies.push(...newReadyDependencies)
 

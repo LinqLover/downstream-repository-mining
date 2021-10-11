@@ -43,7 +43,6 @@ export class Dowdep {
     }
 
     createReferenceSearcher(dependency: Dependency, $package: Package) {
-        // TODO: Do we still need $package param?
         return createReferenceSearcher($package, dependency, this.referenceSearchStrategy)
     }
 }

@@ -41,6 +41,5 @@ export class Package {
             }
             await dependency.update(dowdep, options, updateCallback)
         }))
-        // TODO: Dependency needs a "state" variable for proper asynchronous state checking
     }
 }

@@ -7,6 +7,7 @@ import tqdm2 from '../utils/tqdm2'
 export default class List extends DowdepCommand {
     static description = 'list downstream dependencies'
 
+    // TODO: Command aliases do not work!
     static flags = {
         help: flags.help({ char: 'h' }),
         limit: flags.integer({
@@ -19,7 +20,7 @@ export default class List extends DowdepCommand {
             default: 'all'
         }),
         downloadGitHubData: flags.boolean({
-            name: 'download-github-metadata', // TODO: Does not work!
+            name: 'download-github-metadata',
             description: "download additional metadata from GitHubn (enabled by default, prepend no to disable)",
             default: true,
             allowNo: true

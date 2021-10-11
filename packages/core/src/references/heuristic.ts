@@ -41,7 +41,7 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
         const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
         /**
-         * Workaround for https://github.com/microsoft/TypeScript/issues/43329. // TODO: Check if this is a regression
+         * Workaround for https://github.com/microsoft/TypeScript/issues/43329.
          *
          * TypeScript will always try to replace dynamic imports with `requires` which doesn't work for importing ESM from CJS.
          * We work around by "hiding" our dynamic import in a Function constructor (terrible...).
@@ -69,9 +69,9 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
         this.commonJsPatterns = [requirePattern]
     }
 
-    async* basicSearchReferences(rootDirectory: string) {
-        for (const file of await this.findAllSourceFiles(rootDirectory)) {
-            yield* this.searchReferencesInFile(rootDirectory, file)
+    async* basicSearchReferences() {
+        for (const file of await this.findAllSourceFiles(this.dependency.sourceDirectory)) {
+            yield* this.searchReferencesInFile(this.dependency.sourceDirectory, file)
         }
     }
 
@@ -194,7 +194,6 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
                 console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100), dependencyName: this.dependency.name }) // TODO: Make getter denedencyName?
                 // This includes syntax errors but also TypeScript syntax which is not (yet?) supported by parse-imports.
                 // See: https://github.com/TomerAberbach/parse-imports/issues/1
-                // TODO: Increase robustness by stripping of everything below import statements
                 return []
             }
         })()
@@ -266,9 +265,7 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
                          * | ---------------------- | ------------------------ |
                          * | CommonJS               | default export           |
                          * | ECMA Script (ESM)      | `Module` instance        |
-                         * Here we assume the more common CommonJS case and thus fall back to undefined.
-                         *
-                         * TODO: Create parameter to indicate the module type for packageName. */
+                         * Here we assume the more common CommonJS case and thus fall back to undefined. */
                         ?? undefined,
                     alias: match.groups.alias,
                     index: match.index

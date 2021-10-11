@@ -141,8 +141,7 @@ export class Dependency {
 
         const searcher = dowdep.createReferenceSearcher(this, this.$package)
 
-        // TODO: Don't pass directory separately
-        for await (const reference of searcher.searchReferences(this.sourceDirectory)) {
+        for await (const reference of searcher.searchReferences()) {
             const existingReference = this._references.find(existingReference =>
                 existingReference.location.keyEquals(reference.location))
             if (existingReference) {

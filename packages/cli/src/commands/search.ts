@@ -11,6 +11,7 @@ import tqdm2 from '../utils/tqdm2'
 export default class Search extends DowdepCommand {
     static description = 'search downstream dependencies for package references'
 
+    // TODO: Command aliases do not work!
     static flags = {
         help: flags.help({ char: 'h' }),
         source: flags.string({
@@ -22,7 +23,7 @@ export default class Search extends DowdepCommand {
             options: ['heuristic', 'types']
         }),
         includeImports: flags.boolean({
-            name: 'include-imports', // TODO does not work
+            name: 'include-imports',
             description: "whether also to find import statements for the package (experimental)",
             default: false
         }),

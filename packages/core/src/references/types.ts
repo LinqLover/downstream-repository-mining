@@ -13,65 +13,62 @@ import { DeclarationLocation, FilePosition, ReferenceSearcher, Reference, Refere
 export class TypeReferenceSearcher extends ReferenceSearcher {
     protected typeChecker!: ts.TypeChecker
     protected references!: Reference[]
-    protected dependencyDirectory!: string
 
     /** In bytes (B). */
     protected static maximumFileSize = 10_000_000
 
+    protected get dependencyDirectory() {
+        return this.dependency.sourceDirectory
+    }
     protected get packageDirectory() {
         const directory = this.$package.directory
         assert(directory, `No package directory was specified for package ${this.$package.name}`)
         return directory
     }
 
-    async* basicSearchReferences(rootDirectory: string) {
-        this.dependencyDirectory = rootDirectory
-        try {
-            const options = this.loadOptions()
+    async* basicSearchReferences() {
+        const options = this.loadOptions()
 
-            const allFileNames = (
-                await this.findAllSourceFiles(this.dependencyDirectory)
-            ).map(file => path.join(this.dependencyDirectory, file))
-            if (!options.fileNames.length) {
-                if (!allFileNames.length) {
-                    console.warn("No files names passed or found, skipping repository", { dependencyName: this.dependency.name })
-                } else if (allFileNames.length > 1000) {
-                    console.warn("No files names passed and too many hypothetical source files, skipping repository", { dependencyName: this.dependency.name })
-                } else {
-                    console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
-                    options.fileNames = allFileNames
-                }
+        const allFileNames = (
+            await this.findAllSourceFiles(this.dependencyDirectory)
+        ).map(file => path.join(this.dependencyDirectory, file))
+        if (!options.fileNames.length) {
+            if (!allFileNames.length) {
+                console.warn("No files names passed or found, skipping repository", { dependencyName: this.dependency.name })
+            } else if (allFileNames.length > 1000) {
+                console.warn("No files names passed and too many hypothetical source files, skipping repository", { dependencyName: this.dependency.name })
+            } else {
+                console.warn("No file names passed, searching whole repository", { dependencyName: this.dependency.name })
+                options.fileNames = allFileNames
+            }
+        }
+
+        const totalFileSize = _.sumBy(await Promise.all(options.fileNames.map(name => fsPromises.stat(name))), x => x.size)
+        if (totalFileSize > TypeReferenceSearcher.maximumFileSize) {
+            console.warn("Too large source files, skipping repository", { dependencyName: this.dependency.name })
+            return
+        }
+
+        const host = this.createCompilerHost(options.options)
+        const program = ts.createProgram(options.fileNames, options.options, host)
+        this.typeChecker = program.getTypeChecker()
+
+        for (const sourceFile of program.getSourceFiles()) {
+            if (!options.fileNames.includes(sourceFile.fileName)) {
+                // External library, maybe our own package
+                continue
+            }
+            if (!allFileNames.includes(sourceFile.fileName)) {
+                // Irrelevant file such as bundle
+                continue
             }
 
-            const totalFileSize = _.sumBy(await Promise.all(options.fileNames.map(name => fsPromises.stat(name))), x => x.size)
-            if (totalFileSize > TypeReferenceSearcher.maximumFileSize) {
-                console.warn("Too large source files, skipping repository", { dependencyName: this.dependency.name })
-                return
+            this.references = []  // A generator would be nicer but also more complicated
+            ts.forEachChild(sourceFile, (node) => this.visitNode(node))
+            if (this.includeKinds != '*') {
+                this.references = this.references.filter(reference => this.includeKinds.includes(reference.kind))
             }
-
-            const host = this.createCompilerHost(options.options)
-            const program = ts.createProgram(options.fileNames, options.options, host)
-            this.typeChecker = program.getTypeChecker()
-
-            for (const sourceFile of program.getSourceFiles()) {
-                if (!options.fileNames.includes(sourceFile.fileName)) {
-                    // External library, maybe our own package
-                    continue
-                }
-                if (!allFileNames.includes(sourceFile.fileName)) {
-                    // Irrelevant file such as bundle
-                    continue
-                }
-
-                this.references = []  // A generator would be nicer but also more complicated
-                ts.forEachChild(sourceFile, (node) => this.visitNode(node))
-                if (this.includeKinds != '*') {
-                    this.references = this.references.filter(reference => this.includeKinds.includes(reference.kind))
-                }
-                yield* this.references
-            }
-        } finally {
-            this.dependencyDirectory = ""
+            yield* this.references
         }
     }
 

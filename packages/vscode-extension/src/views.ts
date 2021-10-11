@@ -107,7 +107,6 @@ export abstract class DependencyItem<
     }
 
     async open() {
-        // TODO: Do not suppress expansion of item on click - expand it manually
         await vscode.commands.executeCommand('dowdep.openDependency', this.dependency)
     }
 
