@@ -23,12 +23,12 @@ export default class Search extends DowdepCommand {
         }),
         includeImports: flags.boolean({
             name: 'include-imports', // TODO does not work
-            description: "whether also to find import statements for the package",
+            description: "whether also to find import statements for the package (experimental)",
             default: false
         }),
         includeOccurences: flags.boolean({
             name: 'include-occurences',
-            description: "whether also to find indirect occurences of package types",
+            description: "whether also to find indirect occurences of package types (experimental)",
             default: false
         }),
         aggregate: flags.boolean({

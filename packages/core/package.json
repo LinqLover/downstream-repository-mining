@@ -1,6 +1,7 @@
 {
     "name": "dowdep",
     "version": "0.0.0",
+    "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
     "author": "Christoph Thiede",
     "module": "./out/index.js",
     "exports": "./out/index.js",

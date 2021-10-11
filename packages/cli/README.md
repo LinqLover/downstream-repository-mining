@@ -5,6 +5,8 @@ Outputs are in a machine-readable format and can be reused by other applications
 
 ## Installation 
 
+Prerequisites: Build the [dowdep package](../core).
+
 ```sh
 $ yarn install
 $ npm link

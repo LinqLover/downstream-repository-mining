@@ -3,7 +3,10 @@ import { Command } from '@oclif/command'
 
 import { Dependency, DependencyUpdateOptions, Dowdep, Package } from 'dowdep'
 
+
+/** Abstract base class for all dowdep commands. */
 export default abstract class DowdepCommand extends Command {
+    /** Update dependencies for the given package name with the specified options. Once a found dependency fulfills the specified readiness predicate, stream it via the returned async iterator. */
     async *updateDependencies(
         packageName: string,
         searchStrategies: Dowdep['dependencySearchStrategies'],
@@ -22,7 +25,7 @@ export default abstract class DowdepCommand extends Command {
 
         const knownDependencies: Dependency[] = []
 
-        // Schedule dependency updates asynchronousl and, stream every dependency back to the caller once it has been updated.
+        // Schedule dependency updates asynchronously and stream every dependency back to the caller once it has been updated.
         let yieldResolve: ($new: boolean) => void
         let yieldPromise: Promise<boolean> = new Promise(resolve => yieldResolve = resolve)  // For synchronization between depedency updates and generator
         $package.updateDependencies(dowdep, updateOptions, async () => {
