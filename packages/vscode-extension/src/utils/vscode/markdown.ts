@@ -2,7 +2,7 @@ import assert from 'assert'
 import { MarkdownString } from 'vscode'
 
 
-export default function (templates: TemplateStringsArray, ...args: (string | MarkdownString | {toString(): string})[]) {
+export function md(templates: TemplateStringsArray, ...args: (string | MarkdownString | {toString(): string})[]) {
     assert(templates.raw.length === args.length + 1)
 
     const raws = [...templates.raw]
@@ -17,4 +17,8 @@ export default function (templates: TemplateStringsArray, ...args: (string | Mar
         markdownString.appendMarkdown(raw)
     }
     return markdownString
+}
+
+export function escapeMarkdown(string: string) {
+    return md`${string}`.value
 }

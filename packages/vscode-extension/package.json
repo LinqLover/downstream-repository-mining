@@ -1,5 +1,6 @@
 {
     "name": "dowdep-vscode-extension",
+    "publisher": "LinqLover",
     "displayName": "Downstream Dependency Miner",
     "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
     "version": "0.0.1",
@@ -11,9 +12,9 @@
     ],
     "activationEvents": [
         "onCommand:dowdep.refreshPackages",
-        "onCommand:dowdep.refreshAllDependencies",
-        "onCommand:dowdep.refreshAllReferences",
-        "onCommand:dowdep.refreshAllDependenciesAndReferences",
+        "onCommand:dowdep.refreshDownstreamData",
+        "onCommand:dowdep.refreshDependencies",
+        "onCommand:dowdep.refreshReferences",
         "onView:dowdepDependencies",
         "onView:dowdepReferences",
         "workspaceContains:./package.json"
@@ -33,21 +34,65 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "dowdep.refreshAllDependencies",
+                "command": "dowdep.refreshDownstreamData",
                 "category": "Downstream Dependencies",
-                "title": "Refresh all dependencies",
+                "title": "Refresh downstream data",
                 "icon": "$(refresh)"
             },
             {
-                "command": "dowdep.refreshAllReferences",
+                "command": "dowdep.fetchMoreDownstreamData",
                 "category": "Downstream Dependencies",
-                "title": "Refresh all references",
+                "title": "Fetch more downstream data",
+                "icon": "$(settings-add)",
+                "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.refreshDependencies",
+                "category": "Downstream Dependencies",
+                "title": "Refresh dependencies",
+                "icon": "$(refresh)",
+                "enablement": "dowdep.activationState > 0"
+            },
+            {
+                "command": "dowdep.refreshReferences",
+                "category": "Downstream Dependencies",
+                "title": "Refresh references",
+                "icon": "$(refresh)",
+                "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.openSettings",
+                "category": "Downstream Dependencies",
+                "title": "Open settings",
+                "icon": "$(settings-gear)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                "title": "Open dependency online",
+                "icon": "$(globe)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.openRandomReference",
+                "title": "Open random reference",
+                "icon": {
+                    "dark": "assets/die-dark.svg",
+                    "light": "assets/die-light.svg"
+                },
+                "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.refreshDependencies",
+                "title": "Refresh dependencies",
                 "icon": "$(refresh)"
             },
             {
-                "command": "dowdep.refreshAllDependenciesAndReferences",
-                "category": "Downstream Dependencies",
-                "title": "Refresh all dependencies and references",
+                "command": "dowdep.dowdepDependencies.refreshReferences",
+                "title": "Refresh references",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.dowdepReferences.refreshReferences",
+                "title": "Refresh references",
                 "icon": "$(refresh)"
             }
         ],
@@ -61,6 +106,11 @@
                     ],
                     "markdownDescription": "Indicates how many downstream dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
                     "default": 10
+                },
+                "dowdep.dependencyLimitIncrement": {
+                    "type": "number",
+                    "markdownDescription": "Indicates how many downstream dependencies will be added to `#dowdep.dependencyLimit#` when the command \"Fetch more downstream data\" is executed.",
+                    "default": 5
                 },
                 "dowdep.dependencySearchStrategies": {
                     "type": "array",
@@ -118,10 +168,65 @@
             }
         },
         "menus": {
+            "commandPalette": [
+                {
+                    "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openRandomReference",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshDependencies",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshReferences",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepReferences.refreshReferences",
+                    "when": "false"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "dowdep.dowdepDependencies.refreshDependencies",
+                    "when": "view == dowdepDependencies && viewItem =~ /type:package/"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshReferences",
+                    "when": "view == dowdepDependencies && viewItem =~ /type:dependency/"
+                },
+                {
+                    "command": "dowdep.dowdepReferences.refreshReferences",
+                    "when": "view == dowdepReferences && viewItem =~ /type:package/"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                    "group": "inline",
+                    "when": "view == dowdepDependencies && viewItem =~ /type:dependency/ || view == dowdepReferences && viewItem =~ /type:dependency/"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openRandomReference",
+                    "group": "inline",
+                    "when": "view == dowdepDependencies && viewItem =~ /leafTypes:(\\S*,)?reference/ || view == dowdepReferences && viewItem =~ /leafTypes:(\\S*,)?reference/"
+                }
+            ],
             "view/title": [
                 {
-                    "command": "dowdep.refreshPackages",
-                    "when": "view == dowdepDependencies",
+                    "command": "dowdep.openSettings",
+                    "when": "view == dowdepDependencies || view == dowdepReferences"
+                },
+                {
+                    "command": "dowdep.refreshDownstreamData",
+                    "when": "view == dowdepDependencies || view == dowdepReferences",
+                    "group": "navigation"
+                },
+                {
+                    "command": "dowdep.fetchMoreDownstreamData",
+                    "when": "view == dowdepDependencies && dowdep.activationState > 1 || view == dowdepReferences && dowdep.activationState > 1",
                     "group": "navigation"
                 }
             ]
@@ -146,14 +251,20 @@
                     "name": "Downstream References"
                 }
             ]
-        }
+        },
+        "viewsWelcome": [
+            {
+                "view": "dowdepDependencies",
+                "contents": "No downstream dependencies have been found yet.\n\n[Refresh downstream data](command:dowdep.refreshDownstreamData)\n\nFor more information about dowdep, check out our [GitHub repository](https://github.com/LinqLover/downstream-repository-mining)."
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "yarn run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "pretest": "tsc -p ./tsconfig.test.json",
-        "lint": "eslint src test --ext ts",
+        "lint": "eslint src && eslint --ext=json,js",
         "test": "node ./out/runTest.js"
     },
     "dependencies": {

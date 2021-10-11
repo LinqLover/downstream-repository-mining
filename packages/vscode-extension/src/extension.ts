@@ -8,12 +8,16 @@ import vscode from 'vscode'
 import { DeclarationCodeLensProvider } from './codeLens'
 import { DependenciesProvider } from './dependencies'
 import { ReferencesProvider } from './references'
+import { HierarchyProvider } from './views'
 import isDefined from './utils/node/isDefined'
 import * as iterUtils from './utils/node/iterUtils'
-import { HierarchyProvider } from './views'
+import { escapeMarkdown } from './utils/vscode/markdown'
 
 
 let extension: Extension
+
+type DependencyLike = Dependency | readonly Dependency[] | PackageLike
+type PackageLike = Package | readonly Package[]
 
 /**
  * This method is called on the first activation event.
@@ -35,11 +39,13 @@ export function deactivate() {
 
 export class Extension {
     packages: Package[] = []
+    protected extension: vscode.Extension<unknown> // TODO: Name clash!
     protected dowdep: Dowdep
     protected dependenciesProvider: DependenciesProvider
     protected referencesProvider: ReferencesProvider
     protected codeLensProvider: DeclarationCodeLensProvider
 
+    private dependencyLimitIncrement = 0
     private get modelObservers() {
         return [
             this.dependenciesProvider,
@@ -51,6 +57,8 @@ export class Extension {
     constructor(
         context: vscode.ExtensionContext
     ) {
+        this.extension = context.extension
+
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
             // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
@@ -69,6 +77,7 @@ export class Extension {
     private async configurationChanged() {
         const configuration = vscode.workspace.getConfiguration()
         this.dowdep.dependencyLimit = configuration.get<number>('dowdep.dependencyLimit')
+        this.dependencyLimitIncrement = configuration.get<number>('dowdep.dependencyLimitIncrement', 0)
         this.dowdep.githubAccessToken = configuration.get('dowdep.githubOAuthToken')
         this.dowdep.sourcegraphToken = configuration.get('dowdep.sourcegraphToken')
         this.dowdep.dependencySearchStrategies = configuration.get<Dowdep['dependencySearchStrategies'] | null>('dowdep.dependencySearchStrategies', null) ?? (this.dowdep.sourcegraphToken ? '*' : ['npm'])
@@ -90,16 +99,24 @@ export class Extension {
                 () => this.refreshPackages()
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependencies', this.catchErrors(
-                () => this.refreshAllDependencies()
+            vscode.commands.registerCommand('dowdep.refreshDependencies', this.catchErrors(
+                ($package?: PackageLike) => this.refreshDependencies($package)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllReferences', this.catchErrors(
-                () => this.refreshAllReferences()
+            vscode.commands.registerCommand('dowdep.refreshReferences', this.catchErrors(
+                (dependency?: DependencyLike) => this.refreshReferences(dependency)
             )))
         context.subscriptions.push(
-            vscode.commands.registerCommand('dowdep.refreshAllDependenciesAndReferences', this.catchErrors(
-                () => this.refreshAllDependenciesAndReferences()
+            vscode.commands.registerCommand('dowdep.refreshDownstreamData', this.catchErrors(
+                ($package?: PackageLike) => this.refreshDownstreamData($package)
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.fetchMoreDownstreamData', this.catchErrors(
+                () => this.fetchMoreDownstreamData()
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.openSettings', this.catchErrors(
+                () => this.openSettings()
             )))
     }
 
@@ -111,6 +128,10 @@ export class Extension {
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openDependency', this.catchErrors(
                 (dependency: Dependency) => this.openDependency(dependency)
+            )))
+        context.subscriptions.push(
+            vscode.commands.registerCommand('dowdep.openDependencyExternally', this.catchErrors(
+                (dependency: Dependency) => this.openDependencyExternally(dependency)
             )))
         context.subscriptions.push(
             vscode.commands.registerCommand('dowdep.openDependencyFolder', this.catchErrors(
@@ -152,7 +173,7 @@ export class Extension {
     }
 
     async refreshPackages() {
-        this.packages = await this.getPackages()
+        this.packages = await this.getWorkspacePackages()
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
             // TODO: Only show warning if no error was shown earlier during getPackages()
@@ -161,11 +182,8 @@ export class Extension {
         await this.notifyModelObservers()
     }
 
-    async refreshAllDependencies() {
-        if (!this.packages.length) {
-            await vscode.window.showWarningMessage("No packages were found in this workspace.")
-            // TODO: Do we need to await this?
-        }
+    async refreshDependencies($package?: PackageLike): Promise<void> {
+        const packages = await this.getPackages($package)
 
         await this.doCancellable(async () => {
             await vscode.window.withProgress({
@@ -180,15 +198,18 @@ export class Extension {
                 let progressValue = 0
 
                 await Promise.all(
-                    this.packages.map(async $package => {
+                    packages.map(async $package => {
                         if (canceling) { return }
-                        await this.refreshDependencies($package, cancellationToken, async () => {
+                        await this.basicRefreshDependencies($package, cancellationToken, async () => {
                             if (this.dowdep.dependencyLimit) {
-                                const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep))))
+                                const readyPackageDependencies = await Promise.all(packages.map($package => filterAsync(
+                                    [...$package.dependencies],
+                                    async dependency => await dependency.isSourceCodeReady(this.dowdep)))
+                                )
                                 const newProgressValue = _.sumBy(
                                     readyPackageDependencies,
                                     dependencies => dependencies.length
-                                ) / (this.packages.length * this.dowdep.dependencyLimit) * 100
+                                ) / (packages.length * this.dowdep.dependencyLimit) * 100
                                 const increment = newProgressValue - progressValue
                                 progressValue = newProgressValue
                                 progress.report({ increment })
@@ -200,14 +221,8 @@ export class Extension {
         })
     }
 
-    async refreshAllReferences() {
-        const allDependencies = this.packages
-            .flatMap($package => $package.dependencies)
-            .filter(dependency => dependency.sourceDirectory)
-        if (!allDependencies.length) {
-            await vscode.window.showWarningMessage("No dependencies were found in this workspace.")
-            // TODO: Do we need to await this?
-        }
+    async refreshReferences(dependency?: DependencyLike): Promise<void> {
+        const dependencies = await this.getDependencies(dependency)
 
         this.doCancellable(async () => {
             await vscode.window.withProgress({
@@ -221,58 +236,75 @@ export class Extension {
                 })
 
                 await Promise.all(
-                    allDependencies.map(async dependency => {
+                    dependencies.map(async dependency => {
                         if (canceling) { return }
-                        await this.refreshReferences(dependency, cancellationToken)
-                        progress.report({ increment: 100 / allDependencies.length })
+                        await this.basicRefreshReferences(dependency, cancellationToken)
+                        progress.report({ increment: 100 / dependencies.length })
                     })
                 )
             })
         })
     }
 
-    async refreshAllDependenciesAndReferences() {
+    async refreshDownstreamData($package?: PackageLike): Promise<void> {
+        const packages = await this.getPackages($package)
+
         // TODO: Deduplicate
-        if (!this.packages.length) {
+        if (!packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
         }
 
         await this.doCancellable(async () => {
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Window,
-                title: "Refreshing dependencies...",
+                title: "Refreshing downstream data...",
                 cancellable: true
             }, async (progress, cancellationToken) => {
                 let canceling = false
                 cancellationToken.onCancellationRequested(() => {
                     canceling = true
                 })
+                const halfIncrement = this.dowdep.dependencyLimit
+                    ? 100 / (packages.length * this.dowdep.dependencyLimit) / 2
+                    : undefined
                 const readyDependencies: Dependency[] = []
 
                 await Promise.all(
-                    this.packages.map(async $package => {
+                    packages.map(async $package => {
                         if (canceling) { return }
-                        await this.refreshDependencies($package, cancellationToken, async () => {
-                            const readyPackageDependencies = await Promise.all(this.packages.map($package => filterAsync([...$package.dependencies], async dependency => await dependency.isSourceCodeReady(this.dowdep)))) // TODO: thread-safe?
-                            const newReadyDependencies = readyPackageDependencies.flat().filter(dependency => !readyDependencies.includes(dependency))
+                        await this.basicRefreshDependencies($package, cancellationToken, async () => {
+                            const readyPackageDependencies = await Promise.all(packages.map($package => filterAsync(
+                                [...$package.dependencies],
+                                async dependency => await dependency.isSourceCodeReady(this.dowdep)))
+                            ) // TODO: thread-safe?
+                            const newReadyDependencies = readyPackageDependencies.flat().filter(
+                                dependency => !readyDependencies.includes(dependency)
+                            )
                             readyDependencies.push(...newReadyDependencies)
 
                             if (canceling) { return }
 
                             await Promise.all(newReadyDependencies.map(async dependency => {
-                                if (this.dowdep.dependencyLimit) {
-                                    progress.report({ increment: 100 / (this.packages.length * this.dowdep.dependencyLimit) / 2 })
-                                }
-                                await this.refreshReferences(dependency, cancellationToken)
-                                if (this.dowdep.dependencyLimit) {
-                                    progress.report({ increment: 100 / (this.packages.length * this.dowdep.dependencyLimit) / 2 })
-                                }
+                                progress.report({ increment: halfIncrement })
+                                await this.basicRefreshReferences(dependency, cancellationToken)
+                                progress.report({ increment: halfIncrement })
                             }))
                         })
                     })
                 )
             })
         })
+    }
+
+    async fetchMoreDownstreamData() {
+        const newLimit = (this.dowdep.dependencyLimit ?? 0) + this.dependencyLimitIncrement
+        await vscode.workspace.getConfiguration().update('dowdep.dependencyLimit', newLimit)
+
+        return await this.refreshDownstreamData()
+    }
+
+    async openSettings() {
+        await vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${this.extension.id}`)
     }
 
     async openPackage($package: Package) {
@@ -306,6 +338,42 @@ export class Extension {
         }
 
         await vscode.window.showErrorMessage("Cannot open this dependency")
+    }
+
+    async openDependencyExternally(dependency: Dependency) {
+        const urls = dependency.urls
+        if (!urls.size) {
+            throw new Error("Cannot open dependency online")
+        }
+        let target: {
+            label: string,
+            url: string
+        }
+        if (urls.size === 1) {
+            const url = iterUtils.first(urls.entries())
+            target = {
+                label: url[0],
+                url: url[1]
+            }
+        } else {
+            const choice = await vscode.window.showQuickPick(
+                _.map([...urls.entries()], ([label, url]) => ({
+                    target: { label, url },
+                    label: escapeMarkdown(label),
+                    description: escapeMarkdown(url)
+                })),
+                {
+                    title: "Choose platform"
+                }
+            )
+            if (!choice) {
+                return
+            }
+            target = choice.target
+        }
+
+        const uri = vscode.Uri.parse(target.url)
+        await vscode.commands.executeCommand('vscode.open', uri)
     }
 
     async openDependencyFolder(dependency: Dependency, relativePath: string) {
@@ -365,7 +433,7 @@ export class Extension {
         this.referencesProvider.revealPackageMemberItem($package, location)
     }
 
-    async refreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken, updateCallback?: () => Promise<void>) {
+    async basicRefreshDependencies($package: Package, cancellationToken?: vscode.CancellationToken, updateCallback?: () => Promise<void>) {
         await $package.updateDependencies(
             this.dowdep, {
                 downloadMetadata: true,
@@ -379,13 +447,49 @@ export class Extension {
             })
     }
 
-    async refreshReferences(dependency: Dependency, cancellationToken?: vscode.CancellationToken) {
+    async basicRefreshReferences(dependency: Dependency, cancellationToken?: vscode.CancellationToken) {
         await dependency.updateReferences(this.dowdep, async () => {
             if (cancellationToken?.isCancellationRequested) {
                 throw new vscode.CancellationError()
             }
             await this.notifyModelObservers()
         })
+    }
+
+    protected async getPackages($package?: PackageLike) {
+        if (!$package) {
+            return await this.getAllPackages()
+        }
+
+        return _.isArrayLike($package)
+            ? $package
+            : [$package]
+    }
+
+    protected async getDependencies(dependency?: DependencyLike): Promise<readonly Dependency[]> {
+        if (!dependency) {
+            return await this.getDependencies(await this.getPackages())
+        }
+
+        if (_.isArrayLike(dependency)) {
+            const allDependencies = await Promise.all(dependency.map(
+                async _dependency => await this.getDependencies(_dependency)
+            ))
+            return allDependencies.flat()
+        }
+
+        if (dependency instanceof Package) {
+            return dependency.dependencies
+        }
+
+        return [dependency]
+    }
+
+    private async getAllPackages() {
+        if (!this.packages.length) {
+            await vscode.window.showWarningMessage("No packages were found in this workspace.")
+        }
+        return this.packages
     }
 
     private doCancellable<TIn extends unknown[], TOut>(fun: (...args: TIn) => TOut, ...args: TIn) {
@@ -412,11 +516,22 @@ export class Extension {
     }
 
     private async notifyModelObservers() {
+        this.updateActivationState()
+
         await Promise.all(this.modelObservers.map(
             observer => observer.modelChanged()))
     }
 
-    private async getPackages() {
+    private updateActivationState() {
+        vscode.commands.executeCommand('setContext', 'dowdep.activationState',
+            !this.packages
+                ? 0
+                : !this.packages.some($package => $package.dependencies.length)
+                    ? 1
+                    : 2)
+    }
+
+    private async getWorkspacePackages() {
         const folders = vscode.workspace.workspaceFolders
         if (!folders) {
             return []
@@ -424,7 +539,7 @@ export class Extension {
 
         return (await Promise.all(
             folders.map(async folder => {
-                const [error, $package] = await tryToCatch(() => this.getPackage(folder))
+                const [error, $package] = await tryToCatch(() => this.getWorkspacePackage(folder))
                 if (error) {
                     if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
                         return
@@ -437,7 +552,7 @@ export class Extension {
         )).filter(isDefined)
     }
 
-    private async getPackage(folder: vscode.WorkspaceFolder) {
+    private async getWorkspacePackage(folder: vscode.WorkspaceFolder) {
         const packageJsonUri = vscode.Uri.joinPath(folder.uri, 'package.json')
         const packageData = await this.readPackageData(packageJsonUri)
 

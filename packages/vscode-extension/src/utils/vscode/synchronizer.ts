@@ -20,16 +20,12 @@ export class Synchronizer {
     }
 
     fire<T>(eventEmitter: vscode.EventEmitter<T | void>) {
-        const promise = this.shouldUpdate() ? this.promise() : undefined
+        const promise = this.isEnabled() && this.shouldUpdate() ? this.promise() : undefined
         eventEmitter.fire()
         return promise
     }
 
     protected wasUpdated() {
-        if (!this.isEnabled()) {
-            return
-        }
-
         for (let i = this.pendingResolvers.length - 1; i >= 0; i--) {
             this.pendingResolvers.splice(0, 1)[0]()
         }

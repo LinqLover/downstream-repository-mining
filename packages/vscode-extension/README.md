@@ -68,3 +68,7 @@ Ensure that you've read through the extensions guidelines and follow the best pr
 * [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
 **Enjoy!**
+
+## Credits
+
+- Die icon ([`./assets/die-{dark,light}.svg`](./assets)) by Ben Davis from the Noun Project, edited.

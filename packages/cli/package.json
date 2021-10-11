@@ -21,7 +21,7 @@
         ]
     },
     "scripts": {
-        "lint": "eslint . --ext=.js,.ts,.json",
+        "lint": "eslint . && eslint --ext=.json",
         "test": "./scripts/test-cli.sh"
     },
     "dependencies": {

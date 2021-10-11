@@ -1,10 +1,10 @@
 extends:
-- eslint:recommended
-- plugin:@typescript-eslint/eslint-recommended
-- plugin:@typescript-eslint/recommended
+  - eslint:recommended
+  - plugin:@typescript-eslint/eslint-recommended
+  - plugin:@typescript-eslint/recommended
 ignorePatterns:
-- cache*/
-- out/
+  - cache*/
+  - out/
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
@@ -17,23 +17,24 @@ overrides:
       "@typescript-eslint/no-floating-promises": error
 parser: "@typescript-eslint/parser"
 plugins:
-- "@typescript-eslint"
-- jest
+  - "@typescript-eslint"
+  - jest
 rules:
   indent:
-  - error
-  - 4
-  - SwitchCase: 1
+    - error
+    - 4
+    - SwitchCase: 1
   linebreak-style:
-  - error
-  - unix
+    - error
+    - unix
   no-return-await: 'off'  # optimization only and harder to read
+  no-trailing-spaces: error
   no-unnecessary-initializer: 'off'  # readability
   quotes: 'off'
   require-yield: 'off'
   semi:
-  - error
-  - never
+    - error
+    - never
   "@typescript-eslint/explicit-module-boundary-types": 'off'
   "@typescript-eslint/no-explicit-any":
     - warn
@@ -41,6 +42,9 @@ rules:
   "@typescript-eslint/no-unused-vars":
     - warn
     - args: none
+  "@typescript-eslint/return-await":
+    - error
+    - always
   "jest/no-disabled-tests": "warn"
   "jest/no-focused-tests": "error"
   "jest/no-identical-title": "error"
