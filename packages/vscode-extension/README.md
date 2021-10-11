@@ -21,6 +21,16 @@ Mine usage information about your JavaScript/TypeScript package from dependent r
 	</tbody>
 </table>
 
+## Usage
+
+After installing the extension, open a folder in VS Code that contains a node module, i.e., a `package.json` file.
+Open the downstream dependencies view from the activity bar (<img alt="dowdep icon" src="./assets/dowdep.svg" height="16"></img>) and press "Refresh downstream data" (you can also invoke this command via the command palette).
+Dependencies are now searched, downloaded, analyzed, and displayed in the view.
+Hover, click, or right-click any item to see additional details.
+
+Also, make sure to check out all functionalities by searching for "Downstream Dependencies" in the command palette.
+You can configure the extension in the settings by navigating to the Downstream Dependencies extension there.
+
 ## Development
 
 See [Contributing](CONTRIBUTING.md).
