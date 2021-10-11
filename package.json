@@ -1,5 +1,6 @@
 {
     "name": "dowdep-base",
+    "author": "Christoph Thiede",
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^4.33.0",
         "@typescript-eslint/parser": "^4.33.0",

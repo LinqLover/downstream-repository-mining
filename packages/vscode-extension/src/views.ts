@@ -19,6 +19,11 @@ export class HierarchyProvider<TRootItem extends RefreshableHierarchyItem> exten
     }
 }
 
+/**
+ * A pseudo-item that represents the root of a tree view of package items.
+ *
+ * This item is never displayed inside a tree view but only used to control child items.
+ */
 export abstract class PackagesItem<TPackageItem extends RefreshableHierarchyItem> extends SynchronizableHierarchyItem<Package, TPackageItem> {
     constructor(
         protected extension: Extension
@@ -31,6 +36,7 @@ export abstract class PackagesItem<TPackageItem extends RefreshableHierarchyItem
     }
 }
 
+/** An item for a {@link Package}. */
 export abstract class PackageItem<TItem extends RefreshableHierarchyItem> extends SynchronizableHierarchyItem<Dependency, TItem> {
     constructor(
         public $package: Package
@@ -56,6 +62,7 @@ export abstract class PackageItem<TItem extends RefreshableHierarchyItem> extend
     }
 }
 
+/** A composite item for a {@link Dependency}. */
 export abstract class DependencyItem<
     TDependencyItem extends DependencyItem<TDependencyItem, TReferenceItem>,
     TReferenceItem extends RefreshableHierarchyItem
@@ -145,6 +152,7 @@ export abstract class DependencyItem<
     }
 }
 
+/** A composite item for a file-system object, i.e., a file or a folder. */
 export abstract class ReferenceFileNodeItem<
     TFileNodeItem extends ReferenceFileNodeItem<TFileNodeItem, TMemberNodeItem, TLeafItem>,
     TMemberNodeItem extends RefreshableHierarchyItem & {
@@ -222,6 +230,7 @@ export abstract class ReferenceFileNodeItem<
     }
 }
 
+/** A leaf item for a {@link Reference}. */
 export class ReferenceItem extends RefreshableHierarchyItem {
     constructor(
         protected reference: Reference

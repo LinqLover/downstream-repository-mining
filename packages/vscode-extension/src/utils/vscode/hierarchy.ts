@@ -7,6 +7,7 @@ import * as mapUtils from '../node/mapUtils'
 import { Synchronizer } from './synchronizer'
 
 
+/** A specialization of {@link vscode.HierarchyDataProvider} that delegates control of the tree structure to a {@link HierarchyItem}. */
 export abstract class HierarchyDataProvider<
     TRootItem extends RefreshableHierarchyItem
 > implements vscode.TreeDataProvider<HierarchyItem> {
@@ -73,6 +74,7 @@ export abstract class HierarchyDataProvider<
     }
 }
 
+/** A specialization {@link vscode.TreeItem} that implements the composite pattern. */
 export abstract class HierarchyItem extends vscode.TreeItem {
     constructor(collapsibleState?: vscode.TreeItemCollapsibleState) {
         super("", collapsibleState)
@@ -96,6 +98,7 @@ export abstract class RefreshableHierarchyItem extends HierarchyItem {
     abstract refresh(): void
 }
 
+/** A {@link RefreshableHierarchyItem} that caches and encapsulates child management and provides an abstract protocol for adding new items. */
 export abstract class SynchronizableHierarchyItem<
     TKey,
     TItem extends RefreshableHierarchyItem
@@ -139,6 +142,8 @@ export type HierarchyNodeItemOptions = {
     showCountInDescription: boolean
 }
 
+/** A {@link RefreshableHierarchyItem} that arranges a composite structure automatically into hierarchical items by paths.
+*/
 export abstract class HierarchyNodeItem<
     TPathSegment,
     TLeafKey,
@@ -161,6 +166,7 @@ export abstract class HierarchyNodeItem<
     public allLeafs: readonly TLeafKey[] = []
     /** If set, will be used to sort all complex item keys. */
     protected pathSegmentSorters?: ReadonlyArray<_.Many<_.ListIteratee<TPathSegment>>>
+    /** If set, will be used to sort all leaf keys. */
     protected leafSorters?: ReadonlyArray<_.Many<_.ListIteratee<TLeafKey>>>
     private complexBuckets: Map<TPathSegment, TLeafKey[]>
     protected showCountInDescription = false

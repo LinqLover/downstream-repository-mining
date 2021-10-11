@@ -1,3 +1,7 @@
+/** Iteration utilities for {@link IterableIterator}s. */
+// eslint-disable-next-line @typescript-eslint/no-extra-semi
+;
+
 export function first<T>(iterator: IterableIterator<T>) {
     const first = iterator.next()
     if (first.done) {

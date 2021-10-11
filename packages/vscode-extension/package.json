@@ -2,6 +2,7 @@
     "name": "dowdep-vscode-extension",
     "displayName": "Downstream Dependency Miner",
     "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
+    "author": "Christoph Thiede",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.57.0"

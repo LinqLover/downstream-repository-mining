@@ -33,6 +33,7 @@ export function deactivate() {
     extension.release()
 }
 
+/** The god class of the extension that connects to a {@link Dowdep} instance. */
 export class Extension {
     packages: Package[] = []
     protected dowdep: Dowdep
@@ -151,20 +152,20 @@ export class Extension {
         return
     }
 
+    /** Refresh the list of packages. */
     async refreshPackages() {
         this.packages = await this.getPackages()
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
             // TODO: Only show warning if no error was shown earlier during getPackages()
-            // TODO: Do we need to await this?
         }
         await this.notifyModelObservers()
     }
 
+    /** Refresh the list of dependencies for all packages. */
     async refreshAllDependencies() {
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
-            // TODO: Do we need to await this?
         }
 
         await this.doCancellable(async () => {
@@ -200,6 +201,7 @@ export class Extension {
         })
     }
 
+    /** Refresh the list of usage samples for all dependencies. */
     async refreshAllReferences() {
         const allDependencies = this.packages
             .flatMap($package => $package.dependencies)
@@ -231,6 +233,7 @@ export class Extension {
         })
     }
 
+    /** Refresh the list of dependencies for all packages and the list of usage samples for each dependency. */
     async refreshAllDependenciesAndReferences() {
         // TODO: Deduplicate
         if (!this.packages.length) {
@@ -388,6 +391,7 @@ export class Extension {
         })
     }
 
+    /** Run the passed function, and return immediately if an {@link vscode.CancellationError} is raised. */
     private doCancellable<TIn extends unknown[], TOut>(fun: (...args: TIn) => TOut, ...args: TIn) {
         try {
             return fun(...args)
@@ -400,6 +404,7 @@ export class Extension {
         }
     }
 
+    /** Run the passed function and catch any errors that are signaled and report them to the user. */
     private catchErrors<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
         return async (...args: TIn) => {
             try {
@@ -411,11 +416,13 @@ export class Extension {
         }
     }
 
+    /** The model has changed. Inform all observers that they need to update their views. */
     private async notifyModelObservers() {
         await Promise.all(this.modelObservers.map(
             observer => observer.modelChanged()))
     }
 
+    /** Find all declared node packages in the current workspace. */
     private async getPackages() {
         const folders = vscode.workspace.workspaceFolders
         if (!folders) {
@@ -453,6 +460,7 @@ export class Extension {
         return data
     }
 
+    /** Find a representative file for the package in the specified {@link directoryUri} that can be used for displaying a preview of this package. */
     private async findRepresentativeFile(directoryUri: vscode.Uri) {
         try {
             if ((await vscode.workspace.fs.stat(directoryUri)).type === vscode.FileType.File) {
