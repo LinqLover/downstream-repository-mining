@@ -11,7 +11,7 @@ import { MarkdownString } from 'vscode'
  * md`Dear ${this.user}, here is some additional markdown: ${md`${2}nd nested template string`}`
  * ```
  */
-export default function (
+export function md(
     templates: TemplateStringsArray,
     ...args: (string | MarkdownString | {
         toString(): string
@@ -31,4 +31,8 @@ export default function (
         markdownString.appendMarkdown(raw)
     }
     return markdownString
+}
+
+export function escapeMarkdown(string: string) {
+    return md`${string}`.value
 }

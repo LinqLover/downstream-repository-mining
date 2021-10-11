@@ -54,7 +54,7 @@ export default function mapUnorderedAsync<TIn, TOut>(iterable: AsyncIterable<TIn
                     }
                     await semaphore
                     semaphore = new Promise<void>((res, rej) => [resolve, reject] = [res, rej])
-                    return this.next()
+                    return await this.next()
                 }
             }
         }

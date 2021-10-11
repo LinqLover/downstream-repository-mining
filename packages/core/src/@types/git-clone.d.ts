@@ -13,7 +13,7 @@ declare module 'git-clone' {
          */
         checkout?: string
     }
-    
+
     /**
      * Clone `repo` to `targetPath`, calling `cb` on completion.
      */

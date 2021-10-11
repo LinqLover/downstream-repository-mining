@@ -4,7 +4,7 @@ import _ from 'lodash'
 import * as vscode from 'vscode'
 
 import { Extension } from './extension'
-import { HierarchyNodeItem } from './utils/vscode/hierarchy'
+import { HierarchyNodeItem, RefreshableHierarchyItem } from './utils/vscode/hierarchy'
 import { DependencyItem, HierarchyProvider, PackageItem, PackagesItem, ReferenceFileNodeItem, ReferenceItem } from './views'
 
 
@@ -20,6 +20,7 @@ export class ReferencesProvider extends HierarchyProvider<ReferencesPackagesItem
             commandCallback: (...args: any[]) => Promise<void>) => void
     ) {
         registerCallback('dowdep.dowdepReferences.openPackage', (item: ReferencesPackageItem) => item.open())
+        registerCallback('dowdep.dowdepReferences.refreshReferences', (item: ReferencesPackageItem) => item.refreshReferences())
         registerCallback('dowdep.dowdepReferences.openPackageFileNode', (item: PackageFileNodeItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openPackageMemberNode', (item: PackageMemberNodeItem) => item.open())
         registerCallback('dowdep.dowdepReferences.openDependency', (item: ReferencesDependencyItem) => item.open())
@@ -54,7 +55,7 @@ export class ReferencesProvider extends HierarchyProvider<ReferencesPackagesItem
 
 class ReferencesPackagesItem extends PackagesItem<ReferencesPackageItem> {
     createItemChild($package: Package) {
-        return new ReferencesPackageItem($package)
+        return new ReferencesPackageItem($package, this)
     }
 }
 
@@ -62,7 +63,7 @@ class ReferencesPackagesItem extends PackagesItem<ReferencesPackageItem> {
 class ReferencesPackageItem extends PackageItem<
     PackageFileNodeItem | PackageMemberNodeItem | ReferencesDependencyItem
 > {
-    private packageNodeItem = new PackageFileNodeItem([])
+    private packageNodeItem = new PackageFileNodeItem([], this)
 
     getChildren() {
         return this.packageNodeItem.getChildren()
@@ -74,6 +75,10 @@ class ReferencesPackageItem extends PackageItem<
         this.packageNodeItem.refresh()
 
         this.description = this.packageNodeItem.description
+    }
+
+    async refreshReferences() {
+        await vscode.commands.executeCommand('dowdep.refreshReferences', this.$package)
     }
 
     protected *getChildrenKeys(): Iterable<Dependency> {
@@ -98,9 +103,10 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
     ReferencesDependencyItem
 > {
     constructor(
-        public path: readonly string[]
+        public path: readonly string[],
+        parent: RefreshableHierarchyItem
     ) {
-        super(path)
+        super(path, parent)
 
         this.command = {
             title: "Browse folder",
@@ -129,11 +135,11 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
     }
 
     createMemberNodeChild() {
-        return new PackageMemberNodeItem([])
+        return new PackageMemberNodeItem([], this)
     }
 
     createFileNodeChild(path: readonly string[]) {
-        return new PackageFileNodeItem(path)
+        return new PackageFileNodeItem(path, this)
     }
 
     isComplexItem(child: PackageFileNodeItem | PackageMemberNodeItem | ReferencesDependencyItem): child is PackageFileNodeItem {
@@ -157,9 +163,10 @@ class PackageMemberNodeItem extends HierarchyNodeItem<
     ReferencesDependencyItem
 > {
     constructor(
-        path: readonly (string | Dependency)[]
+        path: readonly (string | Dependency)[],
+        parent: RefreshableHierarchyItem
     ) {
-        super(path, {
+        super(path, parent, {
             showCountInDescription: true
         })
 
@@ -209,8 +216,8 @@ class PackageMemberNodeItem extends HierarchyNodeItem<
         assert(!(pathSegmentOrLeaf instanceof Reference))
 
         return pathSegmentOrLeaf instanceof Dependency
-            ? new ReferencesDependencyItem()
-            : new PackageMemberNodeItem([...this.path, pathSegmentOrLeaf])
+            ? new ReferencesDependencyItem(this)
+            : new PackageMemberNodeItem([...this.path, pathSegmentOrLeaf], this)
     }
 
     refreshChildItem(child: PackageMemberNodeItem | ReferencesDependencyItem, pathSegmentOrLeaf: string | Dependency | Reference) {
@@ -265,6 +272,6 @@ class ReferencesDependencyItem extends DependencyItem<ReferencesDependencyItem, 
 
     createItemChild(pathSegmentOrLeaf: undefined | Reference) {
         assert(pathSegmentOrLeaf instanceof Reference)
-        return new ReferenceItem(pathSegmentOrLeaf)
+        return new ReferenceItem(pathSegmentOrLeaf, this)
     }
 }

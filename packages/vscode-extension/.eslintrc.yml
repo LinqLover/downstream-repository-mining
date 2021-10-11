@@ -1,9 +1,9 @@
 ignorePatterns:
   - dist
   - out
-  # - **/*.d.ts
 parserOptions:
   ecmaVersion: 2020
+  project: tsconfig.json
   sourceType: module
 rules:
   "@typescript-eslint/naming-convention": warn

@@ -2,6 +2,22 @@
 // eslint-disable-next-line @typescript-eslint/no-extra-semi
 ;
 
+export function *filter<T>(iterator: IterableIterator<T>, predicate: (value: T) => boolean) {
+    for (const value of iterator) {
+        if (predicate(value)) {
+            yield value
+        }
+    }
+}
+
+export function find<T>(iterator: IterableIterator<T>, predicate: (value: T) => boolean) {
+    for (const value of iterator) {
+        if (predicate(value)) {
+            return value
+        }
+    }
+}
+
 export function first<T>(iterator: IterableIterator<T>) {
     const first = iterator.next()
     if (first.done) {
@@ -33,6 +49,10 @@ export function includes<T>(iterator: IterableIterator<T>, searchElement: T) {
         }
     }
     return false
+}
+
+export function isEmpty<T>(iterator: IterableIterator<T>) {
+    return iterator.next().done ?? false
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

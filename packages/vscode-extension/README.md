@@ -39,3 +39,7 @@ You can configure the extension in the settings by navigating to the Downstream 
 ## Development
 
 See [Contributing](CONTRIBUTING.md).
+
+## Credits
+
+- Die icon ([`./assets/die-{dark,light}.svg`](./assets)) by Ben Davis from the Noun Project, edited.

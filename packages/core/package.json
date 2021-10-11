@@ -18,7 +18,7 @@
     ],
     "license": "UNLICENSED",
     "scripts": {
-        "lint": "eslint . --ext=.js,.ts,.json",
+        "lint": "eslint . && eslint --ext=.json",
         "postinstall": "sed -i 's:import(\"src/PackageJson\"):import(\"./PackageJson\"):g' node_modules/package-metadata/dist/findPackageVersion.d.ts || echo \"Cannot patch package-metadata\"",
         "build": "tsc",
         "watch": "tsc -watch -p ./",
