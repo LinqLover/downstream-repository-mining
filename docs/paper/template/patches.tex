@@ -17,6 +17,7 @@
 
 % Fix footnote numbering subcaptions
 % Also do not indent footnotes
+% Separate consecutive footnotes by comma
 \usepackage[hang,flushmargin]{footmisc}
 % CREDITS: https://tex.stackexchange.com/a/414191/221054 (edited)
 \AddToHook{env/subfigure/begin}{%
@@ -25,3 +26,4 @@
 		\expanded{\AddToHookNext{env/subfigure/after}%
 			{\noexpand\setcounter{mpfootnote}{\arabic{mpfootnote}}%
 			 \noexpand\footnotetext\unexpanded{{#1}}}}}}
+\newcommand\footnoteseparator{\textsuperscript{,}}
