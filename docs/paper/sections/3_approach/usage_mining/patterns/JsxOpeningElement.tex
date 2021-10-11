@@ -1,10 +1,10 @@
 \begin{tikzpicture}
-	\node [accent1] {JsxOpeningExpression}
-		child [gray] {node [gray] {tagName}}
-		child [gray] {node [gray, yshift = -0.5cm] {typeArguments}}
-		child [gray] {node [gray] {attributes}};
+	\node [accent1] {\textbf{JsxOpeningExpression}}
+		child [lowlight] {node [lowlight] {tagName}}
+		child [lowlight] {node [lowlight, yshift = -0.5cm] {typeArguments}}
+		child [lowlight] {node [lowlight] {attributes}};
 \end{tikzpicture}
 \caption[LoF entry]{
 	Node pattern for a JSX opening element (as supported in React\footnote{\url{https://reactjs.org/docs/introducing-jsx.html}} or TypeScript\footnote{\url{https://www.typescriptlang.org/docs/handbook/jsx.html}}), such as in:
-	\code*{\textlowlight{elem = }\uline{<Button \textlowlight{color}="\textlowlight{blue}"> \textlowlight{Submit</Button>}}\textlowlight{;}}
+	\code*{\textlowlight{elem = }\uline{<\texthighlight{Button} \textlowlight{color}="\textlowlight{blue}"> \textlowlight{Submit</Button>}}\textlowlight{;}}
 }

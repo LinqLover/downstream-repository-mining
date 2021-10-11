@@ -41,8 +41,9 @@ For that, we have identified two types of data sources that are available in pub
 
 \begin{figure*}
 	\begin{minipage}{\linewidth}
-		\newcommand\textlowlight[1]{\textcolor{gray}{#1}}
-		\newcommand\texthighlight[1]{\textcolor{accent1}{#1}}
+		\colorlet{lowlight}{black!40}
+		\newcommand\textlowlight[1]{\textcolor{lowlight}{#1}}
+		\newcommand\texthighlight[1]{\textbf{\textcolor{accent1}{#1}}}
 		\begin{center}
 			\begin{subfigure}[t]{.32\linewidth}
 				\input{sections/3_approach/usage_mining/patterns/CallExpression}
