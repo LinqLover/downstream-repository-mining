@@ -6,8 +6,7 @@
 
 Mine usage information about your JavaScript/TypeScript package from dependent repositories.
 
-For more information, read the [exposé](./docs/exposé.md):  
-[![Exposé](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/expos%C3%A9.yml/badge.svg?branch=master)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/exposé.yml?query=branch%3Amaster)
+For more information, read our [scientific paper](./docs/paper).
 
 ## Repository Structure
 
@@ -15,7 +14,7 @@ For more information, read the [exposé](./docs/exposé.md):
 - **[`packages/cli/`](./packages/cli):** Provides a simple command-line interface
 - **[`packages/vscode-extension/`](./packages/vscode-extension):** IDE integration that presents the data to the user
 - **[`docs/`](./docs):** Documents examining the scientific background of this project
-- **[`./`](./) (this folder):** Holds everything together, contains [CI](./github) and other configuration files
+- **[`./`](./) (this folder):** Holds everything together, contains [CI](./.github) and other configuration files
 
 ## Installation and Usage
 

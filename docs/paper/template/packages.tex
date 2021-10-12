@@ -1,0 +1,56 @@
+% Define starred commands
+\usepackage{xparse}
+
+% Enumerations
+\usepackage[inline]{enumitem}
+
+% Draw figures
+\usepackage{tikz}
+% \includegraphs for .tikz files
+\usepackage{tikzscale}
+
+% Lay out multiple figures
+\usepackage{subcaption}
+
+% Extended control of figure positioning
+\usepackage{dblfloatfix}
+
+% Algorithms
+\usepackage[noend,noline,boxed]{algorithm2e}
+\SetAlCapSkip{1em}
+% Python style
+\DontPrintSemicolon
+\SetStartEndCondition{ }{}{}%
+\SetKwIF{If}{ElseIf}{Else}{if}{:}{else if}{else}{end if}%
+\SetKwFor{For}{for}{:}{next}%
+\SetKw{kwYield}{yield}
+
+% Source code listings
+\usepackage{listings}
+
+% Underlined text with linebreaks
+\usepackage[normalem]{ulem}
+
+% SI units
+\usepackage{siunitx}
+\sisetup{input-ignore={,},input-decimal-markers={.}}  % allow for manual thousands separators in numbers
+\sisetup{group-separator = {,}}
+\DeclareSIUnit\bit{bit}
+\DeclareSIUnit\byte{B}
+
+\usepackage{xcolor}
+
+% Convenient references (needs to be loaded after algorithms)
+\usepackage[nameinlink]{cleveref}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{multirow}
+
+\usepackage{makecell}
+\renewcommand\theadalign{bc}
+
+\usepackage{threeparttable}
+
+% Bar charts
+\usepackage{bchart}

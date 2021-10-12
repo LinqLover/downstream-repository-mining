@@ -1,0 +1,22 @@
+name: ✒ Paper
+
+on:
+  push:
+    paths:
+      - docs/paper/**
+      - scripts/docs/**
+      - .github/workflows/docs.paper.yml
+
+jobs:
+  latex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: xu-cheng/latex-action@v2
+        with:
+          root_file: paper.tex
+          working_directory: docs/paper
+      - uses: actions/upload-artifact@master
+        with:
+          name: paper.pdf
+          path: docs/paper/paper.pdf
