@@ -1,4 +1,4 @@
-import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
+import { DeclarationLocation, Dependency, Dowdep, FilePosition, loadExternalModules, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
 import normalizePackageData from 'normalize-package-data'
@@ -14,7 +14,8 @@ import * as iterUtils from './utils/node/iterUtils'
 import { escapeMarkdown } from './utils/vscode/markdown'
 
 
-let extension: Extension
+let extension: Extension | undefined = undefined
+export { extension }
 
 type DependencyLike = Dependency | readonly Dependency[] | PackageLike
 type PackageLike = Package | readonly Package[]
@@ -22,28 +23,31 @@ type PackageLike = Package | readonly Package[]
 /**
  * This method is called on the first activation event.
  */
-export function activate(context: vscode.ExtensionContext) {
-    console.log("The extension \"dowdep\" is now active.")
+export async function activate(context: vscode.ExtensionContext) {
+    await loadExternalModules()
 
     extension = new Extension(context)
-
     extension.activate()
+
+    console.log("The extension \"dowdep\" is now active.")
+    return extension
 }
 
 /**
  * This method is called when the extension is deactivated.
  */
 export function deactivate() {
-    extension.release()
+    extension?.release()
 }
 
+/** The god class of the extension that connects to a {@link Dowdep} instance. */
 export class Extension {
+    extension: vscode.Extension<Extension> // TODO: Name clash!
     packages: Package[] = []
-    protected extension: vscode.Extension<unknown> // TODO: Name clash!
-    protected dowdep: Dowdep
-    protected dependenciesProvider: DependenciesProvider
-    protected referencesProvider: ReferencesProvider
-    protected codeLensProvider: DeclarationCodeLensProvider
+    dowdep: Dowdep
+    dependenciesProvider: DependenciesProvider
+    referencesProvider: ReferencesProvider
+    codeLensProvider: DeclarationCodeLensProvider
 
     private dependencyLimitIncrement = 0
     private get modelObservers() {
@@ -61,7 +65,7 @@ export class Extension {
 
         this.dowdep = new Dowdep({
             //fs: vscode.workspace.fs
-            // TODO: Use filesystem abstraction. When workspaces is changed, update storageUri!
+            // TODO: Use filesystem abstraction.
             sourceCacheDirectory: vscode.Uri.joinPath(context.globalStorageUri, 'dowdep-cache').fsPath
         })
         context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => this.configurationChanged()))
@@ -172,16 +176,16 @@ export class Extension {
         return
     }
 
+    /** Refresh the list of packages. */
     async refreshPackages() {
         this.packages = await this.getWorkspacePackages()
         if (!this.packages.length) {
             await vscode.window.showWarningMessage("No packages were found in this workspace.")
-            // TODO: Only show warning if no error was shown earlier during getPackages()
-            // TODO: Do we need to await this?
         }
         await this.notifyModelObservers()
     }
 
+    /** Refresh the list of dependencies for all packages. */
     async refreshDependencies($package?: PackageLike): Promise<void> {
         const packages = await this.getPackages($package)
 
@@ -221,6 +225,7 @@ export class Extension {
         })
     }
 
+    /** Refresh the list of usage samples for all dependencies. */
     async refreshReferences(dependency?: DependencyLike): Promise<void> {
         const dependencies = await this.getDependencies(dependency)
 
@@ -246,6 +251,7 @@ export class Extension {
         })
     }
 
+    /** Refresh the list of dependencies for all packages and the list of usage samples for each dependency. */
     async refreshDownstreamData($package?: PackageLike): Promise<void> {
         const packages = await this.getPackages($package)
 
@@ -276,7 +282,7 @@ export class Extension {
                             const readyPackageDependencies = await Promise.all(packages.map($package => filterAsync(
                                 [...$package.dependencies],
                                 async dependency => await dependency.isSourceCodeReady(this.dowdep)))
-                            ) // TODO: thread-safe?
+                            )
                             const newReadyDependencies = readyPackageDependencies.flat().filter(
                                 dependency => !readyDependencies.includes(dependency)
                             )
@@ -383,6 +389,10 @@ export class Extension {
         }
         const directoryUri = vscode.Uri.file(dependency.sourceDirectory)
         const fileUri = vscode.Uri.joinPath(directoryUri, relativePath)
+        if ((await vscode.workspace.fs.stat(fileUri)).type === vscode.FileType.Directory) {
+            console.warn("Will not open dependency directory", fileUri)
+            return
+        }
         await vscode.commands.executeCommand('vscode.open', fileUri)
     }
 
@@ -492,6 +502,7 @@ export class Extension {
         return this.packages
     }
 
+    /** Run the passed function, and return immediately if an {@link vscode.CancellationError} is raised. */
     private doCancellable<TIn extends unknown[], TOut>(fun: (...args: TIn) => TOut, ...args: TIn) {
         try {
             return fun(...args)
@@ -504,6 +515,7 @@ export class Extension {
         }
     }
 
+    /** Run the passed function and catch any errors that are signaled and report them to the user. */
     private catchErrors<TIn extends unknown[], TOut>(fun: (...args: TIn) => Promise<TOut>) {
         return async (...args: TIn) => {
             try {
@@ -515,6 +527,7 @@ export class Extension {
         }
     }
 
+    /** The model has changed. Inform all observers that they need to update their views. */
     private async notifyModelObservers() {
         this.updateActivationState()
 
@@ -531,6 +544,7 @@ export class Extension {
                     : 2)
     }
 
+    /** Find all declared node packages in the current workspace. */
     private async getWorkspacePackages() {
         const folders = vscode.workspace.workspaceFolders
         if (!folders) {
@@ -568,6 +582,7 @@ export class Extension {
         return data
     }
 
+    /** Find a representative file for the package in the specified {@link directoryUri} that can be used for displaying a preview of this package. */
     private async findRepresentativeFile(directoryUri: vscode.Uri) {
         try {
             if ((await vscode.workspace.fs.stat(directoryUri)).type === vscode.FileType.File) {

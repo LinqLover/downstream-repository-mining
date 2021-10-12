@@ -96,6 +96,7 @@ class ReferencesPackageItem extends PackageItem<
     }
 }
 
+/** A composite item for a file path inside a {@link Package}. */
 class PackageFileNodeItem extends ReferenceFileNodeItem<
     PackageFileNodeItem,
     PackageMemberNodeItem,
@@ -149,11 +150,12 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
         await vscode.commands.executeCommand(
             'dowdep.openPackageFileOrFolder',
             this.$package,
-            this.path.join('/')
+            this.path.join(PackageFileNodeItem.pathSeparator)
         )
     }
 }
 
+/** A composite item for a member path inside a {@link Package} file. */
 class PackageMemberNodeItem extends HierarchyNodeItem<
     string | Dependency,
     Reference,

@@ -7,6 +7,7 @@ import tqdm2 from '../utils/tqdm2'
 export default class List extends DowdepCommand {
     static description = 'list downstream dependencies'
 
+    // TODO: Command aliases do not work!
     static flags = {
         help: flags.help({ char: 'h' }),
         limit: flags.integer({
@@ -19,8 +20,8 @@ export default class List extends DowdepCommand {
             default: 'all'
         }),
         downloadGitHubData: flags.boolean({
-            name: 'download-github-metadata', // TODO: Does not work!
-            description: "download GitHub metadata",
+            name: 'download-github-metadata',
+            description: "download additional metadata from GitHubn (enabled by default, prepend no to disable)",
             default: true,
             allowNo: true
         })
@@ -31,6 +32,7 @@ export default class List extends DowdepCommand {
     async run() {
         const { args, flags } = this.parse(List)
 
+        // Input
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
@@ -39,6 +41,7 @@ export default class List extends DowdepCommand {
             : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
         const downloadGitHubData = flags.downloadGitHubData
 
+        // Processing
         for await (const dependency of tqdm2(
             this.updateDependencies(
                 packageName,
@@ -53,7 +56,7 @@ export default class List extends DowdepCommand {
             {
                 description: "Listing dependencies"
             }
-        )) {
+        )) {  // Output
             console.dir(dependency, {
                 showHidden: false,
                 depth: 1

@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert'
 import { Dependency, Package, Reference } from 'dowdep'
 import _ from 'lodash'
+import path from 'path'
 import truncate from 'truncate'
 import * as vscode from 'vscode'
 
@@ -27,6 +28,11 @@ export class HierarchyProvider<TRootItem extends RefreshableHierarchyItem> exten
     }
 }
 
+/**
+ * A pseudo-item that represents the root of a tree view of package items.
+ *
+ * This item is never displayed inside a tree view but only used to control child items.
+ */
 export abstract class PackagesItem<TPackageItem extends RefreshableHierarchyItem> extends SynchronizableHierarchyItem<Package, TPackageItem> {
     constructor(
         protected extension: Extension
@@ -41,6 +47,7 @@ export abstract class PackagesItem<TPackageItem extends RefreshableHierarchyItem
     }
 }
 
+/** An item for a {@link Package}. */
 export abstract class PackageItem<TItem extends RefreshableHierarchyItem> extends SynchronizableHierarchyItem<Dependency, TItem> {
     constructor(
         public $package: Package,
@@ -68,6 +75,7 @@ export abstract class PackageItem<TItem extends RefreshableHierarchyItem> extend
     }
 }
 
+/** A composite item for a {@link Dependency}. */
 export abstract class DependencyItem<
     TDependencyItem extends DependencyItem<TDependencyItem, TReferenceItem>,
     TReferenceItem extends RefreshableHierarchyItem
@@ -113,7 +121,6 @@ export abstract class DependencyItem<
     }
 
     async open() {
-        // TODO: Do not suppress expansion of item on click - expand it manually
         await vscode.commands.executeCommand('dowdep.openDependency', this.dependency)
     }
 
@@ -153,15 +160,18 @@ export abstract class DependencyItem<
             yield md`---`
             yield
             yield md`GitHub: ${
-                [
-                    ["stars", this.dependency.githubRepository.stargazerCount],
-                    ["forks", this.dependency.githubRepository.forkCount]
-                ].map(([label, count]) => md`${count} ${label}`.value).join(" ⸱ ")
+                (<[[string, string], number][]>[
+                    [["star", "stars"], this.dependency.githubRepository.stargazerCount],
+                    [["fork", "forks"], this.dependency.githubRepository.forkCount]
+                ]).map(([[labelSingular, labelPlural], count]) => md`${count} ${
+                    count === 1 ? labelSingular : labelPlural
+                }`.value).join(" ⸱ ")
             }`
         }
     }
 }
 
+/** A composite item for a file-system object, i.e., a file or a folder. */
 export abstract class ReferenceFileNodeItem<
     TFileNodeItem extends ReferenceFileNodeItem<TFileNodeItem, TMemberNodeItem, TLeafItem>,
     TMemberNodeItem extends RefreshableHierarchyItem & {
@@ -176,8 +186,9 @@ export abstract class ReferenceFileNodeItem<
         })
     }
 
+    protected static readonly pathSeparator = path.sep
     /** Magic number to denote leaves, @see {@link getPathSegment}. */
-    protected static readonly leafPathSegment = '//'
+    protected static readonly leafPathSegment = this.pathSeparator.repeat(2)
 
     get dependency() {
         const anyReference = this.allLeafs[0]
@@ -197,7 +208,8 @@ export abstract class ReferenceFileNodeItem<
 
     protected getPath(reference: Reference) {
         const { fileUri, baseUri } = this.getFullPath(reference)
-        return fileUri.path.split('/').slice(baseUri.path.split('/').length)
+        const separatorPattern = new RegExp(`[/\\${ReferenceFileNodeItem.pathSeparator}]`)
+        return fileUri.path.split(separatorPattern).slice(baseUri.path.split(separatorPattern).length)
     }
 
     protected createItemChild(pathSegmentOrLeaf: string | Reference): TFileNodeItem | TMemberNodeItem {
@@ -239,6 +251,7 @@ export abstract class ReferenceFileNodeItem<
     }
 }
 
+/** A leaf item for a {@link Reference}. */
 export class ReferenceItem extends RefreshableHierarchyItem {
     constructor(
         protected reference: Reference,

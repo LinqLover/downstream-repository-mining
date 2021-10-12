@@ -3,10 +3,11 @@ import mapManyAsync from '@async-generators/map-many'
 
 import { Dowdep } from './dowdep'
 import { Dependency, DependencyUpdateCallback, DependencyUpdateOptions } from './dependencies'
-import { Reference } from '.'
+import { Reference } from './references'
 import mapUnorderedAsync from './utils/mapUnorderedAsync'
 
 
+/** A package whose downstream dependencies will be analyzed. */
 export class Package {
     constructor(
         public name: string,
@@ -25,6 +26,7 @@ export class Package {
         return this.dependencies.flatMap(depedendency => depedendency.references)
     }
 
+    /** Fetch and update dependencies for the package asynchronously. After every update step, `updateCallback` is invoked. */
     async updateDependencies(dowdep: Dowdep, options: Partial<DependencyUpdateOptions> = {}, updateCallback?: DependencyUpdateCallback) {
         const searchers = dowdep.createDependencySearchers(this)
 
@@ -39,6 +41,5 @@ export class Package {
             }
             await dependency.update(dowdep, options, updateCallback)
         }))
-        // TODO: Dependency needs a "state" variable for proper asynchronous state checking
     }
 }

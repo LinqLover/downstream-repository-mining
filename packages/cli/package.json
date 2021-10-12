@@ -1,5 +1,7 @@
 {
     "name": "dowdep-cli",
+    "description": "Command-line interface for dowdep (the downstream dependency miner).",
+    "author": "Christoph Thiede",
     "bin": {
         "dowdep-cli": "./bin/run.js"
     },
@@ -14,6 +16,9 @@
         "bin": "dowdep-cli",
         "commands": "./src/commands",
         "description": "downstream repository mining CLI",
+        "hooks": {
+            "init": "./src/oclif.init.ts"
+        },
         "plugins": [
             "@oclif/plugin-autocomplete",
             "@oclif/plugin-help",

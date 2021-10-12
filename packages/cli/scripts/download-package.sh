@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Download a package from npm. For experimental purposes.
+# Usage:
+#   ./download-package.sh package
+# Expected vars:
+#   NPM_CACHE - path to download
+
 set -ex
 
 cd "$NPM_CACHE" || exit 1

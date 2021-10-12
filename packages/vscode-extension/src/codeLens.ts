@@ -5,7 +5,7 @@ import { Extension, positionToVscode } from './extension'
 import * as mapUtils from './utils/node/mapUtils'
 
 
-type UriPrimitive = string
+type UriPrimitive = ReturnType<vscode.Uri['toString']>
 
 export class DeclarationCodeLensProvider implements vscode.CodeLensProvider {
     constructor(

@@ -1,5 +1,5 @@
 import { flags } from '@oclif/command'
-import asyncIteratorToArray from 'it-all'
+import itAll from 'it-all'
 
 import DowdepCommand from '../DowdepCommand'
 import tqdm2 from '../utils/tqdm2'
@@ -26,6 +26,7 @@ export default class Download extends DowdepCommand {
     async run(): Promise<void> {
         const { args, flags } = this.parse(Download)
 
+        // Input
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
@@ -33,7 +34,8 @@ export default class Download extends DowdepCommand {
             ? [<'npm' | 'sourcegraph'>flags.strategies]
             : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
 
-        const dependencies = await asyncIteratorToArray(
+        // Processing
+        const dependencies = await itAll(
             tqdm2(
                 this.updateDependencies(
                     packageName,
@@ -48,6 +50,7 @@ export default class Download extends DowdepCommand {
             )
         )
 
+        // Output
         console.log(`Download completed, ${dependencies.length} successful`)
     }
 }

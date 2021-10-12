@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Rough acceptance tests for the CLI.
+# Usage:
+#   ./test-cli.sh
+# Expected vars:
+#   GITHUB_OAUTH_TOKEN
+#   SOURCEGRAPH_TOKEN
+
 set -e
 
 fail() {

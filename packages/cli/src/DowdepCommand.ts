@@ -1,9 +1,12 @@
 import filterAsync from 'node-filter-async'
 import { Command } from '@oclif/command'
 
-import { Dependency, DependencyUpdateOptions, Dowdep, getCacheDirectory, Package } from 'dowdep'
+import { Dependency, DependencyUpdateOptions, Dowdep, Package } from 'dowdep'
 
+
+/** Abstract base class for all dowdep commands. */
 export default abstract class DowdepCommand extends Command {
+    /** Update dependencies for the given package name with the specified options. Once a found dependency fulfills the specified readiness predicate, stream it via the returned async iterator. */
     async *updateDependencies(
         packageName: string,
         searchStrategies: Dowdep['dependencySearchStrategies'],
@@ -16,14 +19,15 @@ export default abstract class DowdepCommand extends Command {
             dependencyLimit: limit,
             githubAccessToken: process.env.GITHUB_OAUTH_TOKEN,
             sourcegraphToken: process.env.SOURCEGRAPH_TOKEN,
-            sourceCacheDirectory: getCacheDirectory()
+            sourceCacheDirectory: this.cacheDirectory
         })
         const $package = new Package(packageName)
 
         const knownDependencies: Dependency[] = []
 
+        // Schedule dependency updates asynchronously and stream every dependency back to the caller once it has been updated.
         let yieldResolve: ($new: boolean) => void
-        let yieldPromise: Promise<boolean> = new Promise(resolve => yieldResolve = resolve)
+        let yieldPromise: Promise<boolean> = new Promise(resolve => yieldResolve = resolve)  // For synchronization between depedency updates and generator
         $package.updateDependencies(dowdep, updateOptions, async () => {
             (await filterAsync(
                 [...$package.dependencies],
@@ -51,5 +55,9 @@ export default abstract class DowdepCommand extends Command {
             }
             yieldPromise = new Promise(resolve => yieldResolve = resolve)
         }
+    }
+
+    get cacheDirectory() {
+        return process.env.NPM_CACHE || 'cache'
     }
 }

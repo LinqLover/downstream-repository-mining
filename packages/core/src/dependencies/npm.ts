@@ -11,6 +11,7 @@ import { OnlyData } from '../utils/OnlyData'
 import { URL } from 'url'
 
 
+/** A downstream dependency of a {@link Package} that was retrieved from npm. */
 export class NpmDependency extends Dependency {
     tarballUrl?: string
 
@@ -32,6 +33,7 @@ export class NpmDependency extends Dependency {
         await super.update(dowdep, options, updateCallback)
     }
 
+    /** Download the source code of this dependency from the npm registry. */
     async updateSource(dowdep: Dowdep) {
         if (!this.tarballUrl) {
             return false
@@ -40,11 +42,11 @@ export class NpmDependency extends Dependency {
         const cacheDirectory = dowdep.sourceCacheDirectory
         this.sourceDirectory = dowdep.fileSystem.join(cacheDirectory, this.name)
         if (await this.isSourceCodeReady(dowdep)) {
-            return true // TODO: What to return here?
+            return true
         }
 
         // TODO: Check system-wide npm/yarn caches?
-        // TODO: Use dowdep.fileSystem! How???
+        // TODO: Use dowdep.fileSystem!
         await downloadPackageTarball({
             url: this.tarballUrl,
             dir: cacheDirectory
@@ -52,6 +54,7 @@ export class NpmDependency extends Dependency {
         return true
     }
 
+    /** Fetch metadata about this dependency from the npm registry. */
     async updateFromRegistry() {
         const metadata = await RegistryClient.getMetadata(this.name, { fullMetadata: true })
         const latestVersion = metadata.versions?.latest
@@ -82,6 +85,7 @@ export class NpmDependency extends Dependency {
     }
 }
 
+/** Finds downstream dependencies for a package in the npm ecosystem. */
 export class NpmDependencySearcher extends DependencySearcher {
     constructor($package: Package, init: Partial<OnlyData<NpmDependencySearcher>>) {
         super($package, init)
