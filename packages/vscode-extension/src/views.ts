@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert'
 import { Dependency, Package, Reference } from 'dowdep'
 import _ from 'lodash'
+import path from 'path'
 import truncate from 'truncate'
 import * as vscode from 'vscode'
 
@@ -159,10 +160,12 @@ export abstract class DependencyItem<
             yield md`---`
             yield
             yield md`GitHub: ${
-                [
-                    ["stars", this.dependency.githubRepository.stargazerCount],
-                    ["forks", this.dependency.githubRepository.forkCount]
-                ].map(([label, count]) => md`${count} ${label}`.value).join(" ⸱ ")
+                (<[[string, string], number][]>[
+                    [["star", "stars"], this.dependency.githubRepository.stargazerCount],
+                    [["fork", "forks"], this.dependency.githubRepository.forkCount]
+                ]).map(([[labelSingular, labelPlural], count]) => md`${count} ${
+                    count === 1 ? labelSingular : labelPlural
+                }`.value).join(" ⸱ ")
             }`
         }
     }
