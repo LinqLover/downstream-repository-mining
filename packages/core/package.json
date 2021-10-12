@@ -51,7 +51,6 @@
         "parse-github-repo-url": "^1.4.1",
         "parse-imports": "^1.1.0",
         "path": "^0.12.7",
-        "path-exists": "^5.0.0",
         "path-is-inside": "^1.0.2",
         "promise-status-async": "^1.2.9",
         "psl": "^1.8.0",

@@ -1,3 +1,4 @@
+import { promises as fsPromises } from 'fs'
 import path from 'path'
 
 import { createDependencySearcher, Dependency, DependencySearcher, DependencySearchStrategy } from './dependencies'
@@ -53,6 +54,13 @@ export interface FileSystem {
 }
 
 export const defaultFileSystem: FileSystem = {
-    exists: <FileSystem['exists']><unknown>undefined,
+    exists: async (path: string) => {
+        try {
+            await fsPromises.access(path)
+            return true
+        } catch {
+            return false
+        }
+    },
     join: path.join
 }

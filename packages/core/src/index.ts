@@ -50,9 +50,8 @@ export async function loadExternalModules() {
 
     externalModules.escapeRegexp = (await dynamicImport('escape-string-regexp')).default
 
-    const parseImportsIndexPath = `${dir}/node_modules/parse-imports/src/index.js`
     try {
-        externalModules.parseImports = (await dynamicImport(parseImportsIndexPath)).default
+        externalModules.parseImports = (await dynamicImport(`${dir}/node_modules/parse-imports/src/index.js`)).default
     } catch (parseError) {
         if (!(parseError instanceof Error && 'code' in parseError && (<{ code: string }>parseError).code == 'ERR_MODULE_NOT_FOUND')) {
             throw parseError
@@ -63,9 +62,6 @@ export async function loadExternalModules() {
         const parseImportsIndexPath = `${dir}/../core/node_modules/parse-imports/src/index.js`
         externalModules.parseImports = (await dynamicImport(parseImportsIndexPath)).default
     }
-
-    externalModules.pathExists = (await dynamicImport('path-exists')).pathExists
-    defaultFileSystem.exists = externalModules.pathExists
 
     _loadedExternalModules = true
 }
