@@ -5,6 +5,7 @@ type Options = {
     description?: string
 }
 
+/** Transparent wrapper to iterate the `iterable`. As a side effect, print progress updates to the console. Inspired by Python's tqdm and JavaScript's (not-so-well working) ntqdm. */
 export default async function *tqdm2<T>(iterable: AsyncIterable<T>, length?: number, options: Options = {}): AsyncGenerator<T> {
     const bar = new SingleBar({
         format: `${

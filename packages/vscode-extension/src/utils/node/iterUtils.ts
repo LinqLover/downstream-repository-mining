@@ -1,3 +1,7 @@
+/** Iteration utilities for {@link IterableIterator}s. */
+// eslint-disable-next-line @typescript-eslint/no-extra-semi
+;
+
 export function *filter<T>(iterator: IterableIterator<T>, predicate: (value: T) => boolean) {
     for (const value of iterator) {
         if (predicate(value)) {

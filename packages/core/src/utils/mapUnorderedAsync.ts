@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert'
 
 
+/** Asynchronously iterate `iterable`, schedule a function call for each generated value, and stream all return values into an async generator. Much like a combination of `Promise.all()` and `Array.map()` but with support for lazy iteration of the input collection. See tests. */
 export default function mapUnorderedAsync<TIn, TOut>(iterable: AsyncIterable<TIn>, fn: (item: TIn) => Promise<TOut>): AsyncIterable<TOut> {
     return {
         [Symbol.asyncIterator]: () => {

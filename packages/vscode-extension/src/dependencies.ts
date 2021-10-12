@@ -97,6 +97,7 @@ class DependenciesDependencyItem extends DependencyItem<
     }
 }
 
+/** A composite item for a file path inside a {@link Dependency}. */
 class DependencyFileNodeItem extends ReferenceFileNodeItem<
     DependencyFileNodeItem,
     DependencyMemberNodeItem,
@@ -142,11 +143,12 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
         await vscode.commands.executeCommand(
             'dowdep.openDependencyFolder',
             this.dependency,
-            this.path.join('/')
+            this.path.join(DependencyFileNodeItem.pathSeparator)
         )
     }
 }
 
+/** A composite item for a member path inside a source file of a {@link Dependency}. */
 class DependencyMemberNodeItem extends LabeledHierarchyNodeItem<
     Reference,
     DependencyMemberNodeItem,

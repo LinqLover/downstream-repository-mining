@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert'
 
 /**
- * regular expression utility using template literals
+ * Regular expression utility using template literals and verbose mode for increased readability.
  *
  * Simple Example:
  *

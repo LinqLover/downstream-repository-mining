@@ -1,15 +1,17 @@
 import * as _ from 'lodash'
-import { Command, flags } from '@oclif/command'
+import { flags } from '@oclif/command'
 import * as path from 'path'
 import * as util from 'util'
 
-import { getCacheDirectory, Package, Reference, ReferenceSearcher, ReferenceKind } from 'dowdep'
+import DowdepCommand from '../DowdepCommand'
+import { Package, Reference, ReferenceCollector, ReferenceKind, ReferenceSearchStrategy } from 'dowdep'
 import tqdm2 from '../utils/tqdm2'
 
 
-export default class Search extends Command {
+export default class Search extends DowdepCommand {
     static description = 'search downstream dependencies for package references'
 
+    // TODO: Command aliases do not work!
     static flags = {
         help: flags.help({ char: 'h' }),
         source: flags.string({
@@ -21,13 +23,13 @@ export default class Search extends Command {
             options: ['heuristic', 'types']
         }),
         includeImports: flags.boolean({
-            name: 'include-imports', // TODO does not work
-            description: "whether also to find import statements for the package",
+            name: 'include-imports',
+            description: "whether also to find import statements for the package (experimental)",
             default: false
         }),
         includeOccurences: flags.boolean({
             name: 'include-occurences',
-            description: "whether also to find indirect occurences of package types",
+            description: "whether also to find indirect occurences of package types (experimental)",
             default: false
         }),
         aggregate: flags.boolean({
@@ -45,10 +47,14 @@ export default class Search extends Command {
     async run() {
         const { args, flags } = this.parse(Search)
 
+        // Input
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const packageDirectory = flags.source || undefined
-        const strategy = flags.strategy
+        const strategy = <ReferenceSearchStrategy>flags.strategy
+        if (!['heuristic', 'types'].includes(strategy)) {
+            throw new Error("Invalid strategy")
+        }
         const includeImports = flags.includeImports
         const includeOccurences = flags.includeOccurences
         const aggregate = flags.aggregate
@@ -56,9 +62,9 @@ export default class Search extends Command {
 
         const $package = new Package(
             packageName,
-            packageDirectory ?? path.join(getCacheDirectory(), packageName)
+            packageDirectory ?? path.join(this.cacheDirectory, packageName)
         )
-        const searcher = new ReferenceSearcher($package, getCacheDirectory(), strategy)
+        const searcher = new ReferenceCollector($package, this.cacheDirectory, strategy)
         const includeKinds: ReferenceKind[] = ['usage']
         if (includeImports) {
             includeKinds.push('import')
@@ -66,11 +72,12 @@ export default class Search extends Command {
         if (includeOccurences) {
             includeKinds.push('occurence')
         }
+
+        // Processing
         let references = searcher.searchReferences(limit, includeKinds)
         if (aggregate) {
             references = tqdm2(references)
         }
-
         const allReferences = aggregate && new Array<Reference>()
         for await (const reference of references) {
             console.log(util.inspect(reference, { showHidden: false, depth: null, maxArrayLength: Infinity }))
@@ -78,6 +85,8 @@ export default class Search extends Command {
                 allReferences.push(reference)
             }
         }
+
+        // Output
         if (allReferences) {
             const aggregatedReferences = _.chain(allReferences)
                 .groupBy(reference => reference.declaration.memberPath)

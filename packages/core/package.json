@@ -1,6 +1,7 @@
 {
     "name": "dowdep",
     "version": "0.0.0",
+    "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
     "author": "Christoph Thiede",
     "module": "./out/index.js",
     "exports": "./out/index.js",
@@ -21,10 +22,11 @@
         "postinstall": "sed -i 's:import(\"src/PackageJson\"):import(\"./PackageJson\"):g' node_modules/package-metadata/dist/findPackageVersion.d.ts || echo \"Cannot patch package-metadata\"",
         "build": "tsc",
         "watch": "tsc -watch -p ./",
-        "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+        "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=./test/npm-dependencies.updateSource.test.ts && cross-env NODE_OPTIONS=--experimental-vm-modules jest ./test/npm-dependencies.updateSource.test.ts"
     },
     "scriptsComments": {
-        "postinstall": "WORKAROUND: https://github.com/jd-carroll/package-metadata/issues/3"
+        "postinstall": "WORKAROUND: https://github.com/jd-carroll/package-metadata/issues/3",
+        "test": "do not run all npm-dependencies test at the same time to honor API rate limits. --runInBand apparently does not work for asynchronous tests."
     },
     "dependencies": {
         "@async-generators/map-many": "^0.1.0",
@@ -51,7 +53,6 @@
         "parse-imports": "^1.1.0",
         "path": "^0.12.7",
         "path-is-inside": "^1.0.2",
-        "pkg-dir": "^5.0.0",
         "promise-status-async": "^1.2.9",
         "psl": "^1.8.0",
         "try-catch": "^3.0.0",

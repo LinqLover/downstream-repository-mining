@@ -1,8 +1,22 @@
-import assert from 'assert'
+import { strict as assert } from 'assert'
 import { MarkdownString } from 'vscode'
 
 
-export function md(templates: TemplateStringsArray, ...args: (string | MarkdownString | {toString(): string})[]) {
+/**
+ * A template literal function that compiles a {@link MarkdownString}.
+ *
+ * Arguments can be string-like objects (that will be escaped) or further {@link MarkdownString}s.
+ *
+ * @example ```
+ * md`Dear ${this.user}, here is some additional markdown: ${md`${2}nd nested template string`}`
+ * ```
+ */
+export function md(
+    templates: TemplateStringsArray,
+    ...args: (string | MarkdownString | {
+        toString(): string
+    })[]
+) {
     assert(templates.raw.length === args.length + 1)
 
     const raws = [...templates.raw]
