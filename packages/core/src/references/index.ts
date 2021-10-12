@@ -60,7 +60,6 @@ export class ReferenceCollector {
     protected async* basicSearchReferences(rootDirectory: string, limit: number | undefined, includeKinds: readonly ReferenceKind[] | '*', depth: number): AsyncIterable<Reference> {
         if (!await fsExists(path.join(rootDirectory, 'package.json'))) {
             // Search recursively
-            console.log("read", rootDirectory)
             let depDirectories: Iterable<Dirent> = []
             try {
                 depDirectories = (
@@ -69,7 +68,6 @@ export class ReferenceCollector {
             } catch (ex) {
                 console.error(ex)
             }
-            console.log("did read", depDirectories)
 
             let i = 0
             for await (const depDirectory of depDirectories) {
