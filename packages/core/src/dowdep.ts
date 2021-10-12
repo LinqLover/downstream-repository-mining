@@ -1,5 +1,5 @@
 import path from 'path'
-import pathExists from 'path-exists'
+import { pathExists } from 'path-exists'
 
 import { createDependencySearcher, Dependency, DependencySearcher, DependencySearchStrategy } from './dependencies'
 import { Package } from './packages'
