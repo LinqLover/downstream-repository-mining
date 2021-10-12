@@ -13,7 +13,8 @@ const modules = {
     parseImports: <(
         code: string,
         options?: Options
-    ) => Promise<Iterable<Import>>><unknown>undefined
+    ) => Promise<Iterable<Import>>><unknown>undefined,
+    pathExists: <(path: string) => Promise<boolean>><unknown>undefined
 }
 
 export default modules

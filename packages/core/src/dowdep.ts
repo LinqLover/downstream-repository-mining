@@ -1,5 +1,4 @@
 import path from 'path'
-import { pathExists } from 'path-exists'
 
 import { createDependencySearcher, Dependency, DependencySearcher, DependencySearchStrategy } from './dependencies'
 import { Package } from './packages'
@@ -54,6 +53,6 @@ export interface FileSystem {
 }
 
 export const defaultFileSystem: FileSystem = {
-    exists: pathExists,
+    exists: <FileSystem['exists']><unknown>undefined,
     join: path.join
 }

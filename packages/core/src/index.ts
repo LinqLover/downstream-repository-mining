@@ -17,6 +17,7 @@ export {
     ReferenceSearchStrategy
 } from './references'
 
+import { defaultFileSystem } from './dowdep'
 import externalModules from './externalModules'
 
 let _loadedExternalModules = false
@@ -48,8 +49,8 @@ export async function loadExternalModules() {
     const dir = `file://${__dirname}/..`
 
     externalModules.escapeRegexp = (await dynamicImport('escape-string-regexp')).default
-    const parseImportsIndexPath = `${dir}/node_modules/parse-imports/src/index.js`
 
+    const parseImportsIndexPath = `${dir}/node_modules/parse-imports/src/index.js`
     try {
         externalModules.parseImports = (await dynamicImport(parseImportsIndexPath)).default
     } catch (parseError) {
@@ -62,6 +63,9 @@ export async function loadExternalModules() {
         const parseImportsIndexPath = `${dir}/../core/node_modules/parse-imports/src/index.js`
         externalModules.parseImports = (await dynamicImport(parseImportsIndexPath)).default
     }
+
+    externalModules.pathExists = (await dynamicImport('path-exists')).pathExists
+    defaultFileSystem.exists = externalModules.pathExists
 
     _loadedExternalModules = true
 }
