@@ -20,7 +20,7 @@
         "onView:dowdepReferences",
         "workspaceContains:./package.json"
     ],
-    "main": "./out/extension.js",
+    "main": "./out/src/extension.js",
     "capabilities": {
         "untrustedWorkspaces": {
             "supported": true
