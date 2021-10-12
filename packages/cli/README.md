@@ -20,9 +20,9 @@ $ dowdep-cli autocomplete
 Required environment variables:
 
 - **`GITHUB_OAUTH_TOKEN`:** The token that is used to retrieve additional information about downstream dependencies from GitHub.
-  You can generate a new token in your [developer settings](https://github.com/settings/tokens/new).
+  You can generate a new token in your [developer settings](https://github.com/settings/tokens/new?scopes=public_repo).
 - **`SOURCEGRAPH_TOKEN`:** The token that is used to search dependencies from [Sourcegraph](https://sourcegraph.com/about).
-  You can generate a new token in your [account settings](https://sourcegraph.com/user/settings/tokens).
+  You can generate a new token in your [account settings](https://sourcegraph.com/user/settings/tokens/new).
 - **`NPM_CACHE`** *(optional)*: Indicates the path to the downloaded dependencies.
   Defaults to `cache/`.
 

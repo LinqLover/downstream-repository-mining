@@ -21,7 +21,7 @@ export default class List extends DowdepCommand {
         }),
         downloadGitHubData: flags.boolean({
             name: 'download-github-metadata',
-            description: "download additional metadata from GitHubn (enabled by default, prepend no to disable)",
+            description: "[default: yes] download additional metadata from GitHub",
             default: true,
             allowNo: true
         })

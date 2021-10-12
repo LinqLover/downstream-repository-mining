@@ -14,7 +14,7 @@ For more information, read our [scientific paper](./docs/paper).
 - **[`packages/cli/`](./packages/cli):** Provides a simple command-line interface
 - **[`packages/vscode-extension/`](./packages/vscode-extension):** IDE integration that presents the data to the user
 - **[`docs/`](./docs):** Documents examining the scientific background of this project
-- **[`./`](./) (this folder):** Holds everything together, contains [CI](./.github) and other configuration files
+- **[`./`](./) (this folder):** Holds everything together, contains [CI](./github) and other configuration files
 
 ## Installation and Usage
 
@@ -56,6 +56,8 @@ $ npm run install-all
   ```
 
   Read the [readme](./packages/cli/README.md) for the complete documentation of the CLI.
+
+Don't forget to specify the access tokens for the data sources as described in the relevant package documentation.
 
 ## Acknowledgements
 
