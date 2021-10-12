@@ -54,11 +54,12 @@ export class TypeReferenceSearcher extends ReferenceSearcher {
         this.typeChecker = program.getTypeChecker()
 
         for (const sourceFile of program.getSourceFiles()) {
-            if (!options.fileNames.includes(sourceFile.fileName)) {
+            const fileName = path.normalize(sourceFile.fileName)
+            if (!options.fileNames.includes(fileName)) {
                 // External library, maybe our own package
                 continue
             }
-            if (!allFileNames.includes(sourceFile.fileName)) {
+            if (!allFileNames.includes(fileName)) {
                 // Irrelevant file such as bundle
                 continue
             }
@@ -77,6 +78,7 @@ export class TypeReferenceSearcher extends ReferenceSearcher {
             allowJs: true,
             checkJs: true
         })
+        options.fileNames = options.fileNames.map(path.normalize)
 
         // Since the dependency is not installed, we need to do some hacks here ...
         Object.assign(options.options, {
@@ -242,7 +244,7 @@ export class TypeReferenceSearcher extends ReferenceSearcher {
         if (!symbol.declarations) {
             return
         }
-        if ((symbol.declarations?.length ?? 0) > 10000) {
+        if ((symbol.declarations?.length ?? 0) > 10_000) {
             // Too many declarations (TypeScript mismatch), skipping
             return
         }

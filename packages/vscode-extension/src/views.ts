@@ -183,8 +183,9 @@ export abstract class ReferenceFileNodeItem<
         })
     }
 
+    protected static readonly pathSeparator = path.sep
     /** Magic number to denote leaves, @see {@link getPathSegment}. */
-    protected static readonly leafPathSegment = '//'
+    protected static readonly leafPathSegment = this.pathSeparator.repeat(2)
 
     get dependency() {
         const anyReference = this.allLeafs[0]
@@ -204,7 +205,8 @@ export abstract class ReferenceFileNodeItem<
 
     protected getPath(reference: Reference) {
         const { fileUri, baseUri } = this.getFullPath(reference)
-        return fileUri.path.split('/').slice(baseUri.path.split('/').length)
+        const separatorPattern = new RegExp(`[/\\${ReferenceFileNodeItem.pathSeparator}]`)
+        return fileUri.path.split(separatorPattern).slice(baseUri.path.split(separatorPattern).length)
     }
 
     protected createItemChild(pathSegmentOrLeaf: string | Reference): TFileNodeItem | TMemberNodeItem {

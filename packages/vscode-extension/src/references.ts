@@ -150,7 +150,7 @@ class PackageFileNodeItem extends ReferenceFileNodeItem<
         await vscode.commands.executeCommand(
             'dowdep.openPackageFileOrFolder',
             this.$package,
-            this.path.join('/')
+            this.path.join(PackageFileNodeItem.pathSeparator)
         )
     }
 }

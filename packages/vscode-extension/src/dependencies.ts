@@ -143,7 +143,7 @@ class DependencyFileNodeItem extends ReferenceFileNodeItem<
         await vscode.commands.executeCommand(
             'dowdep.openDependencyFolder',
             this.dependency,
-            this.path.join('/')
+            this.path.join(DependencyFileNodeItem.pathSeparator)
         )
     }
 }
