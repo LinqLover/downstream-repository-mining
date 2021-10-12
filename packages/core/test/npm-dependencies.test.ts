@@ -7,7 +7,7 @@ import { promisify } from 'util'
 import { Package } from '../src'
 import { NpmDependency } from '../src/dependencies/npm'
 
-import { Dowdep } from '../src'
+import { Dowdep, loadExternalModules } from '../src'
 
 const readPackageJson = <(file: string) => Promise<PackageJson>><unknown>  // BUG in type definitions: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/33340
     promisify(readPackageJsonCallback)
@@ -69,6 +69,8 @@ describe('updateSource', () => {
         jest.setTimeout(5000)
         assert(process.env.NPM_CACHE)
         await (promisify(rimRaf))(process.env.NPM_CACHE)
+
+        await loadExternalModules()
 
         const dep = new NpmDependency(packageName, <Package><unknown>undefined)
         dep.tarballUrl = tarballUrl
