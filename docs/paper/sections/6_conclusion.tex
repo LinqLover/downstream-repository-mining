@@ -4,8 +4,8 @@
 Downstream dependencies provide a promising perspective for package developers that are interested in understanding how their interfaces are being used in practice by other software developers.
 In this paper, we have proposed a novel approach to making this sort of information accessible to package developers by automating the dependency collection and mining of usage samples from every dependency.
 We have identified two kinds of rich data sources for collecting downstream dependencies efficiently: public package repositories, such as npm, and online code search engines for finding dependent repositories by their package manifest files, namely Sourcegraph.
-We accomplish the usage mining by scanning the ASTs of every dependency for certain usage patterns that refer to a type from the target package; if the dependency uses a dynamically typed language, we perform a type analysis beforehand.
-We have demonstrated the fundamental usability of our approach with a tool that embeds the downstream dependency data into the Visual Studio Code IDE.
+We accomplish the usage mining by scanning the ASTs of every dependency for certain usage patterns that refer to a type from the target package; if the dependency uses a dynamically typed language, we perform a type analysis before.
+We have demonstrated the fundamental usability of our approach with a tool that embeds the downstream dependency data into the VS Code IDE.
 
 Our analysis suggests that the collected dependencies and the extracted usage samples have a viable quality in terms of precision and extent and that the resource requirements of our implementation are sufficiently low for collecting all data on the local machine of a package developer.
 Nevertheless, we have identified a number of causes for false negatives over the whole mining process that are predestined to biasing the output usage samples, including the popularity and recency of dependencies but also the proper declaration of packages and their renunciation of complex toolchains and metaprogramming patterns.
@@ -22,7 +22,7 @@ Last but not least, we want to improve the integration of the extension by addin
 In a wider perspective, we envision many other purposes for analyzing the collected downstream dependency data.
 By deriving usage patterns from the samples using an approach such as \cite{zhong2009mapo}, the structure and classification of raw data could be refined.
 The derived patterns could also be exploited as suggestions for convenience protocols to package developers.
-There are many ways to turn dependency data into metrics that either could be used for classifying downstream dependencies (e.g., according to their coupling to the target package as per LCOM \citep{chidamber1994metrics}), or that could be attributed to ranges of packages for comparing them with regard to their dependency-based cohesion or their spreading in an ecosystem.
+There are many ways to turn dependency data into metrics that either could be used for classifying downstream dependencies (e.g., according to their coupling to the target package as per LCOM \citep{chidamber1994metrics}), or that could be attributed to ranges of packages for comparing them concerning their dependency-based cohesion or their spreading in an ecosystem.
 
 By replacing the static usage analysis with a dynamic approach, the detected usage samples could be enriched with valuable runtime data describing involved parameters, the fine-grained code coverage of package members, or the invocation context of members.
 
