@@ -140,7 +140,7 @@
                         "string",
                         "null"
                     ],
-                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a new token in your [developer settings](https://github.com/settings/tokens/new).",
+                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a new token in your [developer settings](https://github.com/settings/tokens/new?scopes=public_repo).",
                     "default": null,
                     "pattern": "^ghp_[0-9a-zA-Z]{36}$"
                 },
@@ -162,7 +162,7 @@
                         "string",
                         "null"
                     ],
-                    "markdownDescription": "The token that is used to search dependencies from [Sourcegraph](https://sourcegraph.com/about). You can generate a new token in your [account settings](https://sourcegraph.com/user/settings/tokens).",
+                    "markdownDescription": "The token that is used to search dependencies from [Sourcegraph](https://sourcegraph.com/about). You can generate a new token in your [account settings](https://sourcegraph.com/user/settings/tokens/new).",
                     "default": null,
                     "pattern": "^[0-9a-z]{40}$"
                 }

@@ -58,6 +58,8 @@ $ npm run install-all
 
   Read the [readme](./packages/cli/README.md) for the complete documentation of the CLI.
 
+Don't forget to specify the access tokens for the data sources as described in the relevant package documentation.
+
 ## Acknowledgements
 
 This is currently a student project for the course "Software Mining and Applications" offered by the Computer Graphics System Group ([@hpicgs](https://github.com/hpicgs)/[@varg-dev](https://github.com/varg-dev)) at the Hasso Plattner Institute (HPI), Potsdam, Germany.
