@@ -1,25 +1,26 @@
 {
     "compilerOptions": {
         "module": "CommonJS",
-        "target": "ES6",
-        "outDir": "out",
+        "target": "ES2019",
+        "declaration": true,
         "lib": [
             "ES2020",
             "ESNext.AsyncIterable"
         ],
+        "outDir": "out/src",
         "sourceMap": true,
-        "rootDir": "src",
         "strict": true,  /* enable all strict type-checking options */
         "esModuleInterop": true,
-        "types": [],
+        "types": ["node"],
         "typeRoots": [
             "./src/@types/**/*.d.ts",
             "node_modules/@types"
         ]
     },
+    "include": [
+        "src/**/*.ts"
+    ],
     "exclude": [
-        "node_modules",
-        ".vscode-test",
-        "../../node_modules/*"
+        ".vscode-test"
     ]
 }

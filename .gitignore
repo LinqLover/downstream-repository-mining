@@ -16,11 +16,9 @@ docs/exposé.tex
 out/
 
 # dowdep
-cache/
-cache-*/
+cache*/
 output/
-samples/
-samples-*/
+samples*/
 
 # VS Code Extension
 packages/vscode-extension/.vscode-test/**

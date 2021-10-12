@@ -2,11 +2,10 @@
 
 const dowdep = require('dowdep')
 
-const cacheDirectory = dowdep.getCacheDirectory()
-const $package = new dowdep.Package({
-    name: 'name',
-    directory: 'directory'
-})
-console.log(cacheDirectory)
+const $package = new dowdep.Package(
+    'name',
+    '/path/to/directory'
+)
 console.log($package)
+console.log(new dowdep.Dowdep().createDependencySearchers($package))
 console.log(dowdep.ReferenceSearcher)

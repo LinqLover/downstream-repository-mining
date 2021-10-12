@@ -1,7 +1,9 @@
 {
     "name": "dowdep-vscode-extension",
+    "publisher": "LinqLover",
     "displayName": "Downstream Dependency Miner",
     "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
+    "author": "Christoph Thiede",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.57.0"
@@ -10,28 +12,222 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:dowdep.helloWorld"
+        "onCommand:dowdep.refreshPackages",
+        "onCommand:dowdep.refreshDownstreamData",
+        "onCommand:dowdep.refreshDependencies",
+        "onCommand:dowdep.refreshReferences",
+        "onView:dowdepDependencies",
+        "onView:dowdepReferences",
+        "workspaceContains:./package.json"
     ],
-    "main": "./out/extension.js",
+    "main": "./out/src/extension.js",
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only a limited number of dependencies will be mined in untrusted mode."
+            "supported": true
         }
     },
     "contributes": {
         "commands": [
             {
-                "command": "dowdep.helloWorld",
-                "title": "Hello World",
+                "command": "dowdep.refreshPackages",
+                "category": "Downstream Dependencies",
+                "title": "Refresh packages",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.refreshDownstreamData",
+                "category": "Downstream Dependencies",
+                "title": "Refresh downstream data",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.fetchMoreDownstreamData",
+                "category": "Downstream Dependencies",
+                "title": "Fetch more downstream data",
+                "icon": "$(settings-add)",
+                "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.refreshDependencies",
+                "category": "Downstream Dependencies",
+                "title": "Refresh dependencies",
+                "icon": "$(refresh)",
+                "enablement": "dowdep.activationState > 0"
+            },
+            {
+                "command": "dowdep.refreshReferences",
+                "category": "Downstream Dependencies",
+                "title": "Refresh references",
+                "icon": "$(refresh)",
+                "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.openSettings",
+                "category": "Downstream Dependencies",
+                "title": "Open settings",
+                "icon": "$(settings-gear)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                "title": "Open dependency online",
+                "icon": "$(globe)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.openRandomReference",
+                "title": "Open random reference",
+                "icon": {
+                    "dark": "assets/die-dark.svg",
+                    "light": "assets/die-light.svg"
+                },
+                "enablement": "dowdep.activationState > 1"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.refreshDependencies",
+                "title": "Refresh dependencies",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.dowdepDependencies.refreshReferences",
+                "title": "Refresh references",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "dowdep.dowdepReferences.refreshReferences",
+                "title": "Refresh references",
                 "icon": "$(refresh)"
             }
         ],
+        "configuration": {
+            "title": "Downstream Dependencies",
+            "properties": {
+                "dowdep.dependencyLimit": {
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "markdownDescription": "Indicates how many downstream dependencies will be downloaded. Specify `null` for downloading all references (try this at your own risk).",
+                    "default": 10
+                },
+                "dowdep.dependencyLimitIncrement": {
+                    "type": "number",
+                    "markdownDescription": "Indicates how many downstream dependencies will be added to `#dowdep.dependencyLimit#` when the command \"Fetch more downstream data\" is executed.",
+                    "default": 5
+                },
+                "dowdep.dependencySearchStrategies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "npm",
+                            "sourcegraph"
+                        ],
+                        "minItems": 1,
+                        "markdownEnumDescriptions": [
+                            "Scrapes packages from the [npm registry](https://npmjs.com).",
+                            "Searches repositories on [sourcegraph.com](https://sourcegraph.com)."
+                        ]
+                    },
+                    "description": "Indicates the strategies that are used for searching downstream dependencies.",
+                    "default": null
+                },
+                "dowdep.enableCodeLens": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Controls whether references from downstream dependencies will be displayed in the editor."
+                },
+                "dowdep.githubOAuthToken": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "markdownDescription": "The token that is used to retrieve additional information about downstream dependencies from GitHub. You can generate a new token in your [developer settings](https://github.com/settings/tokens/new).",
+                    "default": null,
+                    "pattern": "^ghp_[0-9a-zA-Z]{36}$"
+                },
+                "dowdep.referenceSearchStrategy": {
+                    "type": "string",
+                    "description": "Indicates the strategy that is used for finding usage samples in downstream dependencies.",
+                    "enum": [
+                        "types",
+                        "heuristic"
+                    ],
+                    "markdownEnumDescriptions": [
+                        "Uses the [TypeScript compiler](https://www.typescriptlang.org/) for searching references. Recommended.",
+                        "Searches dependencies for imports of the analyzed package by using a simple heuristic. For demonstrational purpose only."
+                    ],
+                    "default": "types"
+                },
+                "dowdep.sourcegraphToken": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "markdownDescription": "The token that is used to search dependencies from [Sourcegraph](https://sourcegraph.com/about). You can generate a new token in your [account settings](https://sourcegraph.com/user/settings/tokens).",
+                    "default": null,
+                    "pattern": "^[0-9a-z]{40}$"
+                }
+            }
+        },
         "menus": {
+            "commandPalette": [
+                {
+                    "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openRandomReference",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshDependencies",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshReferences",
+                    "when": "false"
+                },
+                {
+                    "command": "dowdep.dowdepReferences.refreshReferences",
+                    "when": "false"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "dowdep.dowdepDependencies.refreshDependencies",
+                    "when": "view == dowdepDependencies && viewItem =~ /type:package/"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.refreshReferences",
+                    "when": "view == dowdepDependencies && viewItem =~ /type:dependency/"
+                },
+                {
+                    "command": "dowdep.dowdepReferences.refreshReferences",
+                    "when": "view == dowdepReferences && viewItem =~ /type:package/"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openDependencyExternally",
+                    "group": "inline",
+                    "when": "view == dowdepDependencies && viewItem =~ /type:dependency/ || view == dowdepReferences && viewItem =~ /type:dependency/"
+                },
+                {
+                    "command": "dowdep.dowdepDependencies.openRandomReference",
+                    "group": "inline",
+                    "when": "view == dowdepDependencies && viewItem =~ /leafTypes:(\\S*,)?reference/ || view == dowdepReferences && viewItem =~ /leafTypes:(\\S*,)?reference/"
+                }
+            ],
             "view/title": [
                 {
-                    "command": "dowdep.helloWorld",
-                    "when": "view == dowdepDependencies",
+                    "command": "dowdep.openSettings",
+                    "when": "view == dowdepDependencies || view == dowdepReferences"
+                },
+                {
+                    "command": "dowdep.refreshDownstreamData",
+                    "when": "view == dowdepDependencies || view == dowdepReferences",
+                    "group": "navigation"
+                },
+                {
+                    "command": "dowdep.fetchMoreDownstreamData",
+                    "when": "view == dowdepDependencies && dowdep.activationState > 1 || view == dowdepReferences && dowdep.activationState > 1",
                     "group": "navigation"
                 }
             ]
@@ -50,33 +246,53 @@
                 {
                     "id": "dowdepDependencies",
                     "name": "Downstream Dependencies"
+                },
+                {
+                    "id": "dowdepReferences",
+                    "name": "Downstream References"
                 }
             ]
-        }
+        },
+        "viewsWelcome": [
+            {
+                "view": "dowdepDependencies",
+                "contents": "No downstream dependencies have been found yet.\n\n[Refresh downstream data](command:dowdep.refreshDownstreamData)\n\nFor more information about dowdep, check out our [GitHub repository](https://github.com/LinqLover/downstream-repository-mining)."
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "yarn run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "pretest": "yarn run compile && yarn run lint",
-        "lint": "eslint src --ext ts",
+        "pretest": "tsc -p ./tsconfig.test.json",
+        "lint": "eslint src && eslint --ext=json,js",
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
         "dowdep": "file:./../core",
-        "it-all": "^1.0.5"
+        "it-all": "^1.0.6",
+        "lodash": "^4.17.21",
+        "node-filter-async": "^2.0.0",
+        "normalize-package-data": "^3.0.3",
+        "truncate": "^3.0.0",
+        "try-to-catch": "^3.0.0"
     },
     "devDependencies": {
+        "@types/assert": "^1.5.6",
         "@types/glob": "^7.1.4",
+        "@types/lodash": "^4.14.175",
         "@types/mocha": "^9.0.0",
         "@types/node": "16.x",
-        "@types/vscode": "^1.59.0",
-        "@typescript-eslint/eslint-plugin": "^4.30.0",
-        "@typescript-eslint/parser": "^4.30.0",
+        "@types/normalize-package-data": "^2.4.1",
+        "@types/try-to-catch": "^3.0.0",
+        "@types/vscode": "^1.61.0",
+        "@typescript-eslint/eslint-plugin": "^4.33.0",
+        "@typescript-eslint/parser": "^4.33.0",
         "eslint": "^7.32.0",
-        "glob": "^7.1.7",
-        "mocha": "^9.1.1",
-        "typescript": "^4.4.2",
+        "glob": "^7.2.0",
+        "jsonschema": "^1.4.0",
+        "mocha": "^9.1.2",
+        "typescript": "^4.4.3",
         "vscode-test": "^1.6.1"
     }
 }

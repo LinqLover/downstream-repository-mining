@@ -1,17 +1,16 @@
 {
     "compilerOptions": {
-        "baseUrl": "./src",
+        "module": "CommonJS",
+        "target": "ES2019",
         "declaration": true,
         "importHelpers": true,
         "lib": [
             "ES2020",
             "ESNext.AsyncIterable"
         ],
-        "module": "commonjs",
         "outDir": "out",
         "rootDir": "src",
         "strict": true,
-        "target": "ES2019",
         "types": [
             "jest",
             "node"

@@ -1,12 +1,11 @@
 #!/usr/bin/env -S npx ts-node
 
-import { getCacheDirectory, Package, ReferenceSearcher } from 'dowdep'
+import { Dowdep, Package, ReferenceSearcher } from 'dowdep'
 
-const cacheDirectory = getCacheDirectory()
-const $package = new Package({
-    name: 'name',
-    directory: 'directory'
-})
-console.log(cacheDirectory)
+const $package = new Package(
+    'name',
+    '/path/to/directory'
+)
 console.log($package)
+console.log(new Dowdep().createDependencySearchers($package))
 console.log(ReferenceSearcher)

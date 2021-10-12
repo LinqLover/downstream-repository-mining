@@ -1,7 +1,7 @@
-import assert from 'assert'
+import { strict as assert } from 'assert'
 
 /**
- * regular expression utility using template literals
+ * Regular expression utility using template literals and verbose mode for increased readability.
  *
  * Simple Example:
  *
@@ -22,12 +22,12 @@ import assert from 'assert'
  * https://github.com/Canop/miaou/blob/803a7fc5ee8a2d36b896aa0ef1deedfd89c1b670/libs/rex.js
  */
 export default function (templates: TemplateStringsArray, ...args: (string | RegExp)[]) {
-    assert(templates.raw.length == args.length + 1)
+    assert(templates.raw.length === args.length + 1)
     const raws = templates.raw.map(raw => raw
         .replace(/(?<![^\\](?:\\{2})*\\)\s/gm, '')  // remove unescaped whitespace
         .replace(/\/\/.*/gm, '')  // remove comments
     )
-    let flags = ""
+    let flags = ''
     for (const arg of args) {
         if (arg instanceof RegExp) {
             flags += arg.flags
@@ -35,7 +35,9 @@ export default function (templates: TemplateStringsArray, ...args: (string | Reg
     }
     args = args.map(arg => arg instanceof RegExp ? arg.source : arg)
     const raw = raws.shift() + raws.map((template, i) => `${args[i]}${template}`).join('')
-    const [, source, newFlags] = raw.match(/^\/?(.*?)(?:\/(\w+))?$/)!  // extracts source and flags
+    const match = raw.match(/^\/?(.*?)(?:\/(\w+))?$/)  // extracts source and flags
+    assert(match)
+    const [, source, newFlags] = match
     flags += newFlags ?? ''
     return new RegExp(source, [...new Set(flags)].join(''))
 }

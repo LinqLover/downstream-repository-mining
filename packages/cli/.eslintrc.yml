@@ -2,7 +2,8 @@ env:
   es6: true
   node: true
 ignorePatterns:
-- bin/run.js
+  - bin/run.js
 parserOptions:
   ecmaVersion: 2020
+  project: tsconfig.json
   sourceType: module

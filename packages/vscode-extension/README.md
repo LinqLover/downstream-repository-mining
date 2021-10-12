@@ -1,70 +1,45 @@
-# dowdep README
+# dowdep
 
-This is the README for your extension "dowdep". After writing up a brief description, we recommend including the following sections.
+Mine usage information about your JavaScript/TypeScript package from dependent repositories and display them right in VS Code.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+<table>
+	<thead>
+		<tr>
+			<td>Survey downstream dependent projects</td>
+			<td>Explore usage samples of package members from downstream dependencies</td>
+			<td>CodeLens annotations for member references from downstream dependencies</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><a href="./images/dependencies.png"><img alt="dependency view" src="./images/dependencies.png" /></a></td>
+			<td><a href="./images/references.png"><img alt="references view" src="./images/references.png" /></a></td>
+			<td><a href="./images/codelens.png"><img alt="CodeLens" src="./images/codelens.png" /></a></td>
+		</tr>
+	</tbody>
+</table>
 
-For example if there is an image subfolder under your extension project workspace:
+## Configuration
 
-\!\[feature X\]\(images/feature-x.png\)
+After installing the extension, you need to fill in some access tokens.
+To do so, navigate to the settings of the extension and enter each a valid token for the settings "githubOAuthToken" and "sourcegraphToken".
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Usage
 
-## Requirements
+After configuring the extension, open a folder in VS Code that contains a node module, i.e., a `package.json` file.
+Open the downstream dependencies view from the activity bar (<img alt="dowdep icon" src="./assets/dowdep.svg" height="16"></img>) and press "Refresh downstream data" (you can also invoke this command via the command palette).
+Dependencies are now searched, downloaded, analyzed, and displayed in the view.
+Hover, click, or right-click any item to see additional details.
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Also, make sure to check out all functionalities by searching for "Downstream Dependencies" in the command palette.
+You can configure the extension in the settings by navigating to the Downstream Dependencies extension there.
 
-## Extension Settings
+## Development
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+See [Contributing](CONTRIBUTING.md).
 
-For example:
+## Credits
 
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- Die icon ([`./assets/die-{dark,light}.svg`](./assets)) by Ben Davis from the Noun Project, edited.

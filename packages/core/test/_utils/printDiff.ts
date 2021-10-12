@@ -1,6 +1,6 @@
 /** @XXX Cheap and very imprecise workaround for https://github.com/facebook/jest/issues/10276 */
 export function printDiff(actual: unknown, expected: unknown, ...context: unknown[]) {
-    console.log([...context, ...createDiff(actual, expected)].join("\n"))
+    console.debug([...context, ...createDiff(actual, expected)].join("\n"))
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,13 +1,16 @@
 {
     "name": "dowdep-base",
+    "description": "(Virtual) base for all dowdep packages",
+    "author": "Christoph Thiede",
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^4.30.0",
-        "@typescript-eslint/parser": "^4.30.0",
+        "@typescript-eslint/eslint-plugin": "^4.33.0",
+        "@typescript-eslint/parser": "^4.33.0",
         "eslint": "^7.32.0",
-        "eslint-plugin-jest": "^24.4.0",
-        "typescript": "^4.4.2"
+        "eslint-plugin-no-floating-promise": "^1.0.2",
+        "eslint-plugin-jest": "^25.0.1",
+        "typescript": "^4.4.3"
     },
     "scripts": {
-        "update-lockfiles": "yarn install && cd packages/core && yarn install && yarn build && cd ../example-js && npm install && cd ../example-ts && npm install && cd ../cli && npm install && cd ../vscode-extension && npm install"
+        "install-all": "yarn install && cd packages/core && yarn install && yarn build && cd ../example-js && npm install && cd ../example-ts && npm install && cd ../cli && npm install && cd ../vscode-extension && npm install"
     }
 }

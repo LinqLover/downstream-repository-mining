@@ -6,6 +6,10 @@ ignorePatterns:
 - cache-*/
 - test/**/*.test/
 - samples/
+- jest.config.ts
 parserOptions:
   ecmaVersion: 2020
+  project:
+  - tsconfig.json
+  - test/tsconfig.json
   sourceType: module

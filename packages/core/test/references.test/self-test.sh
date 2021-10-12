@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Validate the example packages by compiling and running the example dependents.
+
 set -e
 
 # Make tput a noop if not applicable
