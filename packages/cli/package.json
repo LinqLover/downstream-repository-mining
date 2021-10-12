@@ -16,6 +16,9 @@
         "bin": "dowdep-cli",
         "commands": "./src/commands",
         "description": "downstream repository mining CLI",
+        "hooks": {
+            "init": "./src/oclif.init.ts"
+        },
         "plugins": [
             "@oclif/plugin-autocomplete",
             "@oclif/plugin-help",
