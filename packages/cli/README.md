@@ -24,6 +24,7 @@ Required environment variables:
 - **`SOURCEGRAPH_TOKEN`:** The token that is used to search dependencies from [Sourcegraph](https://sourcegraph.com/about).
   You can generate a new token in your [account settings](https://sourcegraph.com/user/settings/tokens).
 - **`NPM_CACHE`** *(optional)*: Indicates the path to the downloaded dependencies.
+  Defaults to `cache/`.
 
 Find downstream dependencies of a package:
 
