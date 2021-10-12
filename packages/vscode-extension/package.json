@@ -266,7 +266,7 @@
         "watch": "tsc -watch -p ./",
         "pretest": "tsc -p ./tsconfig.test.json",
         "lint": "eslint src && eslint --ext=json,js",
-        "test": "node ./out/runTest.js"
+        "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
         "dowdep": "file:./../core",
