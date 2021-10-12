@@ -17,7 +17,6 @@ export {
     ReferenceSearchStrategy
 } from './references'
 
-import pkgDir from 'pkg-dir'
 import externalModules from './externalModules'
 
 let _loadedExternalModules = false
@@ -46,9 +45,10 @@ export async function loadExternalModules() {
      * Developed with the kind help of @TomerAbach.
      */
     const dynamicImport = new Function('moduleName', 'return import(moduleName)')
+    const dir = `file://${__dirname}/..`
 
     externalModules.escapeRegexp = (await dynamicImport('escape-string-regexp')).default
-    const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
+    const parseImportsIndexPath = `${dir}/node_modules/parse-imports/src/index.js`
 
     try {
         externalModules.parseImports = (await dynamicImport(parseImportsIndexPath)).default
@@ -59,7 +59,7 @@ export async function loadExternalModules() {
         // This will occur if this package is imported as a local dependency from another package via a symlink.
         // For now, let's handle this by assuming the depending package is a sibling of ourselves ...
         // Hardcoded! So many hacks! 😭
-        const parseImportsIndexPath = `${await pkgDir()}/../core/node_modules/parse-imports/src/index.js`
+        const parseImportsIndexPath = `${dir}/../core/node_modules/parse-imports/src/index.js`
         externalModules.parseImports = (await dynamicImport(parseImportsIndexPath)).default
     }
 
