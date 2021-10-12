@@ -125,8 +125,12 @@ export class TypeReferenceSearcher extends ReferenceSearcher {
                 // Pretend this dependent to be installed
                 return true
             }
-            if (path.basename(directoryName) == 'node_modules' && !pathIsInside(path.resolve(directoryName), path.resolve(this.dependencyDirectory))) {
-                // Stop module resolution outside dependent folder - this might cause unintended side effects and will slow down search significantly
+            if (path.basename(directoryName) == 'node_modules' && !(
+                pathIsInside(path.resolve(directoryName), path.resolve(this.dependencyDirectory))
+                    || pathIsInside(path.resolve(this.dependencyDirectory), path.resolve(directoryName))
+                    || pathIsInside(path.resolve(directoryName), path.resolve(this.packageDirectory))
+                    || pathIsInside(path.resolve(this.packageDirectory), path.resolve(directoryName)))) {
+                // Stop module resolution outside relevant source folders - this might cause unintended side effects and will slow down search significantly
                 return false
             }
             return basicDirectoryExists(directoryName)
