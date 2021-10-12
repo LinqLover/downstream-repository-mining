@@ -3,9 +3,7 @@ import { promises as fsPromises } from 'fs'
 import itAll from 'it-all'
 import LinesAndColumns from 'lines-and-columns'
 import _ from 'lodash'
-import type { Import, Options } from 'parse-imports'
 import path from 'path'
-import pkgDir from 'pkg-dir'
 
 import { DeclarationImport, FilePosition, ReferenceSearcher, Reference, ReferenceLocation } from './base'
 import externalModules from '../externalModules'
@@ -46,7 +44,7 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
             = \s*
             require \s* \( \s*
                 (?<quote>['"])
-                (?<packageName> ${externalModules.escapeRegexp!(this.$package.name)} )
+                (?<packageName> ${externalModules.escapeRegexp(this.$package.name)} )
                 (
                     \/ (?<memberName> ${identifierPattern} )
                 )?

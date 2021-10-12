@@ -40,9 +40,9 @@ export async function loadExternalModules() {
      * In particular, we must not extract this call into a separate module.
      * This would result in sporadic unresolved promises in the jest environment.
      * See #65.
-     * 
+     *
      * All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
-     * 
+     *
      * Developed with the kind help of @TomerAbach.
      */
     const dynamicImport = new Function('moduleName', 'return import(moduleName)')
