@@ -1,0 +1,39 @@
+\input{template/acm}
+\input{template/bibtex}
+\input{template/packages}
+\input{template/patches}
+\input{template/commands}
+\input{template/lstlisting}
+\input{hyphenation}
+\input{crefnames}
+
+% Colors
+\colorlet{paperbackground}{white}
+\input{colors}
+
+
+\begin{document}
+
+	\input{title}
+
+	\input{sections/0_abstract}
+	\keywords{mining software repositories, downstream dependencies, ecosystem call graphs, API usage, type analyzer}
+
+	\maketitle
+	\pagestyle{plain} % removes running headers from ACM template
+
+	\input{sections/1_introduction}
+	\input{sections/2_related_work}
+	\input{sections/3_approach}
+	\input{sections/4_implementation}
+	\input{sections/5_evaluation}
+	\input{sections/6_conclusion}
+
+	\input{acknowledgements}
+
+	\input{template/bibliography}
+
+	%\appendix
+
+\end{document}
+\endinput
