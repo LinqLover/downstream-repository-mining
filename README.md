@@ -1,6 +1,7 @@
 # Software Mining of Downstream Dependency Repositories
 
 [![GitHub CI](https://img.shields.io/github/checks-status/LinqLover/downstream-repository-mining/master)](https://github.com/LinqLover/downstream-repository-mining/actions/workflows/test.yml)
+[![Codacy](https://app.codacy.com/project/badge/Grade/e4c01a65b11c4098b206122915bbaedb)](https://www.codacy.com/gh/LinqLover/downstream-repository-mining/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LinqLover/downstream-repository-mining&amp;utm_campaign=Badge_Grade)
 [![CodeFactor](https://www.codefactor.io/repository/github/linqlover/downstream-repository-mining/badge)](https://www.codefactor.io/repository/github/linqlover/downstream-repository-mining)
 
 Mine usage information about your JavaScript/TypeScript package from dependent repositories.
@@ -12,6 +13,7 @@ For more information, read the [exposé](./docs/exposé.md):
 
 - **[`packages/core/`](./packages/core):** Contains the core logic
 - **[`packages/cli/`](./packages/cli):** Provides a simple command-line interface
+- **[`packages/vscode-extension/`](./packages/vscode-extension):** Editor integration that presents the data to the user
 - **[`docs/`](./docs):** Documents examining the scientific background of this project
 - **[`./`](./) (this folder):** Holds everything together, contains [CI](./github) and [`eslint`](./.eslintrc) definitions
 

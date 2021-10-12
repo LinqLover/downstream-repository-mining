@@ -1,10 +1,10 @@
-import { Command, flags } from '@oclif/command'
-import * as util from 'util'
+import { flags } from '@oclif/command'
 
-import { getNpmDeps } from 'dowdep'
+import DowdepCommand from '../DowdepCommand'
+import tqdm2 from '../utils/tqdm2'
 
 
-export default class List extends Command {
+export default class List extends DowdepCommand {
     static description = 'list downstream dependencies'
 
     static flags = {
@@ -13,15 +13,16 @@ export default class List extends Command {
             description: "maximum number of results to return (-1 for unlimited)",
             default: 20
         }),
-        countNestedDependents: flags.boolean({
-            name: 'count-nested-dependents', // TODO: Does not work!
-            description: "count nested dependents",
-            default: true
+        strategies: flags.enum({
+            description: "list strategies to use",
+            options: ['npm', 'sourcegraph', 'all'],
+            default: 'all'
         }),
         downloadGitHubData: flags.boolean({
             name: 'download-github-metadata', // TODO: Does not work!
             description: "download GitHub metadata",
-            default: true
+            default: true,
+            allowNo: true
         })
     }
 
@@ -33,14 +34,30 @@ export default class List extends Command {
         const packageName: string = args.packageName
         if (!packageName) throw new Error("dowdep-cli: Package not specified")
         const limit = flags.limit == -1 ? undefined : flags.limit
+        const strategies = ['npm', 'sourcegraph'].includes(flags.strategies)
+            ? [<'npm' | 'sourcegraph'>flags.strategies]
+            : <['npm', 'sourcegraph']>['npm', 'sourcegraph']
+        const downloadGitHubData = flags.downloadGitHubData
 
-        const deps = await getNpmDeps(
-            packageName,
+        for await (const dependency of tqdm2(
+            this.updateDependencies(
+                packageName,
+                strategies,
+                limit,
+                dependency => !downloadGitHubData || dependency.isGitHubRepositoryReady,
+                {
+                    downloadMetadata: downloadGitHubData,
+                    downloadSource: false
+                }),
             limit,
-            flags.countNestedDependents,
-            flags.downloadGitHubData
-        )
-
-        console.log(util.inspect(deps, {showHidden: false, depth: null}))
+            {
+                description: "Listing dependencies"
+            }
+        )) {
+            console.dir(dependency, {
+                showHidden: false,
+                depth: 1
+            })
+        }
     }
 }

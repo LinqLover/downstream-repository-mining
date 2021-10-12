@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
       - run: yarn install
         working-directory: .  # since VSCE depends on some dev deps from main package (e.g. for lint)
       - run: yarn install && yarn build
@@ -46,8 +46,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
       - run: yarn install
         working-directory: .
+      - run: yarn install && yarn build
+        working-directory: ./packages/core
       - run: npm install  # yarn does not support file dependencies correctly .
       - run: yarn lint

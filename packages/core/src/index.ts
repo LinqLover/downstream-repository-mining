@@ -1,13 +1,22 @@
-import { Dependent, getCacheDirectory, getNpmDeps } from './npm-deps'
-import Package from './package'
-import { Reference, ReferenceKind, ReferenceSearcher } from './references'
+import { Dependency, DependencySearchStrategy, DependencyUpdateOptions } from './dependencies'
+import { Dowdep, getCacheDirectory } from './dowdep'
+import { Package } from './packages'
+import { DeclarationLocation, FilePosition, FilePositionPrimitive, Location, Reference, ReferenceKind, ReferenceSearcher, ReferenceSearchStrategy } from './references'
+
 
 export {
-    Dependent,
+    Location,
+    DeclarationLocation,
+    Dependency,
+    DependencySearchStrategy,
+    DependencyUpdateOptions,
+    Dowdep,
+    FilePosition,
+    FilePositionPrimitive,
     getCacheDirectory,
-    getNpmDeps,
     Package,
     Reference,
     ReferenceKind,
-    ReferenceSearcher
+    ReferenceSearcher,
+    ReferenceSearchStrategy
 }

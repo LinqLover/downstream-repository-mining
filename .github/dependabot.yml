@@ -8,6 +8,9 @@ updates:
     directory: "packages/cli"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "globby"
+        # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/113#issuecomment-917516607
   - package-ecosystem: "npm"
     directory: "packages/core"
     schedule:
@@ -15,6 +18,8 @@ updates:
     ignore:
       - dependency-name: "callsites"
         # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/140#issuecomment-909264249
+      - dependency-name: "pkg-dir"
+        # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/257#issuecomment-936120077
   - package-ecosystem: "npm"
     directory: "packages/vscode-extension"
     schedule:
