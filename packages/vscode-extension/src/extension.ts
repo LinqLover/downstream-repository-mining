@@ -27,8 +27,9 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("The extension \"dowdep\" is now active.")
 
     extension = new Extension(context)
-
     extension.activate()
+
+    return extension
 }
 
 /**
