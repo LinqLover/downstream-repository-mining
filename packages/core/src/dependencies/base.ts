@@ -140,6 +140,7 @@ export class Dependency {
         assert(this.sourceDirectory)
 
         const searcher = dowdep.createReferenceSearcher(this, this.$package)
+        console.debug("Updating references", this.name)
 
         for await (const reference of searcher.searchReferences()) {
             const existingReference = this._references.find(existingReference =>
@@ -153,6 +154,8 @@ export class Dependency {
             this._references.push(reference)
             await updateCallback()
         }
+
+        console.debug("Updated references", this.name)
     }
 
     /**
