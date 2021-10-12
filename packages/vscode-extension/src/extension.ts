@@ -388,6 +388,10 @@ export class Extension {
         }
         const directoryUri = vscode.Uri.file(dependency.sourceDirectory)
         const fileUri = vscode.Uri.joinPath(directoryUri, relativePath)
+        if ((await vscode.workspace.fs.stat(fileUri)).type === vscode.FileType.Directory) {
+            console.warn("Will not open dependency directory", fileUri)
+            return
+        }
         await vscode.commands.executeCommand('vscode.open', fileUri)
     }
 
