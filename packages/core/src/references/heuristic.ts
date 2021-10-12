@@ -8,6 +8,7 @@ import path from 'path'
 import pkgDir from 'pkg-dir'
 
 import { DeclarationImport, FilePosition, ReferenceSearcher, Reference, ReferenceLocation } from './base'
+import externalModules from '../externalModules'
 import rex from '../utils/rex'
 
 
@@ -40,25 +41,12 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
 
         const identifierPattern = /[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*/u
 
-        /**
-         * Workaround for https://github.com/microsoft/TypeScript/issues/43329.
-         *
-         * TypeScript will always try to replace dynamic imports with `requires` which doesn't work for importing ESM from CJS.
-         * We work around by "hiding" our dynamic import in a Function constructor (terrible...).
-         *
-         * In particular, we must not extract this call into a separate module.
-         * This would result in sporadic unresolved promises in the jest environment.
-         * See #65.
-         */
-        const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-        const escapeRegexp: (regex: string) => string = (await dynamicImport('escape-string-regexp')).default
-
         const requirePattern = rex`
             (?<alias> ${identifierPattern} ) \s*
             = \s*
             require \s* \( \s*
                 (?<quote>['"])
-                (?<packageName> ${escapeRegexp(this.$package.name)} )
+                (?<packageName> ${externalModules.escapeRegexp!(this.$package.name)} )
                 (
                     \/ (?<memberName> ${identifierPattern} )
                 )?
@@ -154,42 +142,7 @@ export class HeuristicReferenceSearcher extends ReferenceSearcher {
     async* collectEsmBindings(source: string): AsyncGenerator<ModuleBinding, void, undefined> {
         const imports = await (async () => {
             try {
-                // Truly awful hack! There are a few things going on here:
-                // - Jest (or something) can't find parse-imports by just importing its package name
-                //   no matter what. Just give it the path to the src/index.js file
-                //
-                // - Workaround for https://github.com/microsoft/TypeScript/issues/43329.
-                //
-                //   TypeScript will always try to replace dynamic imports with `requires` which doesn't work for importing ESM from CJS.
-                //   We work around by "hiding" our dynamic import in a Function constructor (terrible...).
-                //
-                //   In particular, we must not extract this call into a separate module.
-                //   This would result in sporadic unresolved promises in the jest environment.
-                //   See #65.
-                //
-                // - All of this required jest@next, ts-jest@next, AND `NODE_OPTIONS=--experimental-vm-modules`
-                const parseImportsIndexPath = `${await pkgDir()}/node_modules/parse-imports/src/index.js`
-                const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-                let parseImports: (
-                    code: string,
-                    options?: Options
-                ) => Promise<Iterable<Import>>
-
-                try {
-                    parseImports = (await dynamicImport(parseImportsIndexPath)).default
-                } catch (parseError) {
-                    if (!(parseError instanceof Error && 'code' in parseError && (<{ code: string }>parseError).code == 'ERR_MODULE_NOT_FOUND')) {
-                        throw parseError
-                    }
-                    // This will occur if this package is imported as a local dependency from another package via a symlink.
-                    // For now, let's handle this by assuming the depending package is a sibling of ourselves ...
-                    // Hardcoded! So many hacks! 😭
-                    const parseImportsIndexPath = `${await pkgDir()}/../core/node_modules/parse-imports/src/index.js`
-                    const dynamicImport = new Function('moduleName', 'return import(moduleName)')
-                    parseImports = (await dynamicImport(parseImportsIndexPath)).default
-                }
-
-                return await parseImports(source)
+                return await externalModules.parseImports(source)
             } catch (parseError) {
                 console.warn("Error from parse-imports", { parseError, source: source.slice(0, 100), dependencyName: this.dependency.name }) // TODO: Make getter denedencyName?
                 // This includes syntax errors but also TypeScript syntax which is not (yet?) supported by parse-imports.

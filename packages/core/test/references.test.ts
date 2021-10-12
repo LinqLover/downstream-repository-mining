@@ -8,6 +8,7 @@ import ifCurtailed from '../src/utils/if-curtailed'
 import { lodashClassifyNested } from '../src/utils/lodash-classify'
 import { getSourceDirectory } from './_utils/sourceDirectory'
 import { printDiff } from './_utils/printDiff'
+import { loadExternalModules } from '../src'
 
 
 const SOURCE_DIRECTORY = getSourceDirectory(__filename)
@@ -37,6 +38,8 @@ describe('ReferenceSearcher', () => {
             ([packageName, expectedReferences]) => ({ strategy: <ReferenceSearchStrategy>strategy, packageName, expectedReferences }))
     ))("should find relevant references for %s", async (
         { strategy, packageName, expectedReferences }) => {
+        await loadExternalModules()
+
         const $package = new Package(
             packageName,
             `${SOURCE_DIRECTORY}/examples/packages/${packageName}`

@@ -1,4 +1,4 @@
-import { DeclarationLocation, Dependency, Dowdep, FilePosition, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
+import { DeclarationLocation, Dependency, Dowdep, FilePosition, loadExternalModules, Package, Reference, ReferenceSearchStrategy } from 'dowdep'
 import _ from 'lodash'
 import filterAsync from 'node-filter-async'
 import normalizePackageData from 'normalize-package-data'
@@ -23,12 +23,13 @@ type PackageLike = Package | readonly Package[]
 /**
  * This method is called on the first activation event.
  */
-export function activate(context: vscode.ExtensionContext) {
-    console.log("The extension \"dowdep\" is now active.")
+export async function activate(context: vscode.ExtensionContext) {
+    await loadExternalModules()
 
     extension = new Extension(context)
     extension.activate()
 
+    console.log("The extension \"dowdep\" is now active.")
     return extension
 }
 
