@@ -17,6 +17,11 @@ For more information, read the [exposé](./docs/exposé.md):
 - **[`docs/`](./docs):** Documents examining the scientific background of this project
 - **[`./`](./) (this folder):** Holds everything together, contains [CI](./github) and other configuration files
 
+Installation and usage structures can be found in the `README.md`s of the relevant packages.
+If you have any trouble reproducing the instructions, please try it out on our reference configuration using Gitpod:
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/LinqLover/downstream-repository-mining)
+
 ## Acknowledgements
 
 This is currently a student project for the course "Software Mining and Applications" offered by the Computer Graphics System Group ([@hpicgs](https://github.com/hpicgs)/[@varg-dev](https://github.com/varg-dev)) at the Hasso Plattner Institute (HPI), Potsdam, Germany.
