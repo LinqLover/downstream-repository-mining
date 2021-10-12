@@ -11,7 +11,7 @@ async function main() {
         // The path to test runner
         const extensionTestsPath = path.resolve(__dirname, './suite/index')
 
-        const testWorkspacePath = path.resolve(__dirname, '../node_modules/jsonschema')
+        const testWorkspacePath = path.resolve(__dirname, '../../node_modules/jsonschema')
         console.log("starting in", testWorkspacePath)
 
         // Download VS Code, unzip it and run the integration test
