@@ -1,13 +1,13 @@
-open-pull-requests-limit: 0  # until the project is maintained again
-
 version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
+    open-pull-requests-limit: 0  # until the project is maintained again
     schedule:
       interval: "daily"
   - package-ecosystem: "npm"
     directory: "packages/cli"
+    open-pull-requests-limit: 0  # until the project is maintained again
     schedule:
       interval: "daily"
     ignore:
@@ -15,6 +15,7 @@ updates:
         # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/113#issuecomment-917516607
   - package-ecosystem: "npm"
     directory: "packages/core"
+    open-pull-requests-limit: 0  # until the project is maintained again
     schedule:
       interval: "daily"
     ignore:
@@ -22,5 +23,6 @@ updates:
         # Incompatible ESM type, see: https://github.com/LinqLover/downstream-repository-mining/pull/140#issuecomment-909264249
   - package-ecosystem: "npm"
     directory: "packages/vscode-extension"
+    open-pull-requests-limit: 0  # until the project is maintained again
     schedule:
       interval: "daily"
