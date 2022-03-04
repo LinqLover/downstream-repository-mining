@@ -277,7 +277,7 @@
         "dowdep": "file:./../core",
         "it-all": "^1.0.6",
         "lodash": "^4.17.21",
-        "node-filter-async": "^2.0.0",
+        "node-filter-async": "^3.0.0",
         "normalize-package-data": "^3.0.3",
         "truncate": "^3.0.0",
         "try-to-catch": "^3.0.0"
