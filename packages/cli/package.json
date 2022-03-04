@@ -2,6 +2,7 @@
     "name": "dowdep-cli",
     "description": "Command-line interface for dowdep (the downstream dependency miner).",
     "author": "Christoph Thiede",
+    "license": "MIT",
     "bin": {
         "dowdep-cli": "./bin/run.js"
     },

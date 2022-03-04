@@ -5,8 +5,13 @@
     "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
     "author": "Christoph Thiede",
     "version": "0.0.1",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LinqLover/downstream-repository-mining.git"
+    },
     "engines": {
-        "vscode": "^1.57.0"
+        "vscode": "^1.61.0"
     },
     "categories": [
         "Other"

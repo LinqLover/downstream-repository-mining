@@ -3,6 +3,7 @@
     "version": "0.0.0",
     "description": "Mine usage information about your JavaScript/TypeScript package from dependent repositories.",
     "author": "Christoph Thiede",
+    "license": "MIT",
     "module": "./out/index.js",
     "exports": "./out/index.js",
     "types": "./out/index.d.ts",
@@ -16,7 +17,6 @@
     "files": [
         "*"
     ],
-    "license": "UNLICENSED",
     "scripts": {
         "lint": "eslint . && eslint --ext=.json",
         "postinstall": "sed -i 's:import(\"src/PackageJson\"):import(\"./PackageJson\"):g' node_modules/package-metadata/dist/findPackageVersion.d.ts || echo \"Cannot patch package-metadata\"",
