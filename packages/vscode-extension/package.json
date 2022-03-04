@@ -287,7 +287,7 @@
         "@types/glob": "^7.1.4",
         "@types/lodash": "^4.14.175",
         "@types/mocha": "^9.0.0",
-        "@types/node": "16.x",
+        "@types/node": "17.x",
         "@types/normalize-package-data": "^2.4.1",
         "@types/try-to-catch": "^3.0.0",
         "@types/vscode": "^1.61.0",
