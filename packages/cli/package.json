@@ -40,7 +40,7 @@
         "dowdep": "file:./../core",
         "it-all": "^1.0.6",
         "lodash": "^4.17.21",
-        "node-filter-async": "^2.0.0",
+        "node-filter-async": "^3.0.0",
         "oclif": "^1.18.0",
         "tslib": "^2"
     },
