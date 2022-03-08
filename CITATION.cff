@@ -1,0 +1,15 @@
+cff-version: 1.1.0
+authors:
+  - family-names: Thiede
+    given-names: Christoph
+    orcid: https://orcid.org/0000-0002-7442-8216
+  - family-names: Scheibel
+    given-names: Willy
+    orcid: https://orcid.org/0000-0002-7885-9857
+  - family-names: Limberger
+    given-names: Daniel
+  - family-names: Döllner
+    given-names: Jürgen
+title: dowdep: Software Mining of Downstream Dependency Repositories
+version: submission-enase17
+date-released: 2022-03-08
