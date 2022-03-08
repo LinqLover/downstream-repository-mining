@@ -12,6 +12,6 @@ authors:
     orcid: https://orcid.org/0000-0002-9111-4809
   - family-names: Döllner
     given-names: Jürgen
-title: dowdep: Software Mining of Downstream Dependency Repositories
+title: "dowdep: Software Mining of Downstream Dependency Repositories"
 version: submission-enase17
 date-released: 2022-03-08
