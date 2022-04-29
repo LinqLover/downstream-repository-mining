@@ -1,3 +1,21 @@
-# Scientific Paper: Downstream Dependency Mining
+# Scientific Paper: Augmenting Library Development by Mining Usage Data from Downstream Dependencies
 
-PDF preprint: [Release Submission (Software Mining & Applications)](https://github.com/LinqLover/downstream-repository-mining/releases/tag/submission-ss21#:~:text=paper.pdf)
+This paper has been published in the *Proceedings of the 17th International Conference on Evaluation of Novel Approaches to Software Engineering – ENASE*, 221-232, 2022, and is accessible on SciTePress here: <https://doi.org/10.5220/0011093700003176>
+
+Citation format:
+
+```bib
+@conference{dowdep22paper,
+	author={Christoph Thiede and Willy Scheibel. and Daniel Limberger. and Jürgen Döllner.},
+	title={Augmenting Library Development by Mining Usage Data from Downstream Dependencies},
+	booktitle={Proceedings of the 17th International Conference on Evaluation of Novel Approaches to Software Engineering - ENASE,},
+	year={2022},
+	pages={221-232},
+	publisher={SciTePress},
+	organization={INSTICC},
+	doi={10.5220/0011093700003176},
+	isbn={978-989-758-568-5},
+}
+```
+
+The first version of this paper has been written in the context of the Software Mining & Applications seminar, a preprint of this version is available via the original seminar release: [Release Submission (Software Mining & Applications)](https://github.com/LinqLover/downstream-repository-mining/releases/tag/submission-ss21#:~:text=paper.pdf)

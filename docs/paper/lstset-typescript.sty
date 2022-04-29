@@ -1,0 +1,82 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{lstset-typescript}[2021/12/31]
+
+\usepackage{listings} 
+\usepackage{accsupp}
+
+
+% This ensures numbers are not copied, but leading spaces are copied, as taken from
+% http://tex.stackexchange.com/a/30310
+
+\newcommand{\noncopynumber}[1]{%
+    \BeginAccSupp{method=escape,ActualText={}}%
+    #1%
+    \EndAccSupp{}%
+}
+
+\makeatletter
+\def\lst@outputspace{{\ifx\lst@bkgcolor\empty\color{white}\else\lst@bkgcolor\fi\lst@visiblespace}}
+\makeatother
+
+
+\definecolor{msvc_keyword}   {HTML}{0000FF} 
+\definecolor{msvc_comment}   {HTML}{008000} 
+\definecolor{msvc_background}{HTML}{eff0f1} 
+\definecolor{msvc_frame}     {HTML}{000000}
+\definecolor{msvc_linenumber}{HTML}{808080}
+\definecolor{msvc_string}    {HTML}{000000}
+
+\definecolor{msvc_directives}{HTML}{808080}
+\definecolor{msvc_operators} {HTML}{000000}
+\definecolor{msvc_stl}       {HTML}{000000}
+
+
+\lstdefinelanguage{TypeScript}
+{
+    keywords        = {break, case, catch, continue, debugger, default, delete, do, else, finally, for, function, if, in, instanceof, new, return, switch, throw, try, typeof, var, void, while, with, super, class, constructor},
+    morecomment     = [l]{//},
+    morecomment     = [s]{/*}{*/},
+    morestring      = [b]',
+    morestring      = [b]", 
+    keywordstyle    = \color{blue}\bfseries,
+    identifierstyle = \color{black},
+    commentstyle    = \color{teal}\ttfamily,
+    stringstyle     = \color{red}\ttfamily,
+    sensitive       = true,
+    style           = TypeScript
+}
+
+
+\lstdefinestyle{TypeScript}
+{
+    basicstyle       = 
+\linespread{0.85}\ttfamily
+\lst@ifdisplaystyle\footnotesize\fi %inline code should have normal font size
+%
+,   backgroundcolor  = \color{msvc_background}
+,   rulecolor        = \color{msvc_frame}
+,   keywordstyle     = \lst@ifdisplaystyle\color{msvc_keyword}\fi
+,   commentstyle     = \lst@ifdisplaystyle\color{msvc_comment}\fi
+,   stringstyle      = \lst@ifdisplaystyle\color{msvc_string}\fi
+,   showstringspaces = false
+,   numberbychapter  = true
+,   numbersep        =  8pt
+,   showlines        = true
+,   tabsize          =  2          
+,   numbers          = left
+,   numberstyle      = \tiny\color{msvc_linenumber}\noncopynumber
+,   framesep         =  4pt
+,   xleftmargin      = \parindent
+,   xleftmargin      = 16pt
+,   framexleftmargin = 16pt
+,   abovecaptionskip = \medskipamount
+,   stepnumber       = 1
+,   columns          = flexible
+,   keepspaces       = true
+,	keywords         = [2]{ prototype, this }
+,	keywordstyle     = [2]\lst@ifdisplaystyle\color{msvc_stl}\fi
+,   morekeywords     = [1]{ noexcept }
+,	literate         = *
+{[}{{\lst@ifdisplaystyle\color{msvc_operators}\fi{[}}}{1}
+{]}{{\lst@ifdisplaystyle\color{msvc_operators}\fi{]}}}{1}
+}
