@@ -18,4 +18,10 @@ Citation format:
 }
 ```
 
-The first version of this paper has been written in the context of the Software Mining & Applications seminar, a preprint of this version is available via the original seminar release: [Release Submission (Software Mining & Applications)](https://github.com/LinqLover/downstream-repository-mining/releases/tag/submission-ss21#:~:text=paper.pdf)
+## Seminar Paper
+
+The first version of this paper has been written in the context of the Software Mining & Applications seminar.
+
+A preprint of this version is available via the original seminar release: [Release Submission (Software Mining & Applications)](https://github.com/LinqLover/downstream-repository-mining/releases/tag/submission-ss21#:~:text=paper.pdf)
+
+The original sources of the seminar paper are still preserved in the git history: [`paper@submission-ss21`](https://github.com/LinqLover/downstream-repository-mining/tree/submission-ss21/docs/paper)
