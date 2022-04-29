@@ -1,0 +1,9 @@
+source,type,fpr
+Sourcegraph,{package_unused},0.385
+Sourcegraph,{peer_dependency},0.277
+Sourcegraph,{type_definitions_only},0.015
+Sourcegraph,{package_json_mismatch},0.015
+npm,{package_unused},0.269
+npm,{peer_dependency},0.077
+npm,{type_definitions_only},0.115
+npm,{package_json_mismatch},0.0
