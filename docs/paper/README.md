@@ -1,5 +1,7 @@
 # Scientific Paper: Augmenting Library Development by Mining Usage Data from Downstream Dependencies
 
+[![Download paper (pdf, 611 kB)](https://img.shields.io/badge/Download%20paper-pdf-F40F02)](https://github.com/LinqLover/downstream-repository-mining/releases/download/paper-enase17/paper-dowdep-enase.pdf)
+
 This paper has been published in the *Proceedings of the 17th International Conference on Evaluation of Novel Approaches to Software Engineering – ENASE*, 221-232, 2022, and is accessible on SciTePress here: <https://doi.org/10.5220/0011093700003176>
 
 Citation format:
