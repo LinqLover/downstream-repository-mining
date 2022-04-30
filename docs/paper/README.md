@@ -20,6 +20,12 @@ Citation format:
 }
 ```
 
+## Conference Presentation
+
+You can find the slides for the paper presentation at the ENASE here:
+
+[![Conference slides (pdf, 2.74 MB)](https://img.shields.io/badge/Conference%20slides-pdf-F40F02)](https://github.com/LinqLover/LinqLover/blob/master/slides/dowdep-ENASE.pdf)
+
 ## Seminar Paper
 
 The first version of this paper has been written in the context of the Software Mining & Applications seminar.
